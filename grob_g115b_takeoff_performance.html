@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grob G115B — Startstrecke</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0e0f0f;
+    --bg2:       #161818;
+    --bg3:       #1d1f1f;
+    --border:    #2a2d2d;
+    --border2:   #363a3a;
+    --text:      #e8e6e0;
+    --muted:     #7a7e7e;
+    --accent:    #c8b97a;
+    --accent2:   #a09050;
+    --danger:    #d4614a;
+    --success:   #5a9e7a;
+    --mono:      'DM Mono', monospace;
+    --serif:     'Instrument Serif', serif;
+  }
+
+  html { background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 14px; line-height: 1.6; }
+
+  body { min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* ── Header ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 2.5rem 1.5rem;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 1rem;
+  }
+  .header-left h1 {
+    font-family: var(--serif);
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .header-left h1 em { color: var(--accent); font-style: italic; }
+  .header-meta {
+    margin-top: 0.5rem;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--accent);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 2px;
+  }
+
+  /* ── Main layout ── */
+  main { flex: 1; display: grid; grid-template-columns: 340px 1fr; min-height: 0; }
+
+  /* ── Left panel: inputs ── */
+  .panel-inputs {
+    border-right: 1px solid var(--border);
+    padding: 2rem 2rem;
+    display: flex; flex-direction: column; gap: 1.5rem;
+    overflow-y: auto;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .field label span { color: var(--accent); font-style: normal; font-size: 10px; }
+
+  .input-row { position: relative; }
+  .input-row input {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 15px;
+    padding: 10px 52px 10px 14px;
+    border-radius: 3px;
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+  .input-row input::-webkit-inner-spin-button,
+  .input-row input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .input-row input:focus { outline: none; border-color: var(--accent2); }
+  .input-row input.err { border-color: var(--danger); }
+  .unit-tag {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    font-size: 11px; color: var(--muted); pointer-events: none;
+    letter-spacing: 0.05em;
+  }
+
+  .hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* slider */
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%; height: 2px;
+    background: var(--border2);
+    border-radius: 1px;
+    outline: none;
+    cursor: pointer;
+    padding: 0;
+    border: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  .slider-row { display: flex; align-items: center; gap: 10px; }
+  .slider-row input[type=range] { flex: 1; }
+  .slider-val {
+    font-size: 13px; color: var(--text);
+    min-width: 44px; text-align: right;
+  }
+
+  .calc-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #0e0f0f;
+    border: none;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    margin-top: 0.5rem;
+  }
+  .calc-btn:hover { background: #ddd090; }
+  .calc-btn:active { transform: scale(0.98); }
+
+  /* ── Right panel: results ── */
+  .panel-results {
+    padding: 2rem 2.5rem;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 2rem;
+  }
+
+  .placeholder {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; gap: 1rem; color: var(--muted); text-align: center;
+    font-size: 13px;
+  }
+  .placeholder-icon {
+    font-size: 3rem; opacity: 0.15;
+    font-family: var(--serif); font-style: italic;
+    color: var(--accent);
+  }
+
+  /* warnings */
+  .warnings { display: flex; flex-direction: column; gap: 8px; }
+  .warn-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: color-mix(in srgb, var(--danger) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+    border-radius: 3px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--danger);
+  }
+  .warn-item::before { content: '▲'; font-size: 10px; margin-top: 2px; flex-shrink: 0; }
+
+  /* step pipeline */
+  .pipeline { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: stretch;
+    gap: 0 1rem;
+  }
+  .step-line {
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .step-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--border2);
+    border: 1px solid var(--border2);
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+  .step-dot.done { background: var(--accent); border-color: var(--accent); }
+  .step-connector {
+    width: 1px; flex: 1; background: var(--border);
+    margin: 4px 0;
+  }
+  .step-body {
+    padding: 0 0 1.5rem;
+  }
+  .step-name {
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 4px;
+  }
+  .step-detail { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .step-value {
+    font-size: 22px;
+    color: var(--text);
+    text-align: right;
+    padding: 0 0 1.5rem;
+    white-space: nowrap;
+    align-self: start;
+    padding-top: 2px;
+  }
+  .step-value small { font-size: 12px; color: var(--muted); display: block; text-align: right; }
+
+  /* final result cards */
+  .result-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .result-card {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 1.25rem 1.5rem;
+  }
+  .result-card.primary { border-color: var(--accent2); }
+  .result-card .rc-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .result-card .rc-value { font-family: var(--serif); font-size: 3rem; color: var(--accent); line-height: 1; }
+  .result-card.primary .rc-value { font-size: 3.5rem; }
+  .result-card .rc-unit { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .result-card .rc-sub { font-size: 11px; color: var(--muted); margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px; }
+
+  /* DA card */
+  .atmos-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .atmos-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.75rem 1rem;
+  }
+  .atmos-card .ac-label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .atmos-card .ac-value { font-size: 18px; color: var(--text); }
+  .ac-value.pos { color: var(--danger); }
+  .ac-value.neg { color: var(--success); }
+
+  /* footer */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 0.75rem 2.5rem;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    display: flex; justify-content: space-between; gap: 1rem;
+  }
+
+  /* responsive */
+  @media (max-width: 800px) {
+    main { grid-template-columns: 1fr; }
+    .panel-inputs { border-right: none; border-bottom: 1px solid var(--border); }
+    header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>Grob <em>G115B</em> — Startstrecke</h1>
+    <p class="header-meta">POH Section 5 · Bilineare Interpolation</p>
+  </div>
+  <div class="badge">AFM / POH Daten</div>
+</header>
+
+<main>
+  <!-- ═══ LEFT: INPUTS ═══ -->
+  <aside class="panel-inputs">
+    <div class="section-label">Atmosphäre</div>
+
+    <div class="field">
+      <label>Pressure Altitude <span>ft</span></label>
+      <div class="input-row">
+        <input type="number" id="pa" value="0" step="100" min="-2000" max="10000">
+        <span class="unit-tag">ft</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>OAT — Outside Air Temp <span>°C</span></label>
+      <div class="input-row">
+        <input type="number" id="oat" value="15" step="1" min="-30" max="50">
+        <span class="unit-tag">°C</span>
+      </div>
+    </div>
+
+    <div class="section-label">Flugzeug</div>
+
+    <div class="field">
+      <label>Masse (Gross Weight) <span>kg</span></label>
+      <div class="input-row">
+        <input type="number" id="mass" value="920" step="5" min="600" max="950">
+        <span class="unit-tag">kg</span>
+      </div>
+      <p class="hint">MTOW: 920 kg</p>
+    </div>
+
+    <div class="section-label">Pistenbedingungen</div>
+
+    <div class="field">
+      <label>Neigung (Slope) <span>%</span></label>
+      <div class="slider-row">
+        <input type="range" id="slope-range" min="-2" max="2" step="0.1" value="0" oninput="syncSlider('slope','slope-range')">
+        <span class="slider-val" id="slope-range-val">0.0 %</span>
+      </div>
+      <div class="input-row" style="margin-top:6px">
+        <input type="number" id="slope" value="0" step="0.1" min="-2" max="2" oninput="syncInput('slope','slope-range')">
+        <span class="unit-tag">%</span>
+      </div>
+      <p class="hint">Positiv = bergauf (Steigung), Negativ = bergab (Gefälle)</p>
+    </div>
+
+    <div class="field">
+      <label>Wind <span>kt</span></label>
+      <div class="slider-row">
+        <input type="range" id="wind-range" min="-11" max="22" step="1" value="0" oninput="syncSlider('wind','wind-range')">
+        <span class="slider-val" id="wind-range-val">0 kt</span>
+      </div>
+      <div class="input-row" style="margin-top:6px">
+        <input type="number" id="wind" value="0" step="1" min="-11" max="22" oninput="syncInput('wind','wind-range')">
+        <span class="unit-tag">kt</span>
+      </div>
+      <p class="hint">Positiv = Gegenwind, Negativ = Rückenwind</p>
+    </div>
+
+    <div class="field">
+      <label>Hindernishöhe <span>m</span></label>
+      <div class="slider-row">
+        <input type="range" id="obs-range" min="0" max="15" step="1" value="15" oninput="syncSlider('obs','obs-range')">
+        <span class="slider-val" id="obs-range-val">15 m</span>
+      </div>
+      <div class="input-row" style="margin-top:6px">
+        <input type="number" id="obs" value="15" step="1" min="0" max="15">
+        <span class="unit-tag">m</span>
+      </div>
+      <p class="hint">0 m = reiner Ground Run; 15 m = Startstrecke über Hindernis</p>
+    </div>
+
+    <div class="section-label">Betrieblicher Zuschlag</div>
+
+    <div class="field">
+      <label>Zuschlag <span>%</span></label>
+      <div class="slider-row">
+        <input type="range" id="zuschl-range" min="0" max="50" step="5" value="15" oninput="syncSlider('zuschl','zuschl-range')">
+        <span class="slider-val" id="zuschl-range-val">15 %</span>
+      </div>
+      <div class="input-row" style="margin-top:6px">
+        <input type="number" id="zuschl" value="15" step="5" min="0" max="100" oninput="syncInput('zuschl','zuschl-range')">
+        <span class="unit-tag">%</span>
+      </div>
+      <p class="hint">Graspiste: 15% · Wirkt auf Startrollstrecke (nach Wind, vor Hindernis)</p>
+    </div>
+
+    <button class="calc-btn" onclick="calculate()">▶ Berechnen</button>
+  </aside>
+
+  <!-- ═══ RIGHT: RESULTS ═══ -->
+  <section class="panel-results" id="results-panel">
+    <div class="placeholder" id="placeholder">
+      <div class="placeholder-icon">G115B</div>
+      <div>Eingaben links ausfüllen<br>und Berechnen drücken.</div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>Grob G115B Performance Calculator · POH Section 5 · Bilineare Interpolation</span>
+  <span>Nur für Planungszwecke — nicht als alleinige Grundlage für Flugentscheidungen verwenden.</span>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════
+   LOOKUP TABLES (aus POH)
+═══════════════════════════════════════════════ */
+
+// TABLE 1: PA (ft) × OAT (°C) → Startrollstrecke Basis (m)
+const T1 = {
+  data: [[190,262],[205,282],[221,301],[236,323],[255,346],[274,374],[296,401],[318,428],[342,458],[369,498]],
+  bp1:  [-1000,0,1000,2000,3000,4000,5000,6000,7000,8000],
+  bp2:  [-20,40]
+};
+
+// TABLE 2: Startrollstrecke (m) × Masse (kg) → Startrollstrecke (m)
+const T2 = {
+  data: [
+    [140,146,165,185,205],
+    [174,183,205,230,255],
+    [203,215,245,275,303],
+    [240,252,284,317,353],
+    [274,288,323,364,408],
+    [305,321,362,410,462],
+    [340,355,400,452,512],
+    [374,392,441,498,561]
+  ],
+  bp1: [205,255,303,353,408,462,512,561],
+  bp2: [750,770,820,870,920]
+};
+
+// TABLE 3: Startrollstrecke (m) × Slope (%) → Startrollstrecke (m)
+const T3 = {
+  data: [
+    [94,104,117],
+    [140,153,175],
+    [185,204,231],
+    [227,256,288],
+    [274,304,343],
+    [319,353,402],
+    [363,404,453],
+    [408,452,511],
+    [453,506,570],
+    [499,556,622]
+  ],
+  bp1: [104,153,204,256,304,353,404,452,506,556],
+  bp2: [-2,0,2]
+};
+
+// TABLE 4: Startrollstrecke (m) × Wind (km/h) → Startrollstrecke (m)
+const T4 = {
+  data: [
+    [227,187,155,126,99,76,55],
+    [298,251,209,167,131,100,74],
+    [371,310,256,207,164,124,93],
+    [441,369,304,248,192,147,112],
+    [517,430,354,286,225,169,127],
+    [589,490,405,327,257,193,145],
+    [661,552,453,364,286,214,158],
+    [733,610,502,405,316,242,174],
+    [807,671,555,445,345,265,193]
+  ],
+  bp1: [155,209,256,304,354,405,453,502,555],
+  bp2: [-20,-10,0,10,20,30,40]
+};
+
+// TABLE 5: Startrollstrecke (m) × Hindernishöhe (m) → Startstrecke (m)
+const T5 = {
+  data: [
+    [52,94],
+    [154,277],
+    [175,321],
+    [249,460],
+    [348,632],
+    [449,814],
+    [545,996],
+    [645,1183],
+    [742,1359],
+    [843,1538]
+  ],
+  bp1: [52,154,175,249,348,449,545,645,742,843],
+  bp2: [0,15]
+};
+
+/* ═══════════════════════════════════════════════
+   BILINEARE INTERPOLATION
+═══════════════════════════════════════════════ */
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function interp1D(bp, vals, x) {
+  if (x <= bp[0]) return vals[0];
+  if (x >= bp[bp.length-1]) return vals[bp.length-1];
+  for (let i = 0; i < bp.length-1; i++) {
+    if (x >= bp[i] && x <= bp[i+1]) {
+      const t = (x - bp[i]) / (bp[i+1] - bp[i]);
+      return vals[i] + t * (vals[i+1] - vals[i]);
+    }
+  }
+  return vals[vals.length-1];
+}
+
+function lookup2D(table, x1, x2) {
+  // table.data[i][j]: i = index into bp1, j = index into bp2
+  const bp1 = table.bp1, bp2 = table.bp2, data = table.data;
+
+  // Find surrounding indices for x1 (rows)
+  let i0 = 0, i1 = 0;
+  if (x1 <= bp1[0]) { i0 = i1 = 0; }
+  else if (x1 >= bp1[bp1.length-1]) { i0 = i1 = bp1.length-1; }
+  else {
+    for (let i = 0; i < bp1.length-1; i++) {
+      if (x1 >= bp1[i] && x1 <= bp1[i+1]) { i0 = i; i1 = i+1; break; }
+    }
+  }
+
+  // Find surrounding indices for x2 (cols)
+  let j0 = 0, j1 = 0;
+  if (x2 <= bp2[0]) { j0 = j1 = 0; }
+  else if (x2 >= bp2[bp2.length-1]) { j0 = j1 = bp2.length-1; }
+  else {
+    for (let j = 0; j < bp2.length-1; j++) {
+      if (x2 >= bp2[j] && x2 <= bp2[j+1]) { j0 = j; j1 = j+1; break; }
+    }
+  }
+
+  const t1 = (i0 === i1) ? 0 : (x1 - bp1[i0]) / (bp1[i1] - bp1[i0]);
+  const t2 = (j0 === j1) ? 0 : (x2 - bp2[j0]) / (bp2[j1] - bp2[j0]);
+
+  const v00 = data[i0][j0], v01 = data[i0][j1];
+  const v10 = data[i1][j0], v11 = data[i1][j1];
+
+  const v0 = v00 + t2 * (v01 - v00);
+  const v1 = v10 + t2 * (v11 - v10);
+  return v0 + t1 * (v1 - v0);
+}
+
+/* ═══════════════════════════════════════════════
+   SLIDER SYNC
+═══════════════════════════════════════════════ */
+function syncSlider(inputId, rangeId) {
+  const r = document.getElementById(rangeId);
+  const i = document.getElementById(inputId);
+  i.value = r.value;
+  updateSliderLabel(rangeId, r.value, inputId);
+}
+function syncInput(inputId, rangeId) {
+  const r = document.getElementById(rangeId);
+  const i = document.getElementById(inputId);
+  r.value = i.value;
+  updateSliderLabel(rangeId, i.value, inputId);
+}
+function updateSliderLabel(rangeId, val, inputId) {
+  const labelEl = document.getElementById(rangeId + '-val');
+  if (!labelEl) return;
+  const units = { 'slope-range': ' %', 'wind-range': ' kt', 'obs-range': ' m', 'zuschl-range': ' %' };
+  const decimals = { 'slope-range': 1, 'wind-range': 0, 'obs-range': 0, 'zuschl-range': 0 };
+  const unit = units[rangeId] || '';
+  const dec  = decimals[rangeId] !== undefined ? decimals[rangeId] : 0;
+  labelEl.textContent = parseFloat(val).toFixed(dec) + unit;
+}
+
+/* ═══════════════════════════════════════════════
+   DENSITY ALTITUDE
+═══════════════════════════════════════════════ */
+function densityAltitude(pa, oat) {
+  const isaTemp = 15 - 1.98 * (pa / 1000);
+  const isadev = oat - isaTemp;
+  const da = pa + 120 * isadev;
+  return { da: Math.round(da), isaTemp, isadev };
+}
+
+/* ═══════════════════════════════════════════════
+   MAIN CALCULATION
+═══════════════════════════════════════════════ */
+function fmt(v) { return Math.round(v); }
+function fmtSign(v) { return (v >= 0 ? '+' : '') + v.toFixed(1); }
+
+function calculate() {
+  const pa     = parseFloat(document.getElementById('pa').value)   || 0;
+  const oat    = parseFloat(document.getElementById('oat').value)  || 15;
+  const mass   = parseFloat(document.getElementById('mass').value) || 920;
+  const slope  = parseFloat(document.getElementById('slope').value)|| 0;
+  const windKt = parseFloat(document.getElementById('wind').value) || 0;
+  const obs    = parseFloat(document.getElementById('obs').value)  || 15;
+  const zPct   = parseFloat(document.getElementById('zuschl').value)|| 0;
+
+  // Convert wind: knots → km/h (1 kt = 1.852 km/h)
+  const windKmh = windKt * 1.852;
+
+  // Warnings
+  const warnings = [];
+  if (mass > 920)  warnings.push('Masse überschreitet MTOW (920 kg) — Berechnung extrapoliert!');
+  if (windKt < -5) warnings.push(`Rückenwind ${Math.abs(windKt)} kt (${Math.abs(windKmh).toFixed(0)} km/h) überschreitet typischen AFM-Grenzwert.`);
+  if (slope < -2 || slope > 2) warnings.push('Neigung außerhalb Tabellenbereich (±2%) — Extrapolation!');
+
+  // Atmosphere
+  const { da, isaTemp, isadev } = densityAltitude(pa, oat);
+  if (da > 8000) warnings.push(`Density Altitude ${da} ft — außerhalb des nominalen Leistungsbereichs!`);
+
+  // Step 1: PA × OAT → Basis-Rollstrecke
+  const s1 = lookup2D(T1, pa, oat);
+
+  // Step 2: Basis × Masse → Rollstrecke
+  const s2 = lookup2D(T2, s1, mass);
+
+  // Step 3: Rollstrecke × Slope → Rollstrecke
+  const s3 = lookup2D(T3, s2, slope);
+
+  // Step 4: Rollstrecke × Wind (km/h) → Rollstrecke
+  const s4 = lookup2D(T4, s3, windKmh);
+
+  // Zuschlag auf Rollstrecke
+  const s4z = s4 * (1 + zPct / 100);
+
+  // Step 5: Rollstrecke(+Zuschlag) × Hindernishöhe → Startstrecke
+  const s5 = lookup2D(T5, s4z, obs);
+
+  // Direction labels
+  const windDir   = windKt > 0 ? 'Gegenwind' : windKt < 0 ? 'Rückenwind' : 'Kein Wind';
+  const windLabel = windKt !== 0
+    ? `${Math.abs(windKt)} kt (${Math.abs(windKmh).toFixed(1)} km/h) ${windDir}`
+    : 'Kein Wind';
+  const slopeLabel = slope > 0 ? `${slope.toFixed(1)}% Steigung` : slope < 0 ? `${Math.abs(slope).toFixed(1)}% Gefälle` : 'Ebene Piste';
+
+  // Render
+  const panel = document.getElementById('results-panel');
+  panel.innerHTML = `
+    ${warnings.length ? `<div class="warnings">${warnings.map(w => `<div class="warn-item">${w}</div>`).join('')}</div>` : ''}
+
+    <div>
+      <div class="section-label" style="margin-bottom:0.75rem">Atmosphäre</div>
+      <div class="atmos-row">
+        <div class="atmos-card">
+          <div class="ac-label">Density Altitude</div>
+          <div class="ac-value ${da > 5000 ? 'pos' : ''}">${da.toLocaleString('de-DE')} ft</div>
+        </div>
+        <div class="atmos-card">
+          <div class="ac-label">ISA-Temp auf PA</div>
+          <div class="ac-value">${isaTemp.toFixed(1)} °C</div>
+        </div>
+        <div class="atmos-card">
+          <div class="ac-label">ISA-Abweichung</div>
+          <div class="ac-value ${isadev > 0 ? 'pos' : 'neg'}">${fmtSign(isadev)} °C</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label" style="margin-bottom:0.75rem">Berechnungsschritte</div>
+      <div class="pipeline">
+
+        <div class="step">
+          <div class="step-line"><div class="step-dot done"></div><div class="step-connector"></div></div>
+          <div class="step-body">
+            <div class="step-name">Schritt 1 — Atmosphäre</div>
+            <div class="step-detail">PA ${pa.toLocaleString('de-DE')} ft · OAT ${oat} °C → Basis-Rollstrecke</div>
+          </div>
+          <div class="step-value">${fmt(s1)} <small>m</small></div>
+        </div>
+
+        <div class="step">
+          <div class="step-line"><div class="step-dot done"></div><div class="step-connector"></div></div>
+          <div class="step-body">
+            <div class="step-name">Schritt 2 — Massenkorrektur</div>
+            <div class="step-detail">${fmt(s1)} m · ${mass} kg → Rollstrecke</div>
+          </div>
+          <div class="step-value">${fmt(s2)} <small>m</small></div>
+        </div>
+
+        <div class="step">
+          <div class="step-line"><div class="step-dot done"></div><div class="step-connector"></div></div>
+          <div class="step-body">
+            <div class="step-name">Schritt 3 — Neigungskorrektur</div>
+            <div class="step-detail">${fmt(s2)} m · ${slopeLabel}</div>
+          </div>
+          <div class="step-value">${fmt(s3)} <small>m</small></div>
+        </div>
+
+        <div class="step">
+          <div class="step-line"><div class="step-dot done"></div><div class="step-connector"></div></div>
+          <div class="step-body">
+            <div class="step-name">Schritt 4 — Windkorrektur</div>
+            <div class="step-detail">${fmt(s3)} m · ${windLabel}${windKt !== 0 ? ` → Tabelle: ${windKmh.toFixed(1)} km/h` : ''}</div>
+          </div>
+          <div class="step-value">${fmt(s4)} <small>m</small></div>
+        </div>
+
+        ${zPct > 0 ? `
+        <div class="step">
+          <div class="step-line"><div class="step-dot done"></div><div class="step-connector"></div></div>
+          <div class="step-body">
+            <div class="step-name">Zuschlag ${zPct} %</div>
+            <div class="step-detail">${fmt(s4)} m × ${(1 + zPct/100).toFixed(2)} → Startrollstrecke</div>
+          </div>
+          <div class="step-value">${fmt(s4z)} <small>m</small></div>
+        </div>` : ''}
+
+        <div class="step">
+          <div class="step-line"><div class="step-dot done"></div></div>
+          <div class="step-body">
+            <div class="step-name">Schritt 5 — Hindernis</div>
+            <div class="step-detail">${fmt(s4z)} m · Hindernishöhe ${obs} m</div>
+          </div>
+          <div class="step-value">${fmt(s5)} <small>m</small></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label" style="margin-bottom:0.75rem">Ergebnis</div>
+      <div class="result-cards">
+        <div class="result-card primary">
+          <div class="rc-label">Startrollstrecke${zPct > 0 ? ' (mit Zuschlag)' : ''}</div>
+          <div class="rc-value">${fmt(s4z)}</div>
+          <div class="rc-unit">Meter</div>
+          <div class="rc-sub">Ground Roll · nach Wind-Korrektur${zPct > 0 ? ` · +${zPct}%` : ''}</div>
+        </div>
+        <div class="result-card ${obs > 0 ? 'primary' : ''}">
+          <div class="rc-label">Startstrecke über ${obs} m Hindernis</div>
+          <div class="rc-value">${fmt(s5)}</div>
+          <div class="rc-unit">Meter</div>
+          <div class="rc-sub">Inkl. alle Korrekturen${zPct > 0 ? ` · +${zPct}% Zuschlag` : ''}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
