@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grob G115B — Performance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #0e0f0f;
+    --bg2:     #161818;
+    --bg3:     #1d1f1f;
+    --border:  #2a2d2d;
+    --border2: #363a3a;
+    --text:    #e8e6e0;
+    --muted:   #7a7e7e;
+    --accent:  #c8b97a;
+    --accent2: #a09050;
+    --mono:    'DM Mono', monospace;
+    --serif:   'Instrument Serif', serif;
+  }
+
+  html, body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 2.5rem 1.5rem;
+  }
+  header h1 {
+    font-family: var(--serif);
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+  header h1 em { color: var(--accent); font-style: italic; }
+  header p {
+    margin-top: 0.5rem;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  main {
+    flex: 1;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 720px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.25rem;
+  }
+
+  .card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 1.25rem 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .card:hover {
+    border-color: var(--accent2);
+    background: var(--bg3);
+  }
+  .card:hover .arrow { color: var(--accent); }
+
+  .card-left { display: flex; flex-direction: column; gap: 4px; }
+  .card-tag {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .card-title {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .card-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .arrow {
+    font-size: 1.5rem;
+    color: var(--border2);
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+
+  .card.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+    cursor: default;
+  }
+  .card.disabled .card-tag::after { content: ' · in Kürze'; }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 0.75rem 2.5rem;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Grob <em>G115B</em> — Performance</h1>
+  <p>POH Section 5 · Bilineare Interpolation</p>
+</header>
+
+<main>
+  <div class="section-label">Verfügbare Rechner</div>
+
+  <a class="card" href="grob_g115b_performance.html">
+    <div class="card-left">
+      <span class="card-tag">Start</span>
+      <span class="card-title">Startstrecke berechnen</span>
+      <span class="card-desc">Startrollstrecke &amp; Startstrecke über Hindernis · inkl. Massen-, Wind- und Neigungskorrektur</span>
+    </div>
+    <span class="arrow">→</span>
+  </a>
+
+  <a class="card disabled" href="#">
+    <div class="card-left">
+      <span class="card-tag">Landung</span>
+      <span class="card-title">Landestrecke berechnen</span>
+      <span class="card-desc">Landerollstrecke &amp; Landestrecke über Hindernis</span>
+    </div>
+    <span class="arrow">→</span>
+  </a>
+
+</main>
+
+<footer>
+  <span>Grob G115B · POH Section 5</span>
+  <span>Nur für Planungszwecke — nicht als alleinige Grundlage für Flugentscheidungen verwenden.</span>
+</footer>
+
+</body>
+</html>
