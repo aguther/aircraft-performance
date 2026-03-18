@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grob G115B — Flugdauer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#0a0a0c; --bg2:#111114; --bg3:#18181d; --bg4:#1f1f26;
+    --border:#1e1e26; --border2:#2a2a38;
+    --text:#cdd8e8; --muted:#5a7a9a;
+    --accent:#4a9fd4; --accent2:#2d7aaa; --accent3:#7ec8f0;
+    --danger:#e05555; --warning:#e8a030; --success:#3aaa70;
+    --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
+  }
+  html { background:var(--bg); color:var(--text); font-family:var(--mono); font-size:14px; line-height:1.6; }
+  body { min-height:100vh; display:flex; flex-direction:column; }
+
+  header { border-bottom:1px solid var(--border); padding:1.25rem 2.5rem; background:var(--bg2); display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+  .header-left h1 { font-family:var(--sans); font-size:1.25rem; font-weight:400; letter-spacing:0.06em; text-transform:uppercase; color:var(--text); line-height:1.2; }
+  .header-left h1 em { color:var(--accent); font-style:normal; }
+  .header-meta { margin-top:0.2rem; font-size:10px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; }
+  .badge { display:inline-block; background:transparent; border:1px solid var(--accent2); color:var(--accent); font-size:9px; font-family:var(--mono); letter-spacing:0.15em; text-transform:uppercase; padding:4px 10px; border-radius:2px; }
+  .back-btn { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-family:var(--sans); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; text-decoration:none; padding:5px 10px; border:1px solid var(--border2); border-radius:2px; transition:color 0.15s,border-color 0.15s; }
+  .back-btn:hover { color:var(--accent); border-color:var(--accent2); }
+
+  main { flex:1; display:grid; grid-template-columns:320px 1fr; min-height:0; }
+  .panel-inputs { border-right:1px solid var(--border); padding:1.5rem; display:flex; flex-direction:column; gap:1.25rem; overflow-y:auto; background:var(--bg2); }
+
+  .section-label { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--accent2); padding-bottom:0.6rem; border-bottom:1px solid var(--border); font-family:var(--sans); font-weight:500; }
+  .field { display:flex; flex-direction:column; gap:5px; }
+  .field label { font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); font-family:var(--sans); }
+  .field label span { color:var(--accent); font-size:10px; }
+  .input-row { position:relative; }
+  .input-row input { width:100%; background:var(--bg3); border:1px solid var(--border2); color:var(--text); font-family:var(--mono); font-size:15px; padding:9px 52px 9px 12px; border-radius:2px; transition:border-color 0.15s,background 0.15s; -moz-appearance:textfield; }
+  .input-row input::-webkit-inner-spin-button, .input-row input::-webkit-outer-spin-button { -webkit-appearance:none; }
+  .input-row input:focus { outline:none; border-color:var(--accent); background:var(--bg4); }
+  .unit-tag { position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:10px; color:var(--muted); pointer-events:none; letter-spacing:0.08em; font-family:var(--sans); }
+  .hint { font-size:10px; color:var(--muted); margin-top:3px; line-height:1.5; font-family:var(--sans); }
+
+  input[type=range] { -webkit-appearance:none; width:100%; height:2px; background:var(--border2); border-radius:1px; outline:none; cursor:pointer; padding:0; border:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:var(--accent); border:2px solid var(--bg); cursor:pointer; transition:transform 0.1s; }
+  input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
+  .slider-row { display:flex; align-items:center; gap:10px; }
+  .slider-row input[type=range] { flex:1; }
+  .slider-val { font-size:12px; color:var(--text); min-width:50px; text-align:right; font-family:var(--mono); }
+
+  .panel-results { padding:1.5rem 2rem; overflow-y:auto; display:flex; flex-direction:column; gap:1.5rem; background:var(--bg); }
+
+  .warnings { display:flex; flex-direction:column; gap:6px; }
+  .warn-item { display:flex; align-items:flex-start; gap:10px; background:color-mix(in srgb,var(--warning) 8%,transparent); border-left:2px solid var(--warning); border-top:1px solid color-mix(in srgb,var(--warning) 20%,transparent); border-right:1px solid color-mix(in srgb,var(--warning) 20%,transparent); border-bottom:1px solid color-mix(in srgb,var(--warning) 20%,transparent); border-radius:0 2px 2px 0; padding:8px 12px; font-size:11px; color:var(--warning); font-family:var(--sans); }
+  .warn-item::before { content:'▲'; font-size:9px; margin-top:2px; flex-shrink:0; }
+
+  .result-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .result-card { background:var(--bg3); border:1px solid var(--accent2); border-radius:2px; padding:1rem 1.1rem; }
+  .result-card .rc-label { font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--accent2); margin-bottom:6px; font-family:var(--sans); font-weight:500; }
+  .result-card .rc-value { font-family:var(--mono); font-size:2.4rem; color:var(--accent3); line-height:1; }
+  .result-card .rc-sub { font-size:11px; color:var(--muted); margin-top:3px; font-family:var(--sans); }
+
+  .breakdown-card { background:var(--bg2); border:1px solid var(--border); border-radius:2px; padding:0.875rem 1rem; }
+  .breakdown-card .bc-title { font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--accent2); margin-bottom:10px; font-family:var(--sans); font-weight:500; }
+  .breakdown-card table { width:100%; border-collapse:collapse; }
+  .breakdown-card td { font-size:12px; padding:3px 0; font-family:var(--mono); }
+  .breakdown-card td:first-child { color:var(--muted); font-family:var(--sans); font-size:11px; }
+  .breakdown-card td:last-child { text-align:right; }
+
+  .conditions-box { background:var(--bg2); border:1px solid var(--border); border-left:2px solid var(--accent2); border-radius:0 2px 2px 0; padding:0.75rem 1rem; }
+  .cond-title { font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--accent2); margin-bottom:8px; font-family:var(--sans); font-weight:500; }
+  .cond-list { display:grid; grid-template-columns:1fr 1fr; gap:3px 12px; font-size:11px; color:var(--muted); font-family:var(--sans); }
+  .cond-list span::before { content:'— '; color:var(--border2); }
+
+  footer { border-top:1px solid var(--border); padding:0.6rem 2.5rem; font-size:10px; color:var(--muted); letter-spacing:0.05em; background:var(--bg2); display:flex; justify-content:space-between; gap:1rem; font-family:var(--sans); }
+
+  @media (max-width:900px) {
+    main { grid-template-columns:1fr; }
+    .panel-inputs { border-right:none; border-bottom:1px solid var(--border); }
+    .result-grid { grid-template-columns:1fr 1fr; }
+    header { flex-direction:column; align-items:flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>Grob <em>G115B</em> — Maximale Flugdauer</h1>
+    <p class="header-meta">POH Section 5.3.14 · 45 min Reserve · Lean-Limit</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="index.html" class="back-btn">← Übersicht</a>
+    <div class="badge">AFM / POH Daten</div>
+  </div>
+</header>
+
+<main>
+  <aside class="panel-inputs">
+    <div class="section-label">Kraftstoff</div>
+
+    <div class="field">
+      <label>Kraftstoffmenge <span>l</span></label>
+      <div class="slider-row">
+        <input type="range" id="fuel-range" min="0" max="107" step="1" value="70" oninput="syncSlider('fuel','fuel-range')">
+        <span class="slider-val" id="fuel-range-val">70 l</span>
+      </div>
+      <div class="input-row" style="margin-top:6px">
+        <input type="number" id="fuel" value="70" step="1" min="0" max="107"
+          onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="syncInput('fuel','fuel-range')">
+        <span class="unit-tag">l</span>
+      </div>
+      <p class="hint">Max. ausfliegbare Kraftstoffmenge: 107 l</p>
+    </div>
+
+    <div class="section-label">Leistung</div>
+
+    <div class="field">
+      <label>Leistung <span>%</span></label>
+      <div class="slider-row">
+        <input type="range" id="pwr-range" min="45" max="75" step="1" value="55" oninput="syncSlider('pwr','pwr-range')">
+        <span class="slider-val" id="pwr-range-val">55 %</span>
+      </div>
+      <div class="input-row" style="margin-top:6px">
+        <input type="number" id="pwr" value="55" step="1" min="45" max="75"
+          onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="syncInput('pwr','pwr-range')">
+        <span class="unit-tag">%</span>
+      </div>
+      <p class="hint">45–75% · Lean-Limit · Leistungseinstellung POH Abschnitt 4</p>
+    </div>
+
+  </aside>
+
+  <section class="panel-results" id="results-panel"></section>
+</main>
+
+<footer>
+  <span>Grob G115B Flugdauer · POH Section 5.3.14 · Lean-Limit</span>
+  <span>Nur für Planungszwecke — nicht als alleinige Grundlage für Flugentscheidungen verwenden.</span>
+</footer>
+
+<script>
+/*
+  POH 5.3.14 — Maximale Flugdauer
+  Lineare Berechnung: Flugzeit = Kraftstoff / Verbrauch
+  Verbrauchswerte aus POH 5.3.10 (Lean-Limit):
+    45% → 20.4 l/h
+    55% → 24.2 l/h
+    65% → 28.8 l/h
+    75% → 33.3 l/h
+  Reserve: 45 min bei gewählter Leistung
+  Beispiel-Check: 70 l, 55% → 70/24.2 = 2.89h ohne Reserve
+                  Reserve = 0.75h → 2.14h = 2 Std. 6 min ✓
+*/
+
+const FUEL_BP  = [45, 55, 65, 75];
+const FUEL_LPH = [20.4, 24.2, 28.8, 33.3];
+
+function interp1D(bp, vals, x) {
+  if(x <= bp[0]) return vals[0];
+  if(x >= bp[bp.length-1]) return vals[bp.length-1];
+  for(let i=0; i<bp.length-1; i++) {
+    if(x >= bp[i] && x <= bp[i+1]) {
+      const t = (x-bp[i])/(bp[i+1]-bp[i]);
+      return vals[i] + t*(vals[i+1]-vals[i]);
+    }
+  }
+  return vals[vals.length-1];
+}
+
+function toHHMM(hours) {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  if(m === 60) return `${h+1} Std. 0 min`;
+  return `${h} Std. ${m} min`;
+}
+
+function syncSlider(inputId, rangeId) {
+  const v = document.getElementById(rangeId).value;
+  document.getElementById(inputId).value = v;
+  const unit = rangeId === 'fuel-range' ? ' l' : ' %';
+  document.getElementById(rangeId+'-val').textContent = v + unit;
+}
+function syncInput(inputId, rangeId) {
+  const v = document.getElementById(inputId).value;
+  document.getElementById(rangeId).value = v;
+  const unit = rangeId === 'fuel-range' ? ' l' : ' %';
+  document.getElementById(rangeId+'-val').textContent = parseFloat(v).toFixed(0) + unit;
+}
+
+function calculate() {
+  const fuel = parseFloat(document.getElementById('fuel').value) || 0;
+  const pwr  = parseFloat(document.getElementById('pwr').value)  || 55;
+
+  const lph      = interp1D(FUEL_BP, FUEL_LPH, pwr);
+  const reserve  = 0.75; // 45 min in hours
+  const fuelRes  = lph * reserve; // fuel for reserve
+
+  const hoursTotal    = fuel / lph;
+  const hoursWithRes  = Math.max(0, hoursTotal - reserve);
+  const fuelUsable    = Math.max(0, fuel - fuelRes);
+
+  const warnings = [];
+  if(fuel > 107) warnings.push('Kraftstoffmenge überschreitet max. ausfliegbare Menge (107 l).');
+  if(fuel < fuelRes) warnings.push(`Kraftstoff reicht nicht für 45 min Reserve (${fuelRes.toFixed(1)} l benötigt).`);
+
+  document.getElementById('results-panel').innerHTML = `
+    <div class="conditions-box">
+      <div class="cond-title">Gültig für folgende Bedingungen</div>
+      <div class="cond-list">
+        <span>Reiseflug</span><span>Empfohlenes armes Gemisch</span>
+        <span>Lean-Limit</span><span>Leistungseinstellung POH Kap. 4.11</span>
+        <span>Steigflug siehe POH Bild 5.3.9</span><span>Reserve 45 min</span>
+      </div>
+    </div>
+
+    ${warnings.length ? `<div class="warnings">${warnings.map(w=>`<div class="warn-item">${w}</div>`).join('')}</div>` : ''}
+
+    <div>
+      <div class="section-label" style="margin-bottom:0.75rem">Ergebnis — ${pwr} % Leistung · ${fuel} l</div>
+      <div class="result-grid">
+        <div class="result-card">
+          <div class="rc-label">Flugzeit mit Reserve · Endurance</div>
+          <div class="rc-value">${toHHMM(hoursWithRes)}</div>
+          <div class="rc-sub">inkl. 45 min Reserve</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">Flugzeit ohne Reserve</div>
+          <div class="rc-value">${toHHMM(hoursTotal)}</div>
+          <div class="rc-sub">gesamter Kraftstoff</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="breakdown-card">
+      <div class="bc-title">Aufschlüsselung</div>
+      <table>
+        <tr><td>Verbrauch</td><td>${lph.toFixed(1)} l/h</td></tr>
+        <tr><td>Kraftstoff gesamt</td><td>${fuel.toFixed(0)} l</td></tr>
+        <tr><td>Reserve (45 min)</td><td>${fuelRes.toFixed(1)} l</td></tr>
+        <tr><td>Nutzbarer Kraftstoff</td><td>${fuelUsable.toFixed(1)} l</td></tr>
+      </table>
+    </div>
+  `;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelector('.panel-inputs').addEventListener('input', calculate);
+  calculate();
+});
+</script>
+</body>
+</html>

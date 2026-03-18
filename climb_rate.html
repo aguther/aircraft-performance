@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grob G115B — Steiggeschwindigkeit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#0a0a0c; --bg2:#111114; --bg3:#18181d; --bg4:#1f1f26;
+    --border:#1e1e26; --border2:#2a2a38;
+    --text:#cdd8e8; --muted:#5a7a9a;
+    --accent:#4a9fd4; --accent2:#2d7aaa; --accent3:#7ec8f0;
+    --danger:#e05555; --warning:#e8a030; --success:#3aaa70;
+    --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
+  }
+  html { background:var(--bg); color:var(--text); font-family:var(--mono); font-size:14px; line-height:1.6; }
+  body { min-height:100vh; display:flex; flex-direction:column; }
+
+  header { border-bottom:1px solid var(--border); padding:1.25rem 2.5rem; background:var(--bg2); display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+  .header-left h1 { font-family:var(--sans); font-size:1.25rem; font-weight:400; letter-spacing:0.06em; text-transform:uppercase; color:var(--text); line-height:1.2; }
+  .header-left h1 em { color:var(--accent); font-style:normal; }
+  .header-meta { margin-top:0.2rem; font-size:10px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; }
+  .badge { display:inline-block; background:transparent; border:1px solid var(--accent2); color:var(--accent); font-size:9px; font-family:var(--mono); letter-spacing:0.15em; text-transform:uppercase; padding:4px 10px; border-radius:2px; }
+  .back-btn { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-family:var(--sans); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; text-decoration:none; padding:5px 10px; border:1px solid var(--border2); border-radius:2px; transition:color 0.15s,border-color 0.15s; }
+  .back-btn:hover { color:var(--accent); border-color:var(--accent2); }
+
+  main { flex:1; display:grid; grid-template-columns:320px 1fr; min-height:0; }
+  .panel-inputs { border-right:1px solid var(--border); padding:1.5rem; display:flex; flex-direction:column; gap:1.25rem; overflow-y:auto; background:var(--bg2); }
+
+  .section-label { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--accent2); padding-bottom:0.6rem; border-bottom:1px solid var(--border); font-family:var(--sans); font-weight:500; }
+  .field { display:flex; flex-direction:column; gap:5px; }
+  .field label { font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); font-family:var(--sans); }
+  .field label span { color:var(--accent); font-size:10px; }
+  .input-row { position:relative; }
+  .input-row input { width:100%; background:var(--bg3); border:1px solid var(--border2); color:var(--text); font-family:var(--mono); font-size:15px; padding:9px 52px 9px 12px; border-radius:2px; transition:border-color 0.15s,background 0.15s; -moz-appearance:textfield; }
+  .input-row input::-webkit-inner-spin-button, .input-row input::-webkit-outer-spin-button { -webkit-appearance:none; }
+  .input-row input:focus { outline:none; border-color:var(--accent); background:var(--bg4); }
+  .unit-tag { position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:10px; color:var(--muted); pointer-events:none; letter-spacing:0.08em; font-family:var(--sans); }
+  .hint { font-size:10px; color:var(--muted); margin-top:3px; line-height:1.5; font-family:var(--sans); }
+
+  .mode-toggle { display:flex; border:1px solid var(--border2); border-radius:2px; overflow:hidden; }
+  .mode-btn { flex:1; background:transparent; border:none; color:var(--muted); font-family:var(--sans); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; padding:7px 10px; cursor:pointer; transition:background 0.15s,color 0.15s; }
+  .mode-btn:first-child { border-right:1px solid var(--border2); }
+  .mode-btn.active { background:var(--bg4); color:var(--accent); }
+  .pa-mode { display:flex; flex-direction:column; gap:6px; }
+  .pa-derived { background:var(--bg4); border:1px solid var(--accent2); border-radius:2px; padding:8px 12px; display:flex; flex-direction:column; gap:2px; }
+  .pa-derived-label { font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent2); font-family:var(--sans); }
+  .pa-derived-value { font-size:17px; color:var(--accent3); }
+
+  input[type=range] { -webkit-appearance:none; width:100%; height:2px; background:var(--border2); border-radius:1px; outline:none; cursor:pointer; padding:0; border:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:var(--accent); border:2px solid var(--bg); cursor:pointer; transition:transform 0.1s; }
+  input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
+  .slider-row { display:flex; align-items:center; gap:10px; }
+  .slider-row input[type=range] { flex:1; }
+  .slider-val { font-size:12px; color:var(--text); min-width:50px; text-align:right; font-family:var(--mono); }
+
+  .panel-results { padding:1.5rem 2rem; overflow-y:auto; display:flex; flex-direction:column; gap:1.5rem; background:var(--bg); }
+
+  .warnings { display:flex; flex-direction:column; gap:6px; }
+  .warn-item { display:flex; align-items:flex-start; gap:10px; background:color-mix(in srgb,var(--warning) 8%,transparent); border-left:2px solid var(--warning); border-top:1px solid color-mix(in srgb,var(--warning) 20%,transparent); border-right:1px solid color-mix(in srgb,var(--warning) 20%,transparent); border-bottom:1px solid color-mix(in srgb,var(--warning) 20%,transparent); border-radius:0 2px 2px 0; padding:8px 12px; font-size:11px; color:var(--warning); font-family:var(--sans); }
+  .warn-item::before { content:'▲'; font-size:9px; margin-top:2px; flex-shrink:0; }
+
+  .atmos-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .atmos-card { background:var(--bg2); border:1px solid var(--border); border-top:2px solid var(--border2); border-radius:2px; padding:0.6rem 0.875rem; }
+  .atmos-card .ac-label { font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; font-family:var(--sans); }
+  .atmos-card .ac-value { font-size:17px; color:var(--text); font-family:var(--mono); }
+  .ac-value.pos { color:var(--danger); }
+  .ac-value.neg { color:var(--success); }
+
+  .result-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+  .result-card { background:var(--bg3); border:1px solid var(--accent2); border-radius:2px; padding:1rem 1.1rem; }
+  .result-card .rc-label { font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--accent2); margin-bottom:6px; font-family:var(--sans); font-weight:500; }
+  .result-card .rc-value { font-family:var(--mono); font-size:2.4rem; color:var(--accent3); line-height:1; }
+  .result-card .rc-sub { font-size:11px; color:var(--muted); margin-top:3px; font-family:var(--sans); }
+
+  .conditions-box { background:var(--bg2); border:1px solid var(--border); border-left:2px solid var(--accent2); border-radius:0 2px 2px 0; padding:0.75rem 1rem; }
+  .cond-title { font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--accent2); margin-bottom:8px; font-family:var(--sans); font-weight:500; }
+  .cond-list { display:grid; grid-template-columns:1fr 1fr; gap:3px 12px; font-size:11px; color:var(--muted); font-family:var(--sans); }
+  .cond-list span::before { content:'— '; color:var(--border2); }
+
+  footer { border-top:1px solid var(--border); padding:0.6rem 2.5rem; font-size:10px; color:var(--muted); letter-spacing:0.05em; background:var(--bg2); display:flex; justify-content:space-between; gap:1rem; font-family:var(--sans); }
+
+  @media (max-width:900px) {
+    main { grid-template-columns:1fr; }
+    .panel-inputs { border-right:none; border-bottom:1px solid var(--border); }
+    .result-grid { grid-template-columns:1fr 1fr; }
+    header { flex-direction:column; align-items:flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>Grob <em>G115B</em> — Steiggeschwindigkeit</h1>
+    <p class="header-meta">POH Section 5.3.8 · Rate of Climb · V<sub>Y</sub></p>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="index.html" class="back-btn">← Übersicht</a>
+    <div class="badge">AFM / POH Daten</div>
+  </div>
+</header>
+
+<main>
+  <aside class="panel-inputs">
+    <div class="section-label">Höhe</div>
+
+    <div class="field">
+      <label>Eingabemodus</label>
+      <div class="mode-toggle" style="display:grid;grid-template-columns:1fr 1fr 1fr">
+        <button class="mode-btn active" id="mode-qnh-btn" onclick="setPAMode('qnh')">Altitude</button>
+        <button class="mode-btn" id="mode-fl-btn"  onclick="setPAMode('fl')">Flight Level</button>
+        <button class="mode-btn" id="mode-da-btn"  onclick="setPAMode('da')">Density Altitude</button>
+      </div>
+    </div>
+
+    <div class="pa-mode" id="mode-qnh">
+      <div class="field">
+        <label>Flughöhe <span>ft</span></label>
+        <div class="input-row">
+          <input type="number" id="alt" value="4000" step="100" min="0" max="20000"
+            onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="calcPA()">
+          <span class="unit-tag">ft</span>
+        </div>
+        <p class="hint">Angezeigte Höhe bei eingestelltem QNH</p>
+      </div>
+      <div class="field">
+        <label>QNH <span>hPa</span></label>
+        <div class="input-row">
+          <input type="number" id="qnh" value="1013" step="1" min="900" max="1100"
+            onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="calcPA()">
+          <span class="unit-tag">hPa</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pa-mode" id="mode-fl" style="display:none">
+      <div class="field">
+        <label>Flight Level <span>FL</span></label>
+        <div class="input-row">
+          <input type="number" id="fl" value="40" step="5" min="0" max="200"
+            onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="calcPA()">
+          <span class="unit-tag">FL</span>
+        </div>
+        <p class="hint">z.B. FL040 → Eingabe: 40</p>
+      </div>
+    </div>
+
+    <div class="pa-mode" id="mode-da" style="display:none">
+      <div class="field">
+        <label>Density Altitude <span>ft</span></label>
+        <div class="input-row">
+          <input type="number" id="da-direct" value="4000" step="100" min="0" max="20000"
+            onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="calcPA()">
+          <span class="unit-tag">ft</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field" id="oat-field">
+      <label>OAT — Outside Air Temp <span>°C</span></label>
+      <div class="input-row">
+        <input type="number" id="oat" value="5" step="1" min="-50" max="50"
+          onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="calcPA()">
+        <span class="unit-tag">°C</span>
+      </div>
+    </div>
+
+    <div class="pa-derived" id="da-display">
+      <span class="pa-derived-label">Density Altitude</span>
+      <span class="pa-derived-value" id="da-val">3600 ft</span>
+    </div>
+
+    <input type="hidden" id="pa" value="4000">
+
+    <div class="section-label">Flugzeug</div>
+
+    <div class="field">
+      <label>Masse <span>kg</span></label>
+      <div class="slider-row">
+        <input type="range" id="mass-range" min="750" max="920" step="1" value="920" oninput="syncSlider('mass','mass-range')">
+        <span class="slider-val" id="mass-range-val">920 kg</span>
+      </div>
+      <div class="input-row" style="margin-top:6px">
+        <input type="number" id="mass" value="920" step="5" min="600" max="920"
+          onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="syncInput('mass','mass-range')">
+        <span class="unit-tag">kg</span>
+      </div>
+      <p class="hint">MTOW: 920 kg</p>
+    </div>
+
+  </aside>
+
+  <section class="panel-results" id="results-panel"></section>
+</main>
+
+<footer>
+  <span>Grob G115B Steiggeschwindigkeit · POH Section 5.3.8</span>
+  <span>Nur für Planungszwecke — nicht als alleinige Grundlage für Flugentscheidungen verwenden.</span>
+</footer>
+
+<script>
+/*
+  POH 5.3.8 — Steiggeschwindigkeit
+  Beispiel-Check: PA=4000ft, OAT=+5°C → DA≈3600ft, Masse=850kg
+                  → V_Y≈135 km/h, Steigrate≈1100 ft/min ✓
+
+  V_Y Tabelle: Masse [kg] × PA [ft] → V_Y [km/h]
+*/
+const VY_TABLE = {
+  data: [
+    // PA=  SL    8000   16000
+    [ 135,   119,   107 ], // 750 kg
+    [ 143,   124,   115 ], // 835 kg
+    [ 150,   131,   120 ], // 920 kg
+  ],
+  bp1: [750, 835, 920],
+  bp2: [0, 8000, 16000]
+};
+
+/*
+  Steigrate Tabelle: DA [ft] × Masse [kg] → Steigrate [ft/min]
+  Abgelesen aus Diagramm rechts.
+  Bei DA=0: 920kg→1440, 835kg→1520, 750kg→1620
+  Linien fallen mit steigender DA linear ab.
+  920kg-Linie endet bei ~19000ft (0 ft/min)
+  835kg bei ~20000ft+, 750kg darüber.
+*/
+const ROC_TABLE = {
+  data: [
+    // DA=   0     2000   4000   6000   8000  10000  12000  14000  16000  18000  20000
+    [ 1470,  1340,  1200,  1055,   905,   755,   600,   440,   275,    90,     0 ], // 750 kg
+    [ 1360,  1225,  1085,   940,   790,   635,   475,   310,   140,     0,     0 ], // 835 kg
+    [ 1250,  1115,   970,   820,   670,   515,   355,   190,    25,     0,     0 ], // 920 kg
+  ],
+  bp1: [750, 835, 920],
+  bp2: [0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000]
+};
+
+function lookup2D(t, x1, x2) {
+  const {bp1,bp2,data} = t;
+  let i0=0,i1=0,j0=0,j1=0;
+  if(x1<=bp1[0]){i0=i1=0;}else if(x1>=bp1[bp1.length-1]){i0=i1=bp1.length-1;}
+  else{for(let i=0;i<bp1.length-1;i++)if(x1>=bp1[i]&&x1<=bp1[i+1]){i0=i;i1=i+1;break;}}
+  if(x2<=bp2[0]){j0=j1=0;}else if(x2>=bp2[bp2.length-1]){j0=j1=bp2.length-1;}
+  else{for(let j=0;j<bp2.length-1;j++)if(x2>=bp2[j]&&x2<=bp2[j+1]){j0=j;j1=j+1;break;}}
+  const t1=(i0===i1)?0:(x1-bp1[i0])/(bp1[i1]-bp1[i0]);
+  const t2=(j0===j1)?0:(x2-bp2[j0])/(bp2[j1]-bp2[j0]);
+  const v0=data[i0][j0]+t2*(data[i0][j1]-data[i0][j0]);
+  const v1=data[i1][j0]+t2*(data[i1][j1]-data[i1][j0]);
+  return v0+t1*(v1-v0);
+}
+
+function densityAltitude(pa, oat) {
+  const isaTemp = 15 - 1.98*(pa/1000);
+  const isadev  = oat - isaTemp;
+  return { da: Math.round(pa + 120*isadev), isadev };
+}
+function fmtSign(v){return(v>=0?'+':'')+v.toFixed(1);}
+
+let currentMode = 'qnh';
+
+function setPAMode(mode) {
+  currentMode = mode;
+  ['qnh','fl','da'].forEach(m => {
+    document.getElementById(`mode-${m}`).style.display = m===mode ? 'flex':'none';
+    document.getElementById(`mode-${m}-btn`).classList.toggle('active', m===mode);
+  });
+  const needsOAT = mode !== 'da';
+  document.getElementById('oat-field').style.display  = needsOAT ? 'flex':'none';
+  document.getElementById('da-display').style.display = needsOAT ? 'flex':'none';
+  calcPA();
+}
+
+function calcPA() {
+  let da, pa;
+  if(currentMode === 'da') {
+    da = parseFloat(document.getElementById('da-direct').value)||0;
+    pa = da;
+  } else {
+    if(currentMode === 'qnh') {
+      const alt = parseFloat(document.getElementById('alt').value)||0;
+      const qnh = parseFloat(document.getElementById('qnh').value)||1013;
+      pa = Math.round(alt + (1013.25 - qnh) * 27);
+    } else {
+      pa = (parseFloat(document.getElementById('fl').value)||0) * 100;
+    }
+    const oat = parseFloat(document.getElementById('oat').value)||15;
+    const r = densityAltitude(pa, oat);
+    da = r.da;
+    document.getElementById('da-val').textContent = da.toLocaleString('de-DE') + ' ft';
+  }
+  document.getElementById('pa').value = pa;
+  calculate(da);
+}
+
+function syncSlider(inputId, rangeId) {
+  const v = document.getElementById(rangeId).value;
+  document.getElementById(inputId).value = v;
+  document.getElementById(rangeId+'-val').textContent = v + ' kg';
+}
+function syncInput(inputId, rangeId) {
+  const v = document.getElementById(inputId).value;
+  document.getElementById(rangeId).value = v;
+  document.getElementById(rangeId+'-val').textContent = parseFloat(v).toFixed(0) + ' kg';
+}
+
+function calculate(da) {
+  if(da === undefined) return;
+  const mass = parseFloat(document.getElementById('mass').value)||920;
+  const pa   = parseFloat(document.getElementById('pa').value)||0;
+  const oat  = parseFloat(document.getElementById('oat').value)||15;
+
+  // V_Y uses PA (pressure altitude), not DA
+  const vy = lookup2D(VY_TABLE, mass, currentMode === 'da' ? da : pa);
+  const vyKt = vy * 0.539957;
+
+  // Rate of Climb uses DA
+  const roc = Math.max(0, lookup2D(ROC_TABLE, mass, da));
+  // Also compute ROC in m/s
+  const rocMs = roc * 0.00508;
+
+  let isadev = 0;
+  if(currentMode !== 'da') {
+    isadev = densityAltitude(pa, oat).isadev;
+  }
+
+  const warnings = [];
+  if(da > 20000) warnings.push('Density Altitude über 20.000 ft — außerhalb Diagrammbereich!');
+  if(roc < 50)   warnings.push('Steigrate sehr gering — Diagrammgrenze erreicht.');
+  if(mass > 920) warnings.push('Masse überschreitet MTOW (920 kg)!');
+
+  document.getElementById('results-panel').innerHTML = `
+    <div class="conditions-box">
+      <div class="cond-title">Gültig für folgende Bedingungen</div>
+      <div class="cond-list">
+        <span>Vollgas</span><span>Gemisch für größte Leistung</span>
+        <span>Klappen 0°</span><span>V = V<sub>Y</sub></span>
+        <span>Mittlere Schwerpunktlage</span><span> </span>
+      </div>
+    </div>
+
+    ${warnings.length ? `<div class="warnings">${warnings.map(w=>`<div class="warn-item">${w}</div>`).join('')}</div>` : ''}
+
+    ${currentMode !== 'da' ? `
+    <div>
+      <div class="section-label" style="margin-bottom:0.75rem">Atmosphäre</div>
+      <div class="atmos-row">
+        <div class="atmos-card">
+          <div class="ac-label">Density Altitude</div>
+          <div class="ac-value ${da>10000?'pos':''}">${da.toLocaleString('de-DE')} ft</div>
+        </div>
+        <div class="atmos-card">
+          <div class="ac-label">ISA-Abweichung</div>
+          <div class="ac-value ${Math.abs(isadev)>=0.1?(isadev>0?'pos':'neg'):''}">${fmtSign(isadev)} °C</div>
+        </div>
+      </div>
+    </div>` : ''}
+
+    <div>
+      <div class="section-label" style="margin-bottom:0.75rem">Ergebnis — ${mass} kg · DA ${da.toLocaleString('de-DE')} ft</div>
+      <div class="result-grid" style="grid-template-columns:1fr 1fr">
+        <div class="result-card">
+          <div class="rc-label">Steigrate · Rate of Climb</div>
+          <div class="rc-value">${Math.round(roc)} <span style="font-size:1.1rem;color:var(--muted)">ft/min</span></div>
+          <div class="rc-sub">${rocMs.toFixed(1)} m/s</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">Steiggeschwindigkeit · V<sub>Y</sub></div>
+          <div class="rc-value">${vyKt.toFixed(1)} <span style="font-size:1.1rem;color:var(--muted)">kt</span></div>
+          <div class="rc-sub">${Math.round(vy)} km/h (IAS)</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  calcPA();
+  document.querySelector('.panel-inputs').addEventListener('input', () => { calcPA(); });
+});
+</script>
+</body>
+</html>
