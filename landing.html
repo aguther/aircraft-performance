@@ -194,22 +194,6 @@
     min-width: 44px; text-align: right; font-family: var(--mono);
   }
 
-    width: 100%;
-    background: var(--accent2);
-    color: #fff;
-    border: none;
-    font-family: var(--sans);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    padding: 13px;
-    border-radius: 2px;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    margin-top: 0.5rem;
-  }
-
   /* ── Right panel: results ── */
   .panel-results {
     padding: 1.5rem 2rem; overflow-y: auto;
@@ -372,25 +356,14 @@
     <div class="section-label">Atmosphäre</div>
 
     <div class="field">
-      <label>Pressure Altitude — Eingabemodus</label>
+      <label>Eingabemodus</label>
       <div class="mode-toggle">
-        <button class="mode-btn active" id="mode-qnh-btn" onclick="setPAMode('qnh')">Höhe + QNH</button>
-        <button class="mode-btn" id="mode-pa-btn" onclick="setPAMode('direct')">Direkt (PA)</button>
+        <button class="mode-btn active" id="mode-qnh-btn" onclick="setPAMode('qnh')">Elevation</button>
+        <button class="mode-btn" id="mode-direct-btn"  onclick="setPAMode('direct')">Pressure Altitude</button>
       </div>
     </div>
 
-    <!-- Modus A: Direkte PA-Eingabe -->
-    <div class="pa-mode" id="mode-direct" style="display:none">
-      <div class="field">
-        <label>Pressure Altitude <span>ft</span></label>
-        <div class="input-row">
-          <input type="number" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" id="pa" value="0" step="100" min="-2000" max="10000" oninput="onPAInput()">
-          <span class="unit-tag">ft</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modus B: Höhe + QNH -->
+    <!-- Modus A: Elevation + QNH -->
     <div class="pa-mode" id="mode-qnh">
       <div class="field">
         <label>Platzhöhe / Elevation <span>ft</span></label>
@@ -410,6 +383,16 @@
       <div class="pa-derived">
         <span class="pa-derived-label">Errechnete Pressure Altitude</span>
         <span class="pa-derived-value" id="pa-derived-val">0 ft</span>
+      </div>
+    </div>
+    <!-- Modus C: Direkte PA-Eingabe -->
+    <div class="pa-mode" id="mode-direct" style="display:none">
+      <div class="field">
+        <label>Pressure Altitude <span>ft</span></label>
+        <div class="input-row">
+          <input type="number" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" id="pa" value="0" step="100" min="-2000" max="10000" oninput="onPAInput()">
+          <span class="unit-tag">ft</span>
+        </div>
       </div>
     </div>
 
@@ -586,12 +569,13 @@ function lookup2D(table,x1,x2) {
 }
 
 function setPAMode(mode) {
-  const isDirect = mode==='direct';
-  document.getElementById('mode-direct').style.display=isDirect?'flex':'none';
-  document.getElementById('mode-qnh').style.display=isDirect?'none':'flex';
-  document.getElementById('mode-pa-btn').classList.toggle('active',isDirect);
-  document.getElementById('mode-qnh-btn').classList.toggle('active',!isDirect);
-  if(!isDirect) calcPAFromQNH();
+  ['qnh','direct'].forEach(m => {
+    document.getElementById(`mode-${m}`).style.display = m===mode ? 'flex':'none';
+    const btn = document.getElementById(`mode-${m}-btn`);
+    if(btn) btn.classList.toggle('active', m===mode);
+  });
+  if(mode==='qnh') calcPAFromQNH();
+  
 }
 function calcPAFromQNH() {
   const elev=parseFloat(document.getElementById('elev').value)||0;

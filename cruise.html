@@ -126,9 +126,10 @@
 
     <div class="field">
       <label>Höheneingabe — Modus</label>
-      <div class="mode-toggle">
+      <div class="mode-toggle" style="display:grid;grid-template-columns:1fr 1fr 1fr">
         <button class="mode-btn active" id="mode-qnh-btn" onclick="setPAMode('qnh')">Altitude</button>
         <button class="mode-btn" id="mode-fl-btn" onclick="setPAMode('fl')">Flight Level</button>
+        <button class="mode-btn" id="mode-da-btn" onclick="setPAMode('da')">Density Altitude</button>
       </div>
     </div>
 
@@ -166,6 +167,16 @@
       <div class="pa-derived">
         <span class="pa-derived-label">Pressure Altitude</span>
         <span class="pa-derived-value" id="pa-fl-val">6000 ft</span>
+      </div>
+    </div>
+
+    <div class="pa-mode" id="mode-da" style="display:none">
+      <div class="field">
+        <label>Density Altitude <span>ft</span></label>
+        <div class="input-row">
+          <input type="number" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" id="da-direct" value="6000" step="100" min="0" max="20000" oninput="calcPA()">
+          <span class="unit-tag">ft</span>
+        </div>
       </div>
     </div>
 
@@ -271,24 +282,30 @@ function interp1D(bp,vals,x) {
 let currentMode='qnh';
 function setPAMode(mode) {
   currentMode=mode;
-  document.getElementById('mode-qnh').style.display=mode==='qnh'?'flex':'none';
-  document.getElementById('mode-fl').style.display=mode==='fl'?'flex':'none';
-  document.getElementById('mode-qnh-btn').classList.toggle('active',mode==='qnh');
-  document.getElementById('mode-fl-btn').classList.toggle('active',mode==='fl');
+  ['qnh','fl','da'].forEach(m => {
+    document.getElementById(`mode-${m}`).style.display=m===mode?'flex':'none';
+    document.getElementById(`mode-${m}-btn`).classList.toggle('active',m===mode);
+  });
+  const oatEl = document.getElementById('oat')?.closest('.field');
+  if(oatEl) oatEl.style.display = mode==='da' ? 'none':'flex';
   calcPA();
 }
 
 function calcPA() {
-  let pa;
+  let pa, useDaDirectly=false, daValue=0;
   if(currentMode==='qnh') {
     const alt=parseFloat(document.getElementById('alt').value)||0;
     const qnh=parseFloat(document.getElementById('qnh').value)||1013;
     pa=Math.round(alt+(1013.25-qnh)*27);
     document.getElementById('pa-qnh-val').textContent=pa.toLocaleString('de-DE')+' ft';
-  } else {
+  } else if(currentMode==='fl') {
     const fl=parseFloat(document.getElementById('fl').value)||0;
     pa=fl*100;
     document.getElementById('pa-fl-val').textContent=pa.toLocaleString('de-DE')+' ft';
+  } else {
+    daValue=parseFloat(document.getElementById('da-direct').value)||0;
+    useDaDirectly=true;
+    pa=daValue;
   }
   document.getElementById('pa').value=pa;
 }
@@ -315,7 +332,15 @@ function calculate() {
   const pa  = parseFloat(document.getElementById('pa').value)||0;
   const oat = parseFloat(document.getElementById('oat').value)||0;
   const pwr = parseFloat(document.getElementById('pwr').value)||65;
-  const {da,isadev} = densityAltitude(pa,oat);
+
+  let da, isadev=0, showAtmos=true;
+  if(currentMode==='da') {
+    da = parseFloat(document.getElementById('da-direct').value)||0;
+    showAtmos = false;
+  } else {
+    const r = densityAltitude(pa, oat);
+    da = r.da; isadev = r.isadev;
+  }
 
   const rpm     = lookup2D(RPM_TABLE, pwr, da);
   const fuelLph = interp1D(FUEL_BP, FUEL_LPH, Math.min(pwr,75));
@@ -344,7 +369,7 @@ function calculate() {
 
     ${warnings.length?`<div class="warnings">${warnings.map(w=>`<div class="warn-item ${w.cls}">${w.text}</div>`).join('')}</div>`:''}
 
-    <div>
+    ${showAtmos ? `<div>
       <div class="section-label" style="margin-bottom:0.75rem">Atmosphäre</div>
       <div class="atmos-row">
         <div class="atmos-card">
@@ -356,7 +381,7 @@ function calculate() {
           <div class="ac-value ${Math.abs(isadev)>=0.1?(isadev>0?'pos':'neg'):''}">${fmtSign(isadev)} °C</div>
         </div>
       </div>
-    </div>
+    </div>` : ''}
 
     <div>
       <div class="section-label" style="margin-bottom:0.75rem">Ergebnis — ${pwrLabel} Leistung</div>

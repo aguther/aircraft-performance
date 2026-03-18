@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grob G115B — Steigflug</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#0a0a0c; --bg2:#111114; --bg3:#18181d; --bg4:#1f1f26;
+    --border:#1e1e26; --border2:#2a2a38;
+    --text:#cdd8e8; --muted:#5a7a9a;
+    --accent:#4a9fd4; --accent2:#2d7aaa; --accent3:#7ec8f0;
+    --danger:#e05555; --warning:#e8a030; --success:#3aaa70;
+    --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
+  }
+  html { background:var(--bg); color:var(--text); font-family:var(--mono); font-size:14px; line-height:1.6; }
+  body { min-height:100vh; display:flex; flex-direction:column; }
+
+  header {
+    border-bottom:1px solid var(--border); padding:1.25rem 2.5rem;
+    background:var(--bg2); display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  }
+  .header-left h1 { font-family:var(--sans); font-size:1.25rem; font-weight:400; letter-spacing:0.06em; text-transform:uppercase; color:var(--text); line-height:1.2; }
+  .header-left h1 em { color:var(--accent); font-style:normal; }
+  .header-meta { margin-top:0.2rem; font-size:10px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; }
+  .badge { display:inline-block; background:transparent; border:1px solid var(--accent2); color:var(--accent); font-size:9px; font-family:var(--mono); letter-spacing:0.15em; text-transform:uppercase; padding:4px 10px; border-radius:2px; }
+  .back-btn { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-family:var(--sans); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; text-decoration:none; padding:5px 10px; border:1px solid var(--border2); border-radius:2px; transition:color 0.15s,border-color 0.15s; }
+  .back-btn:hover { color:var(--accent); border-color:var(--accent2); }
+
+  main { flex:1; display:grid; grid-template-columns:320px 1fr; min-height:0; }
+
+  .panel-inputs { border-right:1px solid var(--border); padding:1.5rem; display:flex; flex-direction:column; gap:1.25rem; overflow-y:auto; background:var(--bg2); }
+
+  .section-label { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--accent2); padding-bottom:0.6rem; border-bottom:1px solid var(--border); font-family:var(--sans); font-weight:500; }
+
+  .field { display:flex; flex-direction:column; gap:5px; }
+  .field label { font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); font-family:var(--sans); }
+  .field label span { color:var(--accent); font-size:10px; }
+
+  .input-row { position:relative; }
+  .input-row input { width:100%; background:var(--bg3); border:1px solid var(--border2); color:var(--text); font-family:var(--mono); font-size:15px; padding:9px 52px 9px 12px; border-radius:2px; transition:border-color 0.15s,background 0.15s; -moz-appearance:textfield; }
+  .input-row input::-webkit-inner-spin-button, .input-row input::-webkit-outer-spin-button { -webkit-appearance:none; }
+  .input-row input:focus { outline:none; border-color:var(--accent); background:var(--bg4); }
+  .unit-tag { position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:10px; color:var(--muted); pointer-events:none; letter-spacing:0.08em; font-family:var(--sans); }
+  .hint { font-size:10px; color:var(--muted); margin-top:3px; line-height:1.5; font-family:var(--sans); }
+
+  /* mode toggle */
+  .mode-toggle { display:flex; border:1px solid var(--border2); border-radius:2px; overflow:hidden; }
+  .mode-btn { flex:1; background:transparent; border:none; color:var(--muted); font-family:var(--sans); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; padding:7px 10px; cursor:pointer; transition:background 0.15s,color 0.15s; }
+  .mode-btn:first-child { border-right:1px solid var(--border2); }
+  .mode-btn.active { background:var(--bg4); color:var(--accent); }
+  .pa-mode { display:flex; flex-direction:column; gap:6px; }
+  .pa-derived { background:var(--bg4); border:1px solid var(--accent2); border-radius:2px; padding:8px 12px; display:flex; flex-direction:column; gap:2px; }
+  .pa-derived-label { font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent2); font-family:var(--sans); }
+  .pa-derived-value { font-size:17px; color:var(--accent3); }
+
+  input[type=range] { -webkit-appearance:none; width:100%; height:2px; background:var(--border2); border-radius:1px; outline:none; cursor:pointer; padding:0; border:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:var(--accent); border:2px solid var(--bg); cursor:pointer; transition:transform 0.1s; }
+  input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
+  .slider-row { display:flex; align-items:center; gap:10px; }
+  .slider-row input[type=range] { flex:1; }
+  .slider-val { font-size:12px; color:var(--text); min-width:60px; text-align:right; font-family:var(--mono); }
+
+  /* results */
+  .panel-results { padding:1.5rem 2rem; overflow-y:auto; display:flex; flex-direction:column; gap:1.5rem; background:var(--bg); }
+
+  .warnings { display:flex; flex-direction:column; gap:6px; }
+  .warn-item { display:flex; align-items:flex-start; gap:10px; background:color-mix(in srgb,var(--warning) 8%,transparent); border-left:2px solid var(--warning); border-top:1px solid color-mix(in srgb,var(--warning) 20%,transparent); border-right:1px solid color-mix(in srgb,var(--warning) 20%,transparent); border-bottom:1px solid color-mix(in srgb,var(--warning) 20%,transparent); border-radius:0 2px 2px 0; padding:8px 12px; font-size:11px; color:var(--warning); font-family:var(--sans); }
+  .warn-item::before { content:'▲'; font-size:9px; margin-top:2px; flex-shrink:0; }
+  .warn-item.danger { border-left-color:var(--danger); background:color-mix(in srgb,var(--danger) 8%,transparent); border-top-color:color-mix(in srgb,var(--danger) 20%,transparent); border-right-color:color-mix(in srgb,var(--danger) 20%,transparent); border-bottom-color:color-mix(in srgb,var(--danger) 20%,transparent); color:var(--danger); }
+
+  .atmos-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .atmos-card { background:var(--bg2); border:1px solid var(--border); border-top:2px solid var(--border2); border-radius:2px; padding:0.6rem 0.875rem; }
+  .atmos-card .ac-label { font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; font-family:var(--sans); }
+  .atmos-card .ac-value { font-size:17px; color:var(--text); font-family:var(--mono); }
+  .ac-value.pos { color:var(--danger); }
+  .ac-value.neg { color:var(--success); }
+
+  .result-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+  .result-card { background:var(--bg3); border:1px solid var(--accent2); border-radius:2px; padding:1rem 1.1rem; }
+  .result-card .rc-label { font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--accent2); margin-bottom:6px; font-family:var(--sans); font-weight:500; }
+  .result-card .rc-value { font-family:var(--mono); font-size:2.4rem; color:var(--accent3); line-height:1; }
+  .result-card .rc-unit { font-size:11px; color:var(--muted); margin-top:5px; font-family:var(--sans); }
+  .result-card .rc-sub { font-size:11px; color:var(--muted); margin-top:3px; font-family:var(--sans); }
+
+  /* climb pipeline */
+  .climb-pipeline { display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center; }
+  .climb-col { background:var(--bg2); border:1px solid var(--border); border-radius:2px; padding:0.75rem 1rem; }
+  .climb-col .cc-label { font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--accent2); margin-bottom:8px; font-family:var(--sans); font-weight:500; }
+  .climb-col table { width:100%; border-collapse:collapse; }
+  .climb-col td { font-size:12px; padding:2px 0; font-family:var(--mono); }
+  .climb-col td:first-child { color:var(--muted); font-family:var(--sans); font-size:11px; }
+  .climb-col td:last-child { text-align:right; color:var(--text); }
+  .climb-arrow { text-align:center; color:var(--accent2); font-size:1.5rem; font-family:var(--mono); }
+
+  .conditions-box { background:var(--bg2); border:1px solid var(--border); border-left:2px solid var(--accent2); border-radius:0 2px 2px 0; padding:0.75rem 1rem; }
+  .cond-title { font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--accent2); margin-bottom:8px; font-family:var(--sans); font-weight:500; }
+  .cond-list { display:grid; grid-template-columns:1fr 1fr; gap:3px 12px; font-size:11px; color:var(--muted); font-family:var(--sans); }
+  .cond-list span::before { content:'— '; color:var(--border2); }
+
+  footer { border-top:1px solid var(--border); padding:0.6rem 2.5rem; font-size:10px; color:var(--muted); letter-spacing:0.05em; background:var(--bg2); display:flex; justify-content:space-between; gap:1rem; font-family:var(--sans); }
+
+  @media (max-width:900px) {
+    main { grid-template-columns:1fr; }
+    .panel-inputs { border-right:none; border-bottom:1px solid var(--border); }
+    .result-grid { grid-template-columns:1fr 1fr; }
+    .climb-pipeline { grid-template-columns:1fr; }
+    .climb-arrow { transform:rotate(90deg); }
+    header { flex-direction:column; align-items:flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>Grob <em>G115B</em> — Steigflug</h1>
+    <p class="header-meta">POH Section 5.3.9 · Zeit · Kraftstoff · Strecke</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="index.html" class="back-btn">← Übersicht</a>
+    <div class="badge">AFM / POH Daten</div>
+  </div>
+</header>
+
+<main>
+  <aside class="panel-inputs">
+
+    <div class="section-label">Abflug</div>
+    <div class="field">
+      <label>Eingabemodus</label>
+      <div class="mode-toggle" style="display:grid;grid-template-columns:1fr 1fr 1fr">
+        <button class="mode-btn active" id="mode-from-alt-btn" onclick="setMode('from','alt')">Altitude</button>
+        <button class="mode-btn" id="mode-from-fl-btn" onclick="setMode('from','fl')">Flight Level</button>
+        <button class="mode-btn" id="mode-from-da-btn" onclick="setMode('from','da')">Density Altitude</button>
+      </div>
+    </div>
+
+    <div class="pa-mode" id="from-alt">
+      <div class="field">
+        <label>Abflughöhe <span>ft</span></label>
+        <div class="input-row">
+          <input type="number" id="from-alt-val" value="0" step="100" min="0" max="18000"
+            onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="recalc()">
+          <span class="unit-tag">ft</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>QNH <span>hPa</span></label>
+        <div class="input-row">
+          <input type="number" id="from-qnh" value="1013" step="1" min="900" max="1100"
+            onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="recalc()">
+          <span class="unit-tag">hPa</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pa-mode" id="from-fl" style="display:none">
+      <div class="field">
+        <label>Flight Level <span>FL</span></label>
+        <div class="input-row">
+          <input type="number" id="from-fl-val" value="0" step="5" min="0" max="180"
+            onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="recalc()">
+          <span class="unit-tag">FL</span>
+        </div>
+        <p class="hint">z.B. FL050 → Eingabe: 50</p>
+      </div>
+    </div>
+
+    <div class="pa-mode" id="from-da" style="display:none">
+      <div class="field">
+        <label>Start-Dichtehöhe <span>ft</span></label>
+        <div class="input-row">
+          <input type="number" id="from-da-val" value="0" step="100" min="0" max="18000"
+            onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="recalc()">
+          <span class="unit-tag">ft</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field" id="from-oat-field">
+      <label>OAT Abflug <span>°C</span></label>
+      <div class="input-row">
+        <input type="number" id="from-oat" value="15" step="1" min="-50" max="50"
+          onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="recalc()">
+        <span class="unit-tag">°C</span>
+      </div>
+    </div>
+
+    <div class="pa-derived" id="from-da-display">
+      <span class="pa-derived-label">Start-Dichtehöhe</span>
+      <span class="pa-derived-value" id="from-da-result">0 ft</span>
+    </div>
+
+    <div class="section-label">Ziel</div>
+    <div class="field">
+      <label>Eingabemodus</label>
+      <div class="mode-toggle" style="display:grid;grid-template-columns:1fr 1fr 1fr">
+        <button class="mode-btn active" id="mode-to-alt-btn" onclick="setMode('to','alt')">Altitude</button>
+        <button class="mode-btn" id="mode-to-fl-btn" onclick="setMode('to','fl')">Flight Level</button>
+        <button class="mode-btn" id="mode-to-da-btn" onclick="setMode('to','da')">Density Altitude</button>
+      </div>
+    </div>
+
+    <div class="pa-mode" id="to-alt">
+      <div class="field">
+        <label>Zielhöhe <span>ft</span></label>
+        <div class="input-row">
+          <input type="number" id="to-alt-val" value="8000" step="100" min="0" max="20000"
+            onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="recalc()">
+          <span class="unit-tag">ft</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>QNH <span>hPa</span></label>
+        <div class="input-row">
+          <input type="number" id="to-qnh" value="1013" step="1" min="900" max="1100"
+            onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="recalc()">
+          <span class="unit-tag">hPa</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pa-mode" id="to-fl" style="display:none">
+      <div class="field">
+        <label>Flight Level <span>FL</span></label>
+        <div class="input-row">
+          <input type="number" id="to-fl-val" value="80" step="5" min="0" max="200"
+            onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="recalc()">
+          <span class="unit-tag">FL</span>
+        </div>
+        <p class="hint">z.B. FL080 → Eingabe: 80</p>
+      </div>
+    </div>
+
+    <div class="pa-mode" id="to-da" style="display:none">
+      <div class="field">
+        <label>Ziel-Dichtehöhe <span>ft</span></label>
+        <div class="input-row">
+          <input type="number" id="to-da-val" value="8000" step="100" min="0" max="20000"
+            onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="recalc()">
+          <span class="unit-tag">ft</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field" id="to-oat-field">
+      <label>OAT Ziel <span>°C</span></label>
+      <div class="input-row">
+        <input type="number" id="to-oat" value="5" step="1" min="-50" max="50"
+          onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="recalc()">
+        <span class="unit-tag">°C</span>
+      </div>
+    </div>
+
+    <div class="pa-derived" id="to-da-display">
+      <span class="pa-derived-label">Ziel-Dichtehöhe</span>
+      <span class="pa-derived-value" id="to-da-result">8000 ft</span>
+    </div>
+
+  </aside>
+
+  <section class="panel-results" id="results-panel"></section>
+</main>
+
+<footer>
+  <span>Grob G115B Steigflug · POH Section 5.3.9</span>
+  <span>Nur für Planungszwecke — nicht als alleinige Grundlage für Flugentscheidungen verwenden.</span>
+</footer>
+
+<script>
+/*
+  POH 5.3.9 — Steigflug (kumulativ ab DA = 0 ft)
+  Abgelesen aus Diagramm, kalibriert am Beispiel:
+  3000→8000 ft DA: Zeit=6min, Kraftstoff=4.4l, Strecke=14.8km ✓
+
+  Tabelle: DA [ft] → [Zeit (min), Kraftstoff (l), Strecke (km)]
+*/
+const CLIMB_TABLE = [
+  //  DA ft    Zeit    Kraftstoff  Strecke
+  [      0,    0.0,      0.0,       0.0 ],
+  [   1000,    0.9,      0.7,       2.5 ],
+  [   2000,    2.0,      1.4,       5.5 ],
+  [   3000,    3.0,      2.1,       7.4 ],
+  [   4000,    4.1,      2.9,       9.5 ],
+  [   5000,    5.1,      3.5,      11.4 ],
+  [   6000,    6.2,      4.2,      13.5 ],
+  [   7000,    7.5,      5.2,      17.5 ],
+  [   8000,    9.0,      6.5,      22.2 ],
+  [   9000,   10.6,      7.5,      25.5 ],
+  [  10000,   12.5,      8.8,      29.0 ],
+  [  11000,   14.5,     10.0,      32.8 ],
+  [  12000,   17.0,     11.5,      37.0 ],
+  [  13000,   19.5,     13.0,      41.5 ],
+  [  14000,   22.5,     14.5,      46.0 ],
+  [  15000,   26.0,     16.2,      51.0 ],
+  [  16000,   29.0,     18.0,      57.0 ],
+  [  17000,   33.0,     20.0,      63.0 ],
+  [  18000,   37.0,     22.0,      70.0 ],
+];
+
+function interpClimb(da) {
+  if(da <= CLIMB_TABLE[0][0]) return {zeit:0, fuel:0, dist:0};
+  const last = CLIMB_TABLE[CLIMB_TABLE.length-1];
+  if(da >= last[0]) return {zeit:last[1], fuel:last[2], dist:last[3]};
+  for(let i=0; i<CLIMB_TABLE.length-1; i++) {
+    const [da0,t0,f0,d0] = CLIMB_TABLE[i];
+    const [da1,t1,f1,d1] = CLIMB_TABLE[i+1];
+    if(da >= da0 && da <= da1) {
+      const r = (da-da0)/(da1-da0);
+      return {
+        zeit: t0 + r*(t1-t0),
+        fuel: f0 + r*(f1-f0),
+        dist: d0 + r*(d1-d0)
+      };
+    }
+  }
+}
+
+function densityAlt(pa, oat) {
+  const isaTemp = 15 - 1.98*(pa/1000);
+  return Math.round(pa + 120*(oat - isaTemp));
+}
+function fmtSign(v){return(v>=0?'+':'')+v.toFixed(1);}
+
+const modes = {from:'alt', to:'alt'};
+
+function setMode(which, mode) {
+  modes[which] = mode;
+  ['alt','fl','da'].forEach(m => {
+    document.getElementById(`${which}-${m}`).style.display = m===mode ? 'flex':'none';
+    document.getElementById(`mode-${which}-${m}-btn`).classList.toggle('active', m===mode);
+  });
+  const oatField = document.getElementById(`${which}-oat-field`);
+  const daDisplay = document.getElementById(`${which}-da-display`);
+  const needsOAT = mode !== 'da';
+  oatField.style.display  = needsOAT ? 'flex' : 'none';
+  daDisplay.style.display = needsOAT ? 'flex' : 'none';
+  recalc();
+}
+
+function getDA(which) {
+  const mode = modes[which];
+  if(mode === 'da') {
+    return parseFloat(document.getElementById(`${which}-da-val`).value)||0;
+  }
+  let pa;
+  if(mode === 'alt') {
+    const alt = parseFloat(document.getElementById(`${which}-alt-val`).value)||0;
+    const qnh = parseFloat(document.getElementById(`${which}-qnh`).value)||1013;
+    pa = alt + (1013.25 - qnh) * 27;
+  } else { // fl
+    const fl = parseFloat(document.getElementById(`${which}-fl-val`).value)||0;
+    pa = fl * 100;
+  }
+  const oat = parseFloat(document.getElementById(`${which}-oat`).value)||15;
+  const da = densityAlt(pa, oat);
+  document.getElementById(`${which}-da-result`).textContent = da.toLocaleString('de-DE') + ' ft';
+  return da;
+}
+
+function recalc() {
+  // Update DA displays for alt/fl modes
+  ['from','to'].forEach(w => { if(modes[w] !== 'da') getDA(w); });
+  calculate();
+}
+
+function calculate() {
+  const daFrom = getDA('from');
+  const daTo   = getDA('to');
+
+  const warnings = [];
+  if(daTo <= daFrom) {
+    warnings.push({text:'Ziel-Dichtehöhe muss größer als Start-Dichtehöhe sein.', cls:'danger'});
+    document.getElementById('results-panel').innerHTML=`
+      <div class="warnings">${warnings.map(w=>`<div class="warn-item ${w.cls}">${w.text}</div>`).join('')}</div>`;
+    return;
+  }
+  if(daTo > 18000) warnings.push({text:'Ziel-Dichtehöhe über 18.000 ft — Extrapolation.', cls:''});
+
+  const from = interpClimb(daFrom);
+  const to   = interpClimb(daTo);
+
+  const zeit  = to.zeit - from.zeit;
+  const fuel  = to.fuel - from.fuel;
+  const dist  = to.dist - from.dist;
+  const distNm = dist / 1.852;
+
+  document.getElementById('results-panel').innerHTML=`
+    <div class="conditions-box">
+      <div class="cond-title">Gültig für folgende Bedingungen</div>
+      <div class="cond-list">
+        <span>Vollgas</span><span>Gemisch für größte Leistung</span>
+        <span>Klappen 0°</span><span>V = V<sub>Y</sub></span>
+        <span>Standardatmosphäre</span><span>Max. Abfluggewicht · vorderste SL</span>
+      </div>
+    </div>
+
+    ${warnings.length?`<div class="warnings">${warnings.map(w=>`<div class="warn-item ${w.cls}">${w.text}</div>`).join('')}</div>`:''}
+
+    <div>
+      <div class="section-label" style="margin-bottom:0.75rem">Dichtehöhen</div>
+      <div class="climb-pipeline">
+        <div class="climb-col">
+          <div class="cc-label">Start</div>
+          <table>
+            <tr><td>Dichtehöhe</td><td>${daFrom.toLocaleString('de-DE')} ft</td></tr>
+            <tr><td>Kumulativ Zeit</td><td>${from.zeit.toFixed(1)} min</td></tr>
+            <tr><td>Kumulativ Kraftstoff</td><td>${from.fuel.toFixed(1)} l</td></tr>
+            <tr><td>Kumulativ Strecke</td><td>${from.dist.toFixed(1)} km</td></tr>
+          </table>
+        </div>
+        <div class="climb-arrow">→</div>
+        <div class="climb-col">
+          <div class="cc-label">Ziel</div>
+          <table>
+            <tr><td>Dichtehöhe</td><td>${daTo.toLocaleString('de-DE')} ft</td></tr>
+            <tr><td>Kumulativ Zeit</td><td>${to.zeit.toFixed(1)} min</td></tr>
+            <tr><td>Kumulativ Kraftstoff</td><td>${to.fuel.toFixed(1)} l</td></tr>
+            <tr><td>Kumulativ Strecke</td><td>${to.dist.toFixed(1)} km</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label" style="margin-bottom:0.75rem">Ergebnis — Steigflug ${daFrom.toLocaleString('de-DE')} → ${daTo.toLocaleString('de-DE')} ft DA</div>
+      <div class="result-grid">
+        <div class="result-card">
+          <div class="rc-label">Steigzeit · Climb Time</div>
+          <div class="rc-value">${zeit.toFixed(1)} <span style="font-size:1.1rem;color:var(--muted)">min</span></div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">Kraftstoff · Fuel Used</div>
+          <div class="rc-value">${fuel.toFixed(1)} <span style="font-size:1.1rem;color:var(--muted)">l</span></div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">Strecke · Distance</div>
+          <div class="rc-value">${distNm.toFixed(1)} <span style="font-size:1.1rem;color:var(--muted)">nm</span></div>
+          <div class="rc-sub">${dist.toFixed(1)} km</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  recalc();
+  document.querySelector('.panel-inputs').addEventListener('input', recalc);
+});
+</script>
+</body>
+</html>
