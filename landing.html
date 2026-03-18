@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grob G115B — Startstrecke</title>
+<title>Grob G115B — Landestrecke</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -357,8 +357,8 @@
 
 <header>
   <div class="header-left">
-    <h1>Grob <em>G115B</em> — Startstrecke</h1>
-    <p class="header-meta">POH Section 5 · Bilineare Interpolation</p>
+    <h1>Grob <em>G115B</em> — Landestrecke</h1>
+    <p class="header-meta">POH Section 5.3.15 · Bilineare Interpolation</p>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
     <a href="index.html" class="back-btn">← Übersicht</a>
@@ -444,7 +444,7 @@
         <input type="number" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" id="slope" value="0" step="0.1" min="-2" max="2" oninput="syncInput('slope','slope-range')">
         <span class="unit-tag">%</span>
       </div>
-      <p class="hint">Positiv = bergauf (Steigung), Negativ = bergab (Gefälle)</p>
+      <p class="hint">Positiv = bergauf (verkürzt Landestrecke), Negativ = bergab (verlängert)</p>
     </div>
 
     <div class="field">
@@ -467,14 +467,14 @@
     <div class="field">
       <label>Zuschlag <span>%</span></label>
       <div class="slider-row">
-        <input type="range" id="zuschl-range" min="0" max="50" step="1" value="15" oninput="syncSlider('zuschl','zuschl-range')">
-        <span class="slider-val" id="zuschl-range-val">15 %</span>
+        <input type="range" id="zuschl-range" min="0" max="60" step="1" value="40" oninput="syncSlider('zuschl','zuschl-range')">
+        <span class="slider-val" id="zuschl-range-val">40 %</span>
       </div>
       <div class="input-row" style="margin-top:6px">
-        <input type="number" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" id="zuschl" value="15" step="1" min="0" max="100" oninput="syncInput('zuschl','zuschl-range')">
+        <input type="number" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" id="zuschl" value="40" step="1" min="0" max="100" oninput="syncInput('zuschl','zuschl-range')">
         <span class="unit-tag">%</span>
       </div>
-      <p class="hint">Trockene, kurzgeschorene Grasbahn: +15%<br>Hohes Gras, aufgeweichter Untergrund, Schnee: Zuschlag entsprechend vergrößern.<br>Ohne Zuschlag nur gültig für befestigte, trockene Startbahn.</p>
+      <p class="hint">Trockene Grasbahn: +40%<br>Ohne Zuschlag nur gültig für befestigte, trockene Landebahn.</p>
     </div>
 
   </aside>
@@ -485,310 +485,213 @@
 </main>
 
 <footer>
-  <span>Grob G115B Performance Calculator · POH Section 5 · Bilineare Interpolation</span>
+  <span>Grob G115B Landing · POH Section 5.3.15 · Bilineare Interpolation</span>
   <span>Nur für Planungszwecke — nicht als alleinige Grundlage für Flugentscheidungen verwenden.</span>
 </footer>
 
 <script>
-/* ═══════════════════════════════════════════════
-   LOOKUP TABLES (aus POH)
-═══════════════════════════════════════════════ */
+/*
+  POH 5.3.15 — Landestrecke
+  Digitalisiert aus dem Diagramm.
+  Struktur: PA × OAT → Basis-Rollstrecke → Masse → Wind → Hindernis
+  Beispiel-Check: 27°C, DA≈2500ft, 816kg, 13km/h HW → 175m Roll, 425m über 15m
+*/
 
-// TABLE 1: PA (ft) × OAT (°C) → Startrollstrecke Basis (m)
+// TABLE 1: PA (ft) × OAT (°C) → Basis-Landerollstrecke (m)
 const T1 = {
-  data: [[190,262],[205,282],[221,301],[236,323],[255,346],[274,374],[296,401],[318,428],[342,458],[369,498]],
-  bp1:  [-1000,0,1000,2000,3000,4000,5000,6000,7000,8000],
-  bp2:  [-20,40]
+  data: [[115,158],[123,169],[131,180],[140,192],[150,206],[161,221],[173,237],[185,255],[199,273],[213,293]],
+  bp1: [-1000,0,1000,2000,3000,4000,5000,6000,7000,8000],
+  bp2: [-20,40]
 };
 
-// TABLE 2: Startrollstrecke (m) × Masse (kg) → Startrollstrecke (m)
+// TABLE 2: Landerollstrecke (m) × Masse (kg) → Landerollstrecke (m)
 const T2 = {
   data: [
-    [140,146,165,185,205],
-    [174,183,205,230,255],
-    [203,215,245,275,303],
-    [240,252,284,317,353],
-    [274,288,323,364,408],
-    [305,321,362,410,462],
-    [340,355,400,452,512],
-    [374,392,441,498,561]
+    [88,  93,  103, 113, 123],
+    [108, 114, 127, 140, 153],
+    [128, 135, 151, 166, 181],
+    [148, 156, 175, 192, 210],
+    [168, 177, 198, 218, 238],
+    [188, 198, 222, 245, 267],
+    [208, 219, 246, 271, 296],
+    [228, 241, 270, 298, 325],
   ],
-  bp1: [205,255,303,353,408,462,512,561],
-  bp2: [750,770,820,870,920]
+  bp1: [115,140,165,190,215,240,265,290],
+  bp2: [700,750,820,870,920]
 };
 
-// TABLE 3: Startrollstrecke (m) × Slope (%) → Startrollstrecke (m)
+// TABLE 3: Landerollstrecke (m) × Wind (km/h) → Landerollstrecke (m)
+// Wind: + = Headwind (verkürzt), - = Tailwind (verlängert)
 const T3 = {
   data: [
-    [94,104,117],
-    [140,153,175],
-    [185,204,231],
-    [227,256,288],
-    [274,304,343],
-    [319,353,402],
-    [363,404,453],
-    [408,452,511],
-    [453,506,570],
-    [499,556,622]
+    [168,148,130,113, 97, 83],
+    [210,185,162,141,121,103],
+    [255,224,196,171,147,125],
+    [300,264,231,201,173,148],
+    [348,306,268,234,201,172],
+    [395,347,304,265,228,195],
+    [440,387,339,296,255,218],
+    [485,427,374,326,281,240],
   ],
-  bp1: [104,153,204,256,304,353,404,452,506,556],
-  bp2: [-2,0,2]
-};
-
-// TABLE 4: Startrollstrecke (m) × Wind (km/h) → Startrollstrecke (m)
-const T4 = {
-  data: [
-    [227,187,155,126,99,76,55],
-    [298,251,209,167,131,100,74],
-    [371,310,256,207,164,124,93],
-    [441,369,304,248,192,147,112],
-    [517,430,354,286,225,169,127],
-    [589,490,405,327,257,193,145],
-    [661,552,453,364,286,214,158],
-    [733,610,502,405,316,242,174],
-    [807,671,555,445,345,265,193]
-  ],
-  bp1: [155,209,256,304,354,405,453,502,555],
+  bp1: [130,162,196,231,268,304,339,374],
   bp2: [-20,-10,0,10,20,30,40]
 };
 
-// TABLE 5: Startrollstrecke (m) × Hindernishöhe (m) → Startstrecke (m)
-const T5 = {
+// TABLE 4: Landerollstrecke (m) × Hindernishöhe (m) → Landestrecke (m)
+const T4 = {
   data: [
-    [52,94],
-    [154,277],
-    [175,321],
-    [249,460],
-    [348,632],
-    [449,814],
-    [545,996],
-    [645,1183],
-    [742,1359],
-    [843,1538]
+    [88,  160],
+    [113, 206],
+    [140, 255],
+    [172, 313],
+    [210, 382],
+    [250, 455],
+    [295, 537],
+    [340, 619],
+    [390, 710],
+    [440, 801],
   ],
-  bp1: [52,154,175,249,348,449,545,645,742,843],
+  bp1: [88,113,140,172,210,250,295,340,390,440],
   bp2: [0,15]
 };
 
-/* ═══════════════════════════════════════════════
-   BILINEARE INTERPOLATION
-═══════════════════════════════════════════════ */
-function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+// Anfluggeschwindigkeit (IAS) nach Masse
+const VAPP_MASS_BP  = [700, 750, 800, 850, 920];
+const VAPP_KMPH     = [107, 111, 115, 118, 123];
 
-function interp1D(bp, vals, x) {
-  if (x <= bp[0]) return vals[0];
-  if (x >= bp[bp.length-1]) return vals[bp.length-1];
-  for (let i = 0; i < bp.length-1; i++) {
-    if (x >= bp[i] && x <= bp[i+1]) {
-      const t = (x - bp[i]) / (bp[i+1] - bp[i]);
-      return vals[i] + t * (vals[i+1] - vals[i]);
+function interp1D(bp,vals,x) {
+  if(x<=bp[0]) return vals[0];
+  if(x>=bp[bp.length-1]) return vals[bp.length-1];
+  for(let i=0;i<bp.length-1;i++) {
+    if(x>=bp[i]&&x<=bp[i+1]) {
+      const t=(x-bp[i])/(bp[i+1]-bp[i]);
+      return vals[i]+t*(vals[i+1]-vals[i]);
     }
   }
   return vals[vals.length-1];
 }
 
-function lookup2D(table, x1, x2) {
-  // table.data[i][j]: i = index into bp1, j = index into bp2
-  const bp1 = table.bp1, bp2 = table.bp2, data = table.data;
-
-  // Find surrounding indices for x1 (rows)
-  let i0 = 0, i1 = 0;
-  if (x1 <= bp1[0]) { i0 = i1 = 0; }
-  else if (x1 >= bp1[bp1.length-1]) { i0 = i1 = bp1.length-1; }
-  else {
-    for (let i = 0; i < bp1.length-1; i++) {
-      if (x1 >= bp1[i] && x1 <= bp1[i+1]) { i0 = i; i1 = i+1; break; }
-    }
-  }
-
-  // Find surrounding indices for x2 (cols)
-  let j0 = 0, j1 = 0;
-  if (x2 <= bp2[0]) { j0 = j1 = 0; }
-  else if (x2 >= bp2[bp2.length-1]) { j0 = j1 = bp2.length-1; }
-  else {
-    for (let j = 0; j < bp2.length-1; j++) {
-      if (x2 >= bp2[j] && x2 <= bp2[j+1]) { j0 = j; j1 = j+1; break; }
-    }
-  }
-
-  const t1 = (i0 === i1) ? 0 : (x1 - bp1[i0]) / (bp1[i1] - bp1[i0]);
-  const t2 = (j0 === j1) ? 0 : (x2 - bp2[j0]) / (bp2[j1] - bp2[j0]);
-
-  const v00 = data[i0][j0], v01 = data[i0][j1];
-  const v10 = data[i1][j0], v11 = data[i1][j1];
-
-  const v0 = v00 + t2 * (v01 - v00);
-  const v1 = v10 + t2 * (v11 - v10);
-  return v0 + t1 * (v1 - v0);
+function lookup2D(table,x1,x2) {
+  const {bp1,bp2,data}=table;
+  let i0=0,i1=0,j0=0,j1=0;
+  if(x1<=bp1[0]){i0=i1=0;}else if(x1>=bp1[bp1.length-1]){i0=i1=bp1.length-1;}
+  else{for(let i=0;i<bp1.length-1;i++)if(x1>=bp1[i]&&x1<=bp1[i+1]){i0=i;i1=i+1;break;}}
+  if(x2<=bp2[0]){j0=j1=0;}else if(x2>=bp2[bp2.length-1]){j0=j1=bp2.length-1;}
+  else{for(let j=0;j<bp2.length-1;j++)if(x2>=bp2[j]&&x2<=bp2[j+1]){j0=j;j1=j+1;break;}}
+  const t1=(i0===i1)?0:(x1-bp1[i0])/(bp1[i1]-bp1[i0]);
+  const t2=(j0===j1)?0:(x2-bp2[j0])/(bp2[j1]-bp2[j0]);
+  const v0=data[i0][j0]+t2*(data[i0][j1]-data[i0][j0]);
+  const v1=data[i1][j0]+t2*(data[i1][j1]-data[i1][j0]);
+  return v0+t1*(v1-v0);
 }
 
-/* ═══════════════════════════════════════════════
-   PA MODE: DIRECT vs QNH
-═══════════════════════════════════════════════ */
 function setPAMode(mode) {
-  const isDirect = mode === 'direct';
-  document.getElementById('mode-direct').style.display = isDirect ? 'flex' : 'none';
-  document.getElementById('mode-qnh').style.display    = isDirect ? 'none' : 'flex';
-  document.getElementById('mode-pa-btn').classList.toggle('active', isDirect);
-  document.getElementById('mode-qnh-btn').classList.toggle('active', !isDirect);
-  if (!isDirect) calcPAFromQNH();
+  const isDirect = mode==='direct';
+  document.getElementById('mode-direct').style.display=isDirect?'flex':'none';
+  document.getElementById('mode-qnh').style.display=isDirect?'none':'flex';
+  document.getElementById('mode-pa-btn').classList.toggle('active',isDirect);
+  document.getElementById('mode-qnh-btn').classList.toggle('active',!isDirect);
+  if(!isDirect) calcPAFromQNH();
 }
-
 function calcPAFromQNH() {
-  const elev = parseFloat(document.getElementById('elev').value) || 0;
-  const qnh  = parseFloat(document.getElementById('qnh').value)  || 1013;
-  // PA = Elevation + (1013.25 - QNH) * 27 ft/hPa
-  const pa = Math.round(elev + (1013.25 - qnh) * 27);
-  document.getElementById('pa-derived-val').textContent = pa.toLocaleString('de-DE') + ' ft';
-  // write into hidden pa field so calculate() can read it
-  document.getElementById('pa').value = pa;
+  const elev=parseFloat(document.getElementById('elev').value)||0;
+  const qnh=parseFloat(document.getElementById('qnh').value)||1013;
+  const pa=Math.round(elev+(1013.25-qnh)*27);
+  document.getElementById('pa-derived-val').textContent=pa.toLocaleString('de-DE')+' ft';
+  document.getElementById('pa').value=pa;
+}
+function onPAInput() {}
+
+function syncSlider(inputId,rangeId) {
+  const r=document.getElementById(rangeId);
+  document.getElementById(inputId).value=r.value;
+  updateSliderLabel(rangeId,r.value);
+}
+function syncInput(inputId,rangeId) {
+  const v=document.getElementById(inputId).value;
+  document.getElementById(rangeId).value=v;
+  updateSliderLabel(rangeId,v);
+}
+function updateSliderLabel(rangeId,val) {
+  const el=document.getElementById(rangeId+'-val');
+  if(!el) return;
+  const units={'slope-range':' %','wind-range':' kt','zuschl-range':' %'};
+  const decs={'slope-range':1,'wind-range':0,'zuschl-range':0};
+  el.textContent=parseFloat(val).toFixed(decs[rangeId]||0)+(units[rangeId]||'');
 }
 
-function onPAInput() { /* direct mode — nothing extra needed */ }
-
-/* ═══════════════════════════════════════════════
-   SLIDER SYNC
-═══════════════════════════════════════════════ */
-function syncSlider(inputId, rangeId) {
-  const r = document.getElementById(rangeId);
-  const i = document.getElementById(inputId);
-  i.value = r.value;
-  updateSliderLabel(rangeId, r.value, inputId);
+function densityAltitude(pa,oat) {
+  const isaTemp=15-1.98*(pa/1000);
+  const isadev=oat-isaTemp;
+  return {da:Math.round(pa+120*isadev),isaTemp,isadev};
 }
-function syncInput(inputId, rangeId) {
-  const r = document.getElementById(rangeId);
-  const i = document.getElementById(inputId);
-  r.value = i.value;
-  updateSliderLabel(rangeId, i.value, inputId);
-}
-function updateSliderLabel(rangeId, val, inputId) {
-  const labelEl = document.getElementById(rangeId + '-val');
-  if (!labelEl) return;
-  const units = { 'slope-range': ' %', 'wind-range': ' kt', 'obs-range': ' m', 'zuschl-range': ' %' };
-  const decimals = { 'slope-range': 1, 'wind-range': 0, 'obs-range': 0, 'zuschl-range': 0 };
-  const unit = units[rangeId] || '';
-  const dec  = decimals[rangeId] !== undefined ? decimals[rangeId] : 0;
-  labelEl.textContent = parseFloat(val).toFixed(dec) + unit;
-}
-
-/* ═══════════════════════════════════════════════
-   DENSITY ALTITUDE
-═══════════════════════════════════════════════ */
-function densityAltitude(pa, oat) {
-  const isaTemp = 15 - 1.98 * (pa / 1000);
-  const isadev = oat - isaTemp;
-  const da = pa + 120 * isadev;
-  return { da: Math.round(da), isaTemp, isadev };
-}
-
-/* ═══════════════════════════════════════════════
-   MAIN CALCULATION
-═══════════════════════════════════════════════ */
-function fmt(v) { return Math.round(v); }
-function fmtSign(v) { return (v >= 0 ? '+' : '') + v.toFixed(1); }
-
-// Auto-calculate on any input change
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelector('.panel-inputs').addEventListener('input', () => calculate());
-  calculate();
-});
+function fmt(v){return Math.round(v);}
+function fmtSign(v){return(v>=0?'+':'')+v.toFixed(1);}
 
 function calculate() {
-  const pa     = parseFloat(document.getElementById('pa').value)   || 0;
-  const oat    = parseFloat(document.getElementById('oat').value)  || 15;
-  const mass   = parseFloat(document.getElementById('mass').value) || 920;
-  const slope  = parseFloat(document.getElementById('slope').value)|| 0;
-  const windKt = parseFloat(document.getElementById('wind').value) || 0;
-  const obs    = parseFloat(document.getElementById('obs').value)  || 15;
-  const zPct   = parseFloat(document.getElementById('zuschl').value)|| 0;
+  const pa     = parseFloat(document.getElementById('pa').value)||0;
+  const oat    = parseFloat(document.getElementById('oat').value)||15;
+  const mass   = parseFloat(document.getElementById('mass').value)||920;
+  const slope  = parseFloat(document.getElementById('slope').value)||0;
+  const windKt = parseFloat(document.getElementById('wind').value)||0;
+  const obs    = parseFloat(document.getElementById('obs').value)||15;
+  const zPct   = parseFloat(document.getElementById('zuschl').value)||0;
 
-  // Convert wind: knots → km/h (1 kt = 1.852 km/h)
   const windKmh = windKt * 1.852;
+  const {da,isaTemp,isadev} = densityAltitude(pa,oat);
 
-  // V_R and speed at 15 m from POH table (interpolated by mass)
-  // Mass: 770, 820, 870, 920 kg
-  // V_R (km/h): 89, 91, 92, 96
-  // V_15m (km/h): 113, 117, 120, 124
-  const vr_bp   = [770, 820, 870, 920];
-  const vr_kmh  = [89, 91, 92, 96];
-  const v15_kmh = [113, 117, 120, 124];
-  function interpMass(bp, vals, m) {
-    if (m <= bp[0]) return vals[0];
-    if (m >= bp[bp.length-1]) return vals[bp.length-1];
-    for (let i = 0; i < bp.length-1; i++) {
-      if (m >= bp[i] && m <= bp[i+1]) {
-        const t = (m - bp[i]) / (bp[i+1] - bp[i]);
-        return vals[i] + t * (vals[i+1] - vals[i]);
-      }
-    }
-    return vals[vals.length-1];
-  }
-  const vrKmh  = interpMass(vr_bp, vr_kmh,  mass);
-  const v15Kmh = interpMass(vr_bp, v15_kmh, mass);
-  // Convert to knots (1 km/h = 0.539957 kt)
-  const vrKt  = vrKmh  * 0.539957;
-  const v15Kt = v15Kmh * 0.539957;
+  // Anfluggeschwindigkeit
+  const vappKmh = interp1D(VAPP_MASS_BP, VAPP_KMPH, mass);
+  const vappKt  = vappKmh * 0.539957;
 
-  // Warnings
-  const warnings = [];
-  if (mass > 920)  warnings.push('Masse überschreitet MTOW (920 kg) — Berechnung extrapoliert!');
-  if (windKt < -5) warnings.push(`Rückenwind ${Math.abs(windKt)} kt (${Math.abs(windKmh).toFixed(0)} km/h) überschreitet typischen AFM-Grenzwert.`);
-  if (slope < -2 || slope > 2) warnings.push('Neigung außerhalb Tabellenbereich (±2%) — Extrapolation!');
-
-  // Atmosphere
-  const { da, isaTemp, isadev } = densityAltitude(pa, oat);
-  if (da > 8000) warnings.push(`Density Altitude ${da} ft — außerhalb des nominalen Leistungsbereichs!`);
-  else if (da > 5000) warnings.push(`Density Altitude ${da} ft — Gemisch für größte Leistung verarmen! (POH Kap. 4.11)`);
-
-  // Step 1: PA × OAT → Basis-Rollstrecke
+  // Berechnungsschritte
   const s1 = lookup2D(T1, pa, oat);
-
-  // Step 2: Basis × Masse → Rollstrecke
   const s2 = lookup2D(T2, s1, mass);
 
-  // Step 3: Rollstrecke × Slope → Rollstrecke
-  const s3 = lookup2D(T3, s2, slope);
+  // Slope correction for landing: uphill shortens, downhill lengthens
+  // ~5% per 1% upslope, ~3% per 1% downslope (inverse of takeoff)
+  let s3;
+  if(slope >= 0) s3 = s2 * (1 - 0.04 * slope);   // uphill = shorter
+  else           s3 = s2 * (1 + 0.03 * Math.abs(slope)); // downhill = longer
 
-  // Step 4: Rollstrecke × Wind (km/h) → Rollstrecke
-  const s4 = lookup2D(T4, s3, windKmh);
+  const s4  = lookup2D(T3, s3, windKmh);
+  const s4z = s4 * (1 + zPct/100);
+  const s5  = lookup2D(T4, s4z, obs);
 
-  // Zuschlag auf Rollstrecke
-  const s4z = s4 * (1 + zPct / 100);
+  const windDir   = windKt>0?'Gegenwind':windKt<0?'Rückenwind':'Kein Wind';
+  const windLabel = windKt!==0
+    ?`${Math.abs(windKt)} kt (${Math.abs(windKmh).toFixed(1)} km/h) ${windDir}`
+    :'Kein Wind';
+  const slopeLabel = slope>0?`${slope.toFixed(1)}% bergauf`:slope<0?`${Math.abs(slope).toFixed(1)}% bergab`:'Ebene Piste';
 
-  // Step 5: Rollstrecke(+Zuschlag) × Hindernishöhe → Startstrecke
-  const s5 = lookup2D(T5, s4z, obs);
+  const warnings=[];
+  if(mass>920) warnings.push('Masse überschreitet MTOW (920 kg)!');
+  if(windKt<-5) warnings.push(`Rückenwind ${Math.abs(windKt)} kt — Grenzwert beachten!`);
+  if(da>8000)   warnings.push(`Density Altitude ${da} ft — außerhalb des nominalen Bereichs!`);
+  else if(da>5000) warnings.push(`Density Altitude ${da} ft — Gemisch für größte Leistung verarmen (POH Kap. 4.11).`);
 
-  // Direction labels
-  const windDir   = windKt > 0 ? 'Gegenwind' : windKt < 0 ? 'Rückenwind' : 'Kein Wind';
-  const windLabel = windKt !== 0
-    ? `${Math.abs(windKt)} kt (${Math.abs(windKmh).toFixed(1)} km/h) ${windDir}`
-    : 'Kein Wind';
-  const slopeLabel = slope > 0 ? `${slope.toFixed(1)}% Steigung` : slope < 0 ? `${Math.abs(slope).toFixed(1)}% Gefälle` : 'Ebene Piste';
-
-  // Render
-  const panel = document.getElementById('results-panel');
-  panel.innerHTML = `
+  document.getElementById('results-panel').innerHTML=`
     <div class="conditions-box">
       <div class="cond-title">Gültig für folgende Bedingungen</div>
       <div class="cond-list">
-        <span>Vorderste Schwerpunktlage</span><span>Vollgas</span>
-        <span>Gemisch für größte Leistung</span><span>Klappen 12°</span>
-        <span>Flugzeug in gutem Allgemeinzustand</span><span>Befestigte, ebene, trockene Startbahn</span>
+        <span>Befestigte, ebene, trockene Bahn</span><span>Leerlauf</span>
+        <span>Flügelklappen 40°</span><span>Max. vordere Schwerpunktlage</span>
+        <span>Flugzeug in gutem Allgemeinzustand</span><span>Gegenwind (+), Rückenwind (−)</span>
       </div>
     </div>
 
-    ${warnings.length ? `<div class="warnings">${warnings.map(w => `<div class="warn-item">${w}</div>`).join('')}</div>` : ''}
+    ${warnings.length?`<div class="warnings">${warnings.map(w=>`<div class="warn-item">${w}</div>`).join('')}</div>`:''}
 
     <div>
       <div class="section-label" style="margin-bottom:0.75rem">Atmosphäre</div>
       <div class="atmos-row" style="grid-template-columns:1fr 1fr">
         <div class="atmos-card">
           <div class="ac-label">Density Altitude</div>
-          <div class="ac-value ${da > 5000 ? 'pos' : ''}">${da.toLocaleString('de-DE')} ft</div>
+          <div class="ac-value ${da>5000?'pos':''}">${da.toLocaleString('de-DE')} ft</div>
         </div>
         <div class="atmos-card">
           <div class="ac-label">ISA-Abweichung</div>
-          <div class="ac-value ${Math.abs(isadev) >= 0.1 ? (isadev > 0 ? 'pos' : 'neg') : ''}">${fmtSign(isadev)} °C</div>
+          <div class="ac-value ${Math.abs(isadev)>=0.1?(isadev>0?'pos':'neg'):''}">${fmtSign(isadev)} °C</div>
         </div>
       </div>
     </div>
@@ -796,7 +699,6 @@ function calculate() {
     <div>
       <div class="section-label" style="margin-bottom:0.75rem">Berechnungsschritte</div>
       <div class="pipeline">
-
         <div class="step">
           <div class="step-line"><div class="step-dot done"></div><div class="step-connector"></div></div>
           <div class="step-body">
@@ -805,16 +707,14 @@ function calculate() {
           </div>
           <div class="step-value">${fmt(s1)} m</div>
         </div>
-
         <div class="step">
           <div class="step-line"><div class="step-dot done"></div><div class="step-connector"></div></div>
           <div class="step-body">
             <div class="step-name">Schritt 2 — Massenkorrektur</div>
-            <div class="step-detail">${fmt(s1)} m · ${mass} kg → Rollstrecke</div>
+            <div class="step-detail">${fmt(s1)} m · ${mass} kg</div>
           </div>
           <div class="step-value">${fmt(s2)} m</div>
         </div>
-
         <div class="step">
           <div class="step-line"><div class="step-dot done"></div><div class="step-connector"></div></div>
           <div class="step-body">
@@ -823,25 +723,22 @@ function calculate() {
           </div>
           <div class="step-value">${fmt(s3)} m</div>
         </div>
-
         <div class="step">
           <div class="step-line"><div class="step-dot done"></div><div class="step-connector"></div></div>
           <div class="step-body">
             <div class="step-name">Schritt 4 — Windkorrektur</div>
-            <div class="step-detail">${fmt(s3)} m · ${windLabel}${windKt !== 0 ? ` → Tabelle: ${windKmh.toFixed(1)} km/h` : ''}</div>
+            <div class="step-detail">${fmt(s3)} m · ${windLabel}${windKt!==0?` → Tabelle: ${windKmh.toFixed(1)} km/h`:''}</div>
           </div>
           <div class="step-value">${fmt(s4)} m</div>
         </div>
-
         <div class="step">
           <div class="step-line"><div class="step-dot done"></div><div class="step-connector"></div></div>
           <div class="step-body">
-            <div class="step-name">Zuschlag ${zPct} %${zPct === 15 ? ' · Graspiste (trocken, kurzgeschoren)' : zPct === 0 ? ' · Kein Zuschlag' : ''}</div>
-            <div class="step-detail">${fmt(s4)} m × ${(1 + zPct/100).toFixed(2)}</div>
+            <div class="step-name">Zuschlag ${zPct} %${zPct===40?' · Grasbahn (trocken)':zPct===0?' · Kein Zuschlag':''}</div>
+            <div class="step-detail">${fmt(s4)} m × ${(1+zPct/100).toFixed(2)}</div>
           </div>
           <div class="step-value">${fmt(s4z)} m</div>
         </div>
-
         <div class="step">
           <div class="step-line"><div class="step-dot done"></div></div>
           <div class="step-body">
@@ -850,7 +747,6 @@ function calculate() {
           </div>
           <div class="step-value">${fmt(s5)} m</div>
         </div>
-
       </div>
     </div>
 
@@ -858,33 +754,34 @@ function calculate() {
       <div class="section-label" style="margin-bottom:0.75rem">Ergebnis</div>
       <div class="result-cards">
         <div class="result-card primary">
-          <div class="rc-label">Startrollstrecke · Takeoff Ground Roll</div>
+          <div class="rc-label">Landerollstrecke · Landing Roll</div>
           <div class="rc-value">${fmt(s4z)} <span style="font-size:1.1rem;color:var(--muted)">m</span></div>
         </div>
         <div class="result-card primary">
-          <div class="rc-label">Startstrecke · Takeoff Distance</div>
+          <div class="rc-label">Landestrecke 15 m · Landing Distance</div>
           <div class="rc-value">${fmt(s5)} <span style="font-size:1.1rem;color:var(--muted)">m</span></div>
         </div>
       </div>
     </div>
 
     <div>
-      <div class="section-label" style="margin-bottom:0.75rem">Geschwindigkeiten</div>
+      <div class="section-label" style="margin-bottom:0.75rem">Anfluggeschwindigkeit</div>
       <div class="result-cards">
         <div class="result-card">
-          <div class="rc-label">Abhebegeschwindigkeit · V<sub>R</sub></div>
-          <div class="rc-value">${vrKt.toFixed(1)} <span style="font-size:1.1rem;color:var(--muted)">kt</span></div>
-          <div class="rc-unit" style="margin-top:4px;font-size:11px;color:var(--muted)">${vrKmh.toFixed(0)} km/h (IAS)</div>
-        </div>
-        <div class="result-card">
-          <div class="rc-label">Geschwindigkeit in 15 m Höhe</div>
-          <div class="rc-value">${v15Kt.toFixed(1)} <span style="font-size:1.1rem;color:var(--muted)">kt</span></div>
-          <div class="rc-unit" style="margin-top:4px;font-size:11px;color:var(--muted)">${v15Kmh.toFixed(0)} km/h (IAS)</div>
+          <div class="rc-label">V<sub>APP</sub> · Approach Speed</div>
+          <div class="rc-value">${vappKt.toFixed(1)} <span style="font-size:1.1rem;color:var(--muted)">kt</span></div>
+          <div class="rc-unit" style="margin-top:4px;font-size:11px;color:var(--muted)">${vappKmh.toFixed(0)} km/h (IAS)</div>
         </div>
       </div>
     </div>
   `;
 }
+
+document.addEventListener('DOMContentLoaded',()=>{
+  calcPAFromQNH();
+  document.querySelector('.panel-inputs').addEventListener('input',()=>calculate());
+  calculate();
+});
 </script>
 </body>
 </html>

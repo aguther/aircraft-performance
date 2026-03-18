@@ -60,9 +60,6 @@
   .slider-row input[type=range] { flex:1; }
   .slider-val { font-size:12px; color:var(--text); min-width:50px; text-align:right; font-family:var(--mono); }
 
-  .calc-btn { width:100%; background:var(--accent2); color:#fff; border:none; font-family:var(--sans); font-size:11px; font-weight:500; letter-spacing:0.15em; text-transform:uppercase; padding:13px; border-radius:2px; cursor:pointer; transition:background 0.15s,transform 0.1s; margin-top:0.5rem; }
-  .calc-btn:hover { background:var(--accent); }
-  .calc-btn:active { transform:scale(0.98); }
 
   .panel-results { padding:1.5rem 2rem; overflow-y:auto; display:flex; flex-direction:column; gap:1.5rem; background:var(--bg); }
 
@@ -139,7 +136,7 @@
       <div class="field">
         <label>Flughöhe <span>ft</span></label>
         <div class="input-row">
-          <input type="number" id="alt" value="6000" step="100" min="0" max="20000" oninput="calcPA()">
+          <input type="number" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" id="alt" value="6000" step="100" min="0" max="20000" oninput="calcPA()">
           <span class="unit-tag">ft</span>
         </div>
         <p class="hint">Angezeigte Höhe bei eingestelltem QNH</p>
@@ -147,7 +144,7 @@
       <div class="field">
         <label>QNH <span>hPa</span></label>
         <div class="input-row">
-          <input type="number" id="qnh" value="1013" step="1" min="900" max="1100" oninput="calcPA()">
+          <input type="number" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" id="qnh" value="1013" step="1" min="900" max="1100" oninput="calcPA()">
           <span class="unit-tag">hPa</span>
         </div>
       </div>
@@ -161,7 +158,7 @@
       <div class="field">
         <label>Flight Level <span>FL</span></label>
         <div class="input-row">
-          <input type="number" id="fl" value="60" step="5" min="0" max="200" oninput="calcPA()">
+          <input type="number" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" id="fl" value="60" step="5" min="0" max="200" oninput="calcPA()">
           <span class="unit-tag">FL</span>
         </div>
         <p class="hint">z.B. FL060 → Eingabe: 60 · PA = FL × 100 ft</p>
@@ -179,7 +176,7 @@
     <div class="field">
       <label>OAT — Outside Air Temp <span>°C</span></label>
       <div class="input-row">
-        <input type="number" id="oat" value="0" step="1" min="-50" max="50">
+        <input type="number" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" id="oat" value="0" step="1" min="-50" max="50">
         <span class="unit-tag">°C</span>
       </div>
     </div>
@@ -191,13 +188,12 @@
         <span class="slider-val" id="pwr-range-val">65 %</span>
       </div>
       <div class="input-row" style="margin-top:6px">
-        <input type="number" id="pwr" value="65" step="1" min="45" max="100" oninput="syncInput('pwr','pwr-range')">
+        <input type="number" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" id="pwr" value="65" step="1" min="45" max="100" oninput="syncInput('pwr','pwr-range')">
         <span class="unit-tag">%</span>
       </div>
       <p class="hint">Vollgas = 100% · Leistungseinstellung siehe POH Abschnitt 4</p>
     </div>
 
-    <button class="calc-btn" onclick="calculate()">▶ Berechnen</button>
   </aside>
 
   <section class="panel-results" id="results-panel"></section>
