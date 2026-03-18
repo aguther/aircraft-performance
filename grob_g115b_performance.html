@@ -7,7 +7,7 @@
   <title>Grob G115B — Startstrecke</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
-    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap"
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap"
     rel="stylesheet">
   <style>
     *,
@@ -19,19 +19,22 @@
     }
 
     :root {
-      --bg: #0e0f0f;
-      --bg2: #161818;
-      --bg3: #1d1f1f;
-      --border: #2a2d2d;
-      --border2: #363a3a;
-      --text: #e8e6e0;
-      --muted: #7a7e7e;
-      --accent: #c8b97a;
-      --accent2: #a09050;
-      --danger: #d4614a;
-      --success: #5a9e7a;
-      --mono: 'DM Mono', monospace;
-      --serif: 'Instrument Serif', serif;
+      --bg: #0a0a0c;
+      --bg2: #111114;
+      --bg3: #18181d;
+      --bg4: #1f1f26;
+      --border: #1e1e26;
+      --border2: #2a2a38;
+      --text: #cdd8e8;
+      --muted: #5a7a9a;
+      --accent: #4a9fd4;
+      --accent2: #2d7aaa;
+      --accent3: #7ec8f0;
+      --danger: #e05555;
+      --warning: #e8a030;
+      --success: #3aaa70;
+      --mono: 'IBM Plex Mono', monospace;
+      --sans: 'IBM Plex Sans', sans-serif;
     }
 
     html {
@@ -51,42 +54,45 @@
     /* ── Header ── */
     header {
       border-bottom: 1px solid var(--border);
-      padding: 2rem 2.5rem 1.5rem;
+      padding: 1.25rem 2.5rem;
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       justify-content: space-between;
       gap: 1rem;
+      background: var(--bg2);
     }
 
     .header-left h1 {
-      font-family: var(--serif);
-      font-size: 2rem;
+      font-family: var(--sans);
+      font-size: 1.25rem;
       font-weight: 400;
-      letter-spacing: -0.01em;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
       color: var(--text);
-      line-height: 1.1;
+      line-height: 1.2;
     }
 
     .header-left h1 em {
       color: var(--accent);
-      font-style: italic;
+      font-style: normal;
     }
 
     .header-meta {
-      margin-top: 0.5rem;
-      font-size: 11px;
+      margin-top: 0.25rem;
+      font-size: 10px;
       color: var(--muted);
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
     }
 
     .badge {
       display: inline-block;
-      background: var(--bg3);
-      border: 1px solid var(--border2);
+      background: transparent;
+      border: 1px solid var(--accent2);
       color: var(--accent);
-      font-size: 10px;
-      letter-spacing: 0.1em;
+      font-size: 9px;
+      font-family: var(--mono);
+      letter-spacing: 0.15em;
       text-transform: uppercase;
       padding: 4px 10px;
       border-radius: 2px;
@@ -103,33 +109,37 @@
     /* ── Left panel: inputs ── */
     .panel-inputs {
       border-right: 1px solid var(--border);
-      padding: 2rem 2rem;
+      padding: 1.5rem;
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 1.25rem;
       overflow-y: auto;
+      background: var(--bg2);
     }
 
     .section-label {
-      font-size: 10px;
-      letter-spacing: 0.15em;
+      font-size: 9px;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: var(--muted);
-      padding-bottom: 0.75rem;
+      color: var(--accent2);
+      padding-bottom: 0.6rem;
       border-bottom: 1px solid var(--border);
+      font-family: var(--sans);
+      font-weight: 500;
     }
 
     .field {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
 
     .field label {
-      font-size: 11px;
-      letter-spacing: 0.08em;
+      font-size: 10px;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--muted);
+      font-family: var(--sans);
     }
 
     .field label span {
@@ -144,14 +154,14 @@
 
     .input-row input {
       width: 100%;
-      background: var(--bg2);
-      border: 1px solid var(--border);
+      background: var(--bg3);
+      border: 1px solid var(--border2);
       color: var(--text);
       font-family: var(--mono);
       font-size: 15px;
-      padding: 10px 52px 10px 14px;
-      border-radius: 3px;
-      transition: border-color 0.15s;
+      padding: 9px 52px 9px 12px;
+      border-radius: 2px;
+      transition: border-color 0.15s, background 0.15s;
       -moz-appearance: textfield;
     }
 
@@ -162,7 +172,8 @@
 
     .input-row input:focus {
       outline: none;
-      border-color: var(--accent2);
+      border-color: var(--accent);
+      background: var(--bg4);
     }
 
     .input-row input.err {
@@ -171,19 +182,22 @@
 
     .unit-tag {
       position: absolute;
-      right: 12px;
+      right: 10px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 11px;
+      font-size: 10px;
       color: var(--muted);
       pointer-events: none;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.08em;
+      font-family: var(--sans);
     }
 
     .hint {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--muted);
-      margin-top: 2px;
+      margin-top: 3px;
+      line-height: 1.5;
+      font-family: var(--sans);
     }
 
     /* PA mode toggle */
@@ -191,7 +205,7 @@
       display: flex;
       gap: 0;
       border: 1px solid var(--border2);
-      border-radius: 3px;
+      border-radius: 2px;
       overflow: hidden;
     }
 
@@ -200,9 +214,9 @@
       background: transparent;
       border: none;
       color: var(--muted);
-      font-family: var(--mono);
+      font-family: var(--sans);
       font-size: 10px;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       padding: 7px 10px;
       cursor: pointer;
@@ -214,7 +228,7 @@
     }
 
     .mode-btn.active {
-      background: var(--bg3);
+      background: var(--bg4);
       color: var(--accent);
     }
 
@@ -225,10 +239,10 @@
     }
 
     .pa-derived {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      padding: 8px 14px;
+      background: var(--bg4);
+      border: 1px solid var(--accent2);
+      border-radius: 2px;
+      padding: 8px 12px;
       display: flex;
       flex-direction: column;
       gap: 2px;
@@ -236,14 +250,15 @@
 
     .pa-derived-label {
       font-size: 10px;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--accent2);
+      font-family: var(--sans);
     }
 
     .pa-derived-value {
-      font-size: 20px;
-      color: var(--accent);
+      font-size: 17px;
+      color: var(--accent3);
     }
 
     /* slider */
@@ -285,31 +300,32 @@
     }
 
     .slider-val {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text);
       min-width: 44px;
       text-align: right;
+      font-family: var(--mono);
     }
 
     .calc-btn {
       width: 100%;
-      background: var(--accent);
-      color: #0e0f0f;
+      background: var(--accent2);
+      color: #fff;
       border: none;
-      font-family: var(--mono);
-      font-size: 12px;
+      font-family: var(--sans);
+      font-size: 11px;
       font-weight: 500;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
-      padding: 14px;
-      border-radius: 3px;
+      padding: 13px;
+      border-radius: 2px;
       cursor: pointer;
       transition: background 0.15s, transform 0.1s;
       margin-top: 0.5rem;
     }
 
     .calc-btn:hover {
-      background: #ddd090;
+      background: var(--accent);
     }
 
     .calc-btn:active {
@@ -318,57 +334,51 @@
 
     /* ── Right panel: results ── */
     .panel-results {
-      padding: 2rem 2.5rem;
+      padding: 1.5rem 2rem;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 2rem;
-    }
-
-    .placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      gap: 1rem;
-      color: var(--muted);
-      text-align: center;
-      font-size: 13px;
-    }
-
-    .placeholder-icon {
-      font-size: 3rem;
-      opacity: 0.15;
-      font-family: var(--serif);
-      font-style: italic;
-      color: var(--accent);
+      gap: 1.5rem;
+      background: var(--bg);
     }
 
     /* warnings */
     .warnings {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
 
     .warn-item {
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      background: color-mix(in srgb, var(--danger) 10%, transparent);
-      border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
-      border-radius: 3px;
-      padding: 10px 14px;
-      font-size: 12px;
+      background: color-mix(in srgb, var(--danger) 8%, transparent);
+      border-left: 2px solid var(--danger);
+      border-top: 1px solid color-mix(in srgb, var(--danger) 20%, transparent);
+      border-right: 1px solid color-mix(in srgb, var(--danger) 20%, transparent);
+      border-bottom: 1px solid color-mix(in srgb, var(--danger) 20%, transparent);
+      border-radius: 0 2px 2px 0;
+      padding: 8px 12px;
+      font-size: 11px;
       color: var(--danger);
+      font-family: var(--sans);
     }
 
     .warn-item::before {
       content: '▲';
-      font-size: 10px;
+      font-size: 9px;
       margin-top: 2px;
       flex-shrink: 0;
+    }
+
+    .warn-item.advisory {
+      border-left-color: var(--warning);
+      background: color-mix(in srgb, var(--warning) 8%, transparent);
+      border-top-color: color-mix(in srgb, var(--warning) 20%, transparent);
+      border-right-color: color-mix(in srgb, var(--warning) 20%, transparent);
+      border-bottom-color: color-mix(in srgb, var(--warning) 20%, transparent);
+      color: var(--warning);
     }
 
     /* step pipeline */
@@ -380,9 +390,9 @@
 
     .step {
       display: grid;
-      grid-template-columns: 28px 1fr auto;
+      grid-template-columns: 24px 1fr auto;
       align-items: stretch;
-      gap: 0 1rem;
+      gap: 0 0.75rem;
     }
 
     .step-line {
@@ -392,8 +402,8 @@
     }
 
     .step-dot {
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: var(--border2);
       border: 1px solid var(--border2);
@@ -402,7 +412,7 @@
     }
 
     .step-dot.done {
-      background: var(--accent);
+      background: var(--accent2);
       border-color: var(--accent);
     }
 
@@ -410,61 +420,68 @@
       width: 1px;
       flex: 1;
       background: var(--border);
-      margin: 4px 0;
+      margin: 3px 0;
     }
 
     .step-body {
-      padding: 0 0 1.5rem;
+      padding: 0 0 1.25rem;
     }
 
     .step-name {
-      font-size: 11px;
-      letter-spacing: 0.1em;
+      font-size: 9px;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 4px;
+      color: var(--accent2);
+      margin-bottom: 3px;
+      font-family: var(--sans);
+      font-weight: 500;
     }
 
     .step-detail {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--muted);
       line-height: 1.5;
+      font-family: var(--sans);
     }
 
     .step-value {
-      font-size: 22px;
+      font-size: 20px;
       color: var(--text);
       text-align: right;
-      padding: 0 0 1.5rem;
+      padding: 0 0 1.25rem;
       white-space: nowrap;
       align-self: start;
       padding-top: 2px;
+      font-family: var(--mono);
     }
 
     /* final result cards */
     .result-cards {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1rem;
+      gap: 8px;
     }
 
     .result-card {
       background: var(--bg2);
       border: 1px solid var(--border2);
-      border-radius: 4px;
-      padding: 1.25rem 1.5rem;
+      border-radius: 2px;
+      padding: 1rem 1.25rem;
     }
 
     .result-card.primary {
+      background: var(--bg3);
       border-color: var(--accent2);
     }
 
     .result-card .rc-label {
-      font-size: 10px;
-      letter-spacing: 0.1em;
+      font-size: 9px;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--muted);
       margin-bottom: 6px;
+      font-family: var(--sans);
+      font-weight: 500;
     }
 
     .result-card .rc-label em {
@@ -475,20 +492,21 @@
     }
 
     .result-card .rc-value {
-      font-family: var(--serif);
-      font-size: 3rem;
-      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 2.8rem;
+      color: var(--accent3);
       line-height: 1;
     }
 
     .result-card.primary .rc-value {
-      font-size: 3.5rem;
+      font-size: 3rem;
     }
 
     .result-card .rc-unit {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--muted);
       margin-top: 4px;
+      font-family: var(--sans);
     }
 
     .result-card .rc-sub {
@@ -499,31 +517,34 @@
       padding-top: 8px;
     }
 
-    /* DA card */
+    /* DA / atmos cards */
     .atmos-row {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
+      gap: 8px;
     }
 
     .atmos-card {
-      background: var(--bg3);
+      background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: 3px;
-      padding: 0.75rem 1rem;
+      border-top: 2px solid var(--border2);
+      border-radius: 2px;
+      padding: 0.6rem 0.875rem;
     }
 
     .atmos-card .ac-label {
-      font-size: 10px;
-      letter-spacing: 0.08em;
+      font-size: 9px;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--muted);
       margin-bottom: 4px;
+      font-family: var(--sans);
     }
 
     .atmos-card .ac-value {
-      font-size: 18px;
+      font-size: 17px;
       color: var(--text);
+      font-family: var(--mono);
     }
 
     .ac-value.pos {
@@ -536,26 +557,30 @@
 
     /* conditions box */
     .conditions-box {
-      background: var(--bg3);
+      background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: 3px;
+      border-left: 2px solid var(--accent2);
+      border-radius: 0 2px 2px 0;
       padding: 0.75rem 1rem;
     }
 
     .cond-title {
-      font-size: 10px;
-      letter-spacing: 0.1em;
+      font-size: 9px;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--accent2);
       margin-bottom: 8px;
+      font-family: var(--sans);
+      font-weight: 500;
     }
 
     .cond-list {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 4px 12px;
+      gap: 3px 12px;
       font-size: 11px;
       color: var(--muted);
+      font-family: var(--sans);
     }
 
     .cond-list span::before {
@@ -566,13 +591,15 @@
     /* footer */
     footer {
       border-top: 1px solid var(--border);
-      padding: 0.75rem 2.5rem;
+      padding: 0.6rem 2.5rem;
       font-size: 10px;
       color: var(--muted);
       letter-spacing: 0.05em;
+      background: var(--bg2);
       display: flex;
       justify-content: space-between;
       gap: 1rem;
+      font-family: var(--sans);
     }
 
     /* responsive */
