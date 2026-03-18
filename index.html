@@ -1,238 +1,247 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grob G115B — Performance</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link
-    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap"
-    rel="stylesheet">
-  <style>
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grob G115B — Performance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --bg: #0a0a0c;
-      --bg2: #111114;
-      --bg3: #18181d;
-      --bg4: #1f1f26;
-      --border: #1e1e26;
-      --border2: #2a2a38;
-      --text: #cdd8e8;
-      --muted: #5a7a9a;
-      --accent: #4a9fd4;
-      --accent2: #2d7aaa;
-      --accent3: #7ec8f0;
-      --mono: 'IBM Plex Mono', monospace;
-      --sans: 'IBM Plex Sans', sans-serif;
-    }
+  :root {
+    --bg:      #0a0a0c;
+    --bg2:     #111114;
+    --bg3:     #18181d;
+    --bg4:     #1f1f26;
+    --border:  #1e1e26;
+    --border2: #2a2a38;
+    --text:    #cdd8e8;
+    --muted:   #5a7a9a;
+    --accent:  #4a9fd4;
+    --accent2: #2d7aaa;
+    --accent3: #7ec8f0;
+    --mono:    'IBM Plex Mono', monospace;
+    --sans:    'IBM Plex Sans', sans-serif;
+  }
 
-    html,
-    body {
-      min-height: 100vh;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--sans);
-      font-size: 14px;
-      line-height: 1.6;
-      display: flex;
-      flex-direction: column;
-    }
+  html, body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+  }
 
-    header {
-      border-bottom: 1px solid var(--border);
-      padding: 1.25rem 2.5rem;
-      background: var(--bg2);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem 2.5rem;
+    background: var(--bg2);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header h1 {
+    font-family: var(--sans);
+    font-size: 1.25rem;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.2;
+  }
+  header h1 em { color: var(--accent); font-style: normal; }
+  header p {
+    margin-top: 0.2rem;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .badge {
+    display: inline-block;
+    background: transparent;
+    border: 1px solid var(--accent2);
+    color: var(--accent);
+    font-size: 9px;
+    font-family: var(--mono);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 2px;
+  }
 
-    header h1 {
-      font-family: var(--sans);
-      font-size: 1.25rem;
-      font-weight: 400;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      line-height: 1.2;
-    }
+  main {
+    flex: 1;
+    padding: 2rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-width: 720px;
+  }
 
-    header h1 em {
-      color: var(--accent);
-      font-style: normal;
-    }
+  .section-label {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+  }
 
-    header p {
-      margin-top: 0.2rem;
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
+  .card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 2px;
+    padding: 1.1rem 1.25rem;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .card:hover {
+    border-color: var(--accent);
+    background: var(--bg3);
+  }
+  .card:hover .arrow { color: var(--accent3); }
 
-    .badge {
-      display: inline-block;
-      background: transparent;
-      border: 1px solid var(--accent2);
-      color: var(--accent);
-      font-size: 9px;
-      font-family: var(--mono);
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      padding: 4px 10px;
-      border-radius: 2px;
-    }
+  .card-left { display: flex; flex-direction: column; gap: 3px; }
+  .card-tag {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    font-weight: 500;
+  }
+  .card-title {
+    font-family: var(--sans);
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+  }
+  .card-desc {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
 
-    main {
-      flex: 1;
-      padding: 2rem 2.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      max-width: 720px;
-    }
+  .arrow {
+    font-size: 1.25rem;
+    color: var(--border2);
+    flex-shrink: 0;
+    transition: color 0.15s;
+    font-family: var(--mono);
+  }
 
-    .section-label {
-      font-size: 9px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--accent2);
-      padding-bottom: 0.6rem;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 0.25rem;
-      font-weight: 500;
-    }
+  .card.disabled {
+    opacity: 0.35;
+    pointer-events: none;
+    cursor: default;
+  }
+  .card.disabled .card-tag::after { content: ' · in Kürze'; }
 
-    .card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1.5rem;
-      background: var(--bg2);
-      border: 1px solid var(--border2);
-      border-radius: 2px;
-      padding: 1.1rem 1.25rem;
-      text-decoration: none;
-      color: inherit;
-      transition: border-color 0.15s, background 0.15s;
-    }
-
-    .card:hover {
-      border-color: var(--accent);
-      background: var(--bg3);
-    }
-
-    .card:hover .arrow {
-      color: var(--accent3);
-    }
-
-    .card-left {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .card-tag {
-      font-size: 9px;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--accent2);
-      font-weight: 500;
-    }
-
-    .card-title {
-      font-family: var(--sans);
-      font-size: 1.1rem;
-      font-weight: 400;
-      color: var(--text);
-      line-height: 1.2;
-      letter-spacing: 0.01em;
-    }
-
-    .card-desc {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .arrow {
-      font-size: 1.25rem;
-      color: var(--border2);
-      flex-shrink: 0;
-      transition: color 0.15s;
-      font-family: var(--mono);
-    }
-
-    .card.disabled {
-      opacity: 0.35;
-      pointer-events: none;
-      cursor: default;
-    }
-
-    .card.disabled .card-tag::after {
-      content: ' · in Kürze';
-    }
-
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 0.6rem 2.5rem;
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 0.05em;
-      background: var(--bg2);
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-    }
-  </style>
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 0.6rem 2.5rem;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    background: var(--bg2);
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+</style>
 </head>
-
 <body>
 
-  <header>
-    <div>
-      <h1>Grob <em>G115B</em> — Performance</h1>
-      <p>POH Section 5 · Bilineare Interpolation</p>
+<header>
+  <div>
+    <h1>Grob <em>G115B</em> — Performance</h1>
+    <p>POH Section 5 · Bilineare Interpolation</p>
+  </div>
+  <div class="badge">AFM / POH Daten</div>
+</header>
+
+<main>
+  <div class="section-label">Verfügbare Rechner</div>
+
+  <a class="card" href="takeoff.html">
+    <div class="card-left">
+      <span class="card-tag">Takeoff</span>
+      <span class="card-title">Startstrecke</span>
+      <span class="card-desc">Startrollstrecke &amp; Startstrecke über Hindernis · inkl. Massen-, Wind- und Neigungskorrektur</span>
     </div>
-    <div class="badge">AFM / POH Daten</div>
-  </header>
+    <span class="arrow">→</span>
+  </a>
 
-  <main>
-    <div class="section-label">Verfügbare Rechner</div>
+  <a class="card disabled" href="#">
+    <div class="card-left">
+      <span class="card-tag">Climb</span>
+      <span class="card-title">Steiggeschwindigkeit</span>
+      <span class="card-desc">Rate of Climb nach Masse, Höhe und Temperatur</span>
+    </div>
+    <span class="arrow">→</span>
+  </a>
 
-    <a class="card" href="grob_g115b_performance.html">
-      <div class="card-left">
-        <span class="card-tag">Start</span>
-        <span class="card-title">Startstrecke berechnen</span>
-        <span class="card-desc">Startrollstrecke &amp; Startstrecke über Hindernis · inkl. Massen-, Wind- und
-          Neigungskorrektur</span>
-      </div>
-      <span class="arrow">→</span>
-    </a>
+  <a class="card disabled" href="#">
+    <div class="card-left">
+      <span class="card-tag">Climb Performance</span>
+      <span class="card-title">Steigflug</span>
+      <span class="card-desc">Zeit, Kraftstoff und Distanz im Steigflug</span>
+    </div>
+    <span class="arrow">→</span>
+  </a>
 
-    <a class="card disabled" href="#">
-      <div class="card-left">
-        <span class="card-tag">Landung</span>
-        <span class="card-title">Landestrecke berechnen</span>
-        <span class="card-desc">Landerollstrecke &amp; Landestrecke über Hindernis</span>
-      </div>
-      <span class="arrow">→</span>
-    </a>
+  <a class="card" href="cruise.html">
+    <div class="card-left">
+      <span class="card-tag">Cruise</span>
+      <span class="card-title">Reiseflug</span>
+      <span class="card-desc">Drehzahl, Kraftstoffverbrauch &amp; wahre Fluggeschwindigkeit · POH 5.3.10–12</span>
+    </div>
+    <span class="arrow">→</span>
+  </a>
 
-  </main>
+  <a class="card disabled" href="#">
+    <div class="card-left">
+      <span class="card-tag">Range</span>
+      <span class="card-title">Reichweite</span>
+      <span class="card-desc">Maximale Reichweite nach Kraftstoff und Leistung</span>
+    </div>
+    <span class="arrow">→</span>
+  </a>
 
-  <footer>
-    <span>Grob G115B · POH Section 5</span>
-    <span>Nur für Planungszwecke — nicht als alleinige Grundlage für Flugentscheidungen verwenden.</span>
-  </footer>
+  <a class="card disabled" href="#">
+    <div class="card-left">
+      <span class="card-tag">Endurance</span>
+      <span class="card-title">Maximale Flugdauer</span>
+      <span class="card-desc">Maximale Flugzeit nach verfügbarem Kraftstoff</span>
+    </div>
+    <span class="arrow">→</span>
+  </a>
+
+  <a class="card disabled" href="#">
+    <div class="card-left">
+      <span class="card-tag">Landing</span>
+      <span class="card-title">Landestrecke</span>
+      <span class="card-desc">Landerollstrecke &amp; Landestrecke über Hindernis</span>
+    </div>
+    <span class="arrow">→</span>
+  </a>
+
+</main>
+
+<footer>
+  <span>Grob G115B · POH Section 5</span>
+  <span>Nur für Planungszwecke — nicht als alleinige Grundlage für Flugentscheidungen verwenden.</span>
+</footer>
 
 </body>
-
 </html>
