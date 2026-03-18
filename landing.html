@@ -339,7 +339,7 @@
 </head>
 <body>
 
-<header>
+<header style="position:sticky;top:0;z-index:100">
   <div class="header-left">
     <h1>Grob <em>G115B</em> — Landestrecke</h1>
     <p class="header-meta">POH Section 5.3.15 · Bilineare Interpolation</p>
@@ -467,9 +467,13 @@
   </section>
 </main>
 
-<footer>
-  <span>Grob G115B Landing · POH Section 5.3.15 · Bilineare Interpolation</span>
-  <span>Nur für Planungszwecke — nicht als alleinige Grundlage für Flugentscheidungen verwenden.</span>
+<footer style="position:sticky;bottom:0;z-index:100;border-top:1px solid var(--border);padding:0.6rem 2.5rem;background:var(--bg2);display:flex;align-items:baseline;gap:0.75rem;flex-wrap:wrap">
+  <span style="color:var(--warning);font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;font-family:var(--sans);white-space:nowrap">⚠ Wichtiger Hinweis</span>
+  <span style="font-size:10px;color:var(--muted);font-family:var(--sans);line-height:1.6">
+    Diese Anwendung ersetzt nicht das originale, zugelassene AFM/POH der jeweiligen Maschine.
+    Tabellenwerte wurden teilweise aus Diagrammen digitalisiert und sind vor dem Flug mit dem offiziellen POH abzugleichen.
+    Die Verantwortung für alle Flugentscheidungen liegt ausschließlich beim Piloten.
+  </span>
 </footer>
 
 <script>
