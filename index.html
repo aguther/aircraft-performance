@@ -1,251 +1,984 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="dark">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grob G115B — Performance</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grob G115B — Performance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root[data-theme="dark"] {
+      --bg-app: #0f1520;
+      --bg-nav: #1a2232;
+      --bg-card: #1e2b3f;
+      --bg-input: #131d2e;
+      --bg-active: #273650;
+      --border: #2c3e5c;
+      --border2: #3a5278;
+      --text: #eceff4;
+      --text-sub: #a8bacf;
+      --text-dim: #5a7a9a;
+      --cyan: #00c8f5;
+      --cyan-dim: #0099c0;
+      --cyan-bg: rgba(0, 200, 245, 0.08);
+      --green: #23d160;
+      --amber: #f5a623;
+      --red: #e53935;
+    }
 
-  :root {
-    --bg:      #0a0a0c;
-    --bg2:     #111114;
-    --bg3:     #18181d;
-    --bg4:     #1f1f26;
-    --border:  #1e1e26;
-    --border2: #2a2a38;
-    --text:    #cdd8e8;
-    --muted:   #5a7a9a;
-    --accent:  #4a9fd4;
-    --accent2: #2d7aaa;
-    --accent3: #7ec8f0;
-    --mono:    'IBM Plex Mono', monospace;
-    --sans:    'IBM Plex Sans', sans-serif;
-  }
+    :root[data-theme="light"] {
+      --bg-app: #eef2f7;
+      --bg-nav: #ffffff;
+      --bg-card: #ffffff;
+      --bg-input: #f0f4f9;
+      --bg-active: #dce8f5;
+      --border: #ccd9e8;
+      --border2: #a8c0d8;
+      --text: #1a2332;
+      --text-sub: #3a5272;
+      --text-dim: #7a96b2;
+      --cyan: #0077aa;
+      --cyan-dim: #005580;
+      --cyan-bg: rgba(0, 119, 170, 0.08);
+      --green: #1a9e40;
+      --amber: #c47a00;
+      --red: #c62828;
+    }
 
-  html, body {
-    min-height: 100vh;
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 14px;
-    line-height: 1.6;
-    display: flex;
-    flex-direction: column;
-  }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  header {
-    border-bottom: 1px solid var(--border);
-    padding: 1.25rem 2.5rem;
-    background: var(--bg2);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  header h1 {
-    font-family: var(--sans);
-    font-size: 1.25rem;
-    font-weight: 400;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    line-height: 1.2;
-  }
-  header h1 em { color: var(--accent); font-style: normal; }
-  header p {
-    margin-top: 0.2rem;
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-  .badge {
-    display: inline-block;
-    background: transparent;
-    border: 1px solid var(--accent2);
-    color: var(--accent);
-    font-size: 9px;
-    font-family: var(--mono);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    padding: 4px 10px;
-    border-radius: 2px;
-  }
+    html,
+    body {
+      height: 100%;
+      background: var(--bg-app);
+      color: var(--text);
+      font-family: 'Nunito Sans', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
 
-  main {
-    flex: 1;
-    padding: 2rem 2.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    max-width: 720px;
-  }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      transition: background 0.2s, color 0.2s;
+    }
 
-  .section-label {
-    font-size: 9px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--accent2);
-    padding-bottom: 0.6rem;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 0.25rem;
-    font-weight: 500;
-  }
+    .nav-bar {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: var(--bg-nav);
+      border-bottom: 2px solid var(--cyan);
+      padding: 0 1.5rem;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
 
-  .card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: 2px;
-    padding: 1.1rem 1.25rem;
-    text-decoration: none;
-    color: inherit;
-    transition: border-color 0.15s, background 0.15s;
-  }
-  .card:hover {
-    border-color: var(--accent);
-    background: var(--bg3);
-  }
-  .card:hover .arrow { color: var(--accent3); }
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
 
-  .card-left { display: flex; flex-direction: column; gap: 3px; }
-  .card-tag {
-    font-size: 9px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--accent2);
-    font-weight: 500;
-  }
-  .card-title {
-    font-family: var(--sans);
-    font-size: 1.1rem;
-    font-weight: 400;
-    color: var(--text);
-    line-height: 1.2;
-    letter-spacing: 0.01em;
-  }
-  .card-desc {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
+    .nav-logo {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      border: 1px solid var(--cyan);
+      padding: 3px 8px;
+      border-radius: 3px;
+    }
 
-  .arrow {
-    font-size: 1.25rem;
-    color: var(--border2);
-    flex-shrink: 0;
-    transition: color 0.15s;
-    font-family: var(--mono);
-  }
+    .nav-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
 
-  .card.disabled {
-    opacity: 0.35;
-    pointer-events: none;
-    cursor: default;
-  }
-  .card.disabled .card-tag::after { content: ' · in Kürze'; }
+    .nav-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-left: 0.5rem;
+    }
 
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 0.6rem 2.5rem;
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-    background: var(--bg2);
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-</style>
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-sub);
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .toggle-track {
+      width: 28px;
+      height: 16px;
+      background: var(--border2);
+      border-radius: 8px;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .toggle-track.on {
+      background: var(--cyan);
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 12px;
+      height: 12px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .toggle-thumb.on {
+      transform: translateX(12px);
+    }
+
+    .nav-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--bg-app);
+      background: var(--cyan);
+      padding: 3px 8px;
+      border-radius: 3px;
+    }
+
+    .nav-back {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-decoration: none;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .nav-back:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      background: var(--bg-nav);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-section {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-section:last-child {
+      border-bottom: none;
+    }
+
+    .section-header {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-header::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 14px;
+      background: var(--cyan);
+      border-radius: 2px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 0.75rem;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    .field-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-sub);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .field-label span {
+      color: var(--text-dim);
+      font-weight: 400;
+      text-transform: none;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap input[type=number] {
+      width: 100%;
+      padding: 8px 44px 8px 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'Nunito Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      -moz-appearance: textfield;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .input-wrap input[type=number]::-webkit-inner-spin-button,
+    .input-wrap input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+    }
+
+    .input-wrap input[type=number]:focus {
+      outline: none;
+      border-color: var(--cyan);
+      background: var(--bg-active);
+    }
+
+    .unit {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dim);
+      pointer-events: none;
+    }
+
+    .hint {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .mode-toggle {
+      display: grid;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-bottom: 0.75rem;
+    }
+
+    .mode-btn {
+      background: transparent;
+      border: none;
+      padding: 7px 4px;
+      font-family: 'Nunito Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.15s;
+      border-right: 1px solid var(--border);
+    }
+
+    .mode-btn:last-child {
+      border-right: none;
+    }
+
+    .mode-btn.active {
+      background: var(--cyan-bg);
+      color: var(--cyan);
+    }
+
+    .mode-btn:hover:not(.active) {
+      background: var(--bg-active);
+      color: var(--text-sub);
+    }
+
+    .pa-mode {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .derived-box {
+      background: var(--cyan-bg);
+      border: 1px solid var(--cyan-dim);
+      border-radius: 6px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .derived-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--cyan-dim);
+    }
+
+    .derived-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 3px;
+      background: var(--border2);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+      padding: 0;
+      border: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--cyan);
+      border: 2px solid var(--bg-nav);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slider-row input[type=range] {
+      flex: 1;
+    }
+
+    .slider-val {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      min-width: 50px;
+      text-align: right;
+    }
+
+    .results-panel {
+      overflow-y: auto;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      background: var(--bg-app);
+    }
+
+    .warnings {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .warn-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: rgba(245, 166, 35, 0.08);
+      border-left: 3px solid var(--amber);
+      border-radius: 0 6px 6px 0;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    .warn-item.danger {
+      border-left-color: var(--red);
+      background: rgba(229, 57, 53, 0.08);
+      color: var(--red);
+    }
+
+    .warn-item::before {
+      content: '';
+      display: block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+    }
+
+    .card-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 12px;
+      background: var(--cyan);
+      border-radius: 2px;
+    }
+
+    .atmos-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .atmos-item {
+      background: var(--bg-input);
+      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+    }
+
+    .atmos-item-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+
+    .atmos-item-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .atmos-item-value.warn {
+      color: var(--amber);
+    }
+
+    .atmos-item-value.good {
+      color: var(--green);
+    }
+
+    .pipeline {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 24px 1fr auto;
+      align-items: stretch;
+      gap: 0 10px;
+    }
+
+    .step-rail {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .step-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 4px;
+      background: var(--border2);
+      border: 2px solid var(--border2);
+    }
+
+    .step-dot.active {
+      background: var(--cyan);
+      border-color: var(--cyan);
+      box-shadow: 0 0 6px rgba(0, 200, 245, 0.4);
+    }
+
+    .step-line {
+      width: 1px;
+      flex: 1;
+      background: var(--border);
+      margin: 3px 0;
+    }
+
+    .step-body {
+      padding: 0 0 1rem;
+    }
+
+    .step-name {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--cyan-dim);
+      margin-bottom: 2px;
+    }
+
+    .step-detail {
+      font-size: 11px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .step-val {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      padding: 0 0 1rem;
+      white-space: nowrap;
+      align-self: start;
+      padding-top: 2px;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .result-item {
+      background: var(--cyan-bg);
+      border: 1px solid var(--cyan-dim);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+    }
+
+    .result-item-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--cyan-dim);
+      margin-bottom: 6px;
+    }
+
+    .result-item-value {
+      font-size: 2.6rem;
+      font-weight: 700;
+      color: var(--cyan);
+      line-height: 1;
+    }
+
+    .result-item-value span {
+      font-size: 1.1rem;
+      color: var(--cyan-dim);
+    }
+
+    .result-item-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    .speed-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .speed-item {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.875rem 1rem;
+    }
+
+    .speed-item-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+
+    .speed-item-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .speed-item-value span {
+      font-size: 1rem;
+      color: var(--text-dim);
+    }
+
+    .speed-item-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 3px;
+    }
+
+    .conditions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px 12px;
+    }
+
+    .conditions-grid span {
+      font-size: 11px;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .conditions-grid span::before {
+      content: '';
+      display: block;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--cyan);
+      flex-shrink: 0;
+    }
+
+    .climb-cols {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .climb-arrow {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--cyan-dim);
+    }
+
+    .breakdown-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .breakdown-table td {
+      font-size: 12px;
+      padding: 3px 0;
+    }
+
+    .breakdown-table td:first-child {
+      color: var(--text-sub);
+    }
+
+    .breakdown-table td:last-child {
+      text-align: right;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .disclaimer {
+      position: sticky;
+      bottom: 0;
+      z-index: 200;
+      background: var(--bg-nav);
+      border-top: 2px solid var(--amber);
+      padding: 0.5rem 1.5rem;
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .disclaimer-tag {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--amber);
+      white-space: nowrap;
+    }
+
+    .disclaimer-text {
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    @media(max-width:860px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        max-height: 55vh;
+      }
+
+      .result-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .speed-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .atmos-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .climb-cols {
+        grid-template-columns: 1fr;
+      }
+
+      .climb-arrow {
+        transform: rotate(90deg);
+      }
+    }
+  </style>
+  <style>
+    .idx-main {
+      flex: 1;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+      max-width: 760px;
+    }
+
+    .idx-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.15s;
+    }
+
+    .idx-card:hover {
+      border-color: var(--cyan);
+      background: var(--bg-active);
+    }
+
+    .idx-card:hover .idx-arrow {
+      color: var(--cyan);
+    }
+
+    .idx-card-left {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .idx-tag {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--cyan-dim);
+    }
+
+    .idx-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .idx-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .idx-arrow {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--border2);
+      transition: color 0.15s;
+    }
+
+    .idx-section {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .idx-section::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 12px;
+      background: var(--cyan);
+      border-radius: 2px;
+    }
+  </style>
 </head>
+
 <body>
-
-<header style="position:sticky;top:0;z-index:100">
-  <div>
-    <h1>Grob <em>G115B</em> — Performance</h1>
-    <p>POH Section 5 · Bilineare Interpolation</p>
+  <nav class="nav-bar">
+    <div class="nav-left">
+      <div class="nav-logo">G115B</div>
+      <div><span class="nav-title">Performance</span><span class="nav-sub">POH Section 5</span></div>
+    </div>
+    <div class="nav-right">
+      <div class="theme-toggle" onclick="toggleTheme()">
+        <div class="toggle-track on" id="tTrack">
+          <div class="toggle-thumb on" id="tThumb"></div>
+        </div>
+        <span id="tLabel">Dark</span>
+      </div>
+      <div class="nav-badge">AFM / POH</div>
+    </div>
+  </nav>
+  <main class="idx-main">
+    <div class="idx-section">Verfügbare Rechner</div>
+    <a href="takeoff.html" class="idx-card">
+      <div class="idx-card-left">
+        <div class="idx-tag">Takeoff</div>
+        <div class="idx-title">Startstrecke</div>
+        <div class="idx-desc">Startrollstrecke & Startstrecke über Hindernis · POH 5</div>
+      </div>
+      <div class="idx-arrow">→</div>
+    </a>
+    <a href="climb_rate.html" class="idx-card">
+      <div class="idx-card-left">
+        <div class="idx-tag">Climb</div>
+        <div class="idx-title">Steiggeschwindigkeit</div>
+        <div class="idx-desc">Rate of Climb · VY nach Masse und Dichtehöhe · POH 5.3.8</div>
+      </div>
+      <div class="idx-arrow">→</div>
+    </a>
+    <a href="climb.html" class="idx-card">
+      <div class="idx-card-left">
+        <div class="idx-tag">Climb Performance</div>
+        <div class="idx-title">Steigflug</div>
+        <div class="idx-desc">Zeit, Kraftstoff und Distanz im Steigflug · POH 5.3.9</div>
+      </div>
+      <div class="idx-arrow">→</div>
+    </a>
+    <a href="cruise.html" class="idx-card">
+      <div class="idx-card-left">
+        <div class="idx-tag">Cruise</div>
+        <div class="idx-title">Reiseflug</div>
+        <div class="idx-desc">Drehzahl, Kraftstoffverbrauch & TAS · POH 5.3.10–12</div>
+      </div>
+      <div class="idx-arrow">→</div>
+    </a>
+    <a href="range.html" class="idx-card">
+      <div class="idx-card-left">
+        <div class="idx-tag">Range</div>
+        <div class="idx-title">Reichweite</div>
+        <div class="idx-desc">Maximale Reichweite inkl. 45 min Reserve · POH 5.3.13</div>
+      </div>
+      <div class="idx-arrow">→</div>
+    </a>
+    <a href="endurance.html" class="idx-card">
+      <div class="idx-card-left">
+        <div class="idx-tag">Endurance</div>
+        <div class="idx-title">Maximale Flugdauer</div>
+        <div class="idx-desc">Flugzeit nach Kraftstoff und Leistung · POH 5.3.14</div>
+      </div>
+      <div class="idx-arrow">→</div>
+    </a>
+    <a href="landing.html" class="idx-card">
+      <div class="idx-card-left">
+        <div class="idx-tag">Landing</div>
+        <div class="idx-title">Landestrecke</div>
+        <div class="idx-desc">Landerollstrecke & Landestrecke über Hindernis · POH 5.3.15</div>
+      </div>
+      <div class="idx-arrow">→</div>
+    </a>
+  </main>
+  <div class="disclaimer">
+    <span class="disclaimer-tag">⚠ Wichtiger Hinweis</span>
+    <span class="disclaimer-text">Diese Anwendung ersetzt nicht das originale, zugelassene AFM/POH der jeweiligen
+      Maschine. Die Verantwortung für alle Flugentscheidungen liegt ausschließlich beim Piloten.</span>
   </div>
-  <div class="badge">AFM / POH Daten</div>
-</header>
+  <script>
 
-<main>
-  <div class="section-label">Verfügbare Rechner</div>
+    function toggleTheme() { const h = document.documentElement; const d = h.dataset.theme === 'dark'; h.dataset.theme = d ? 'light' : 'dark'; document.getElementById('tTrack').classList.toggle('on', !d); document.getElementById('tThumb').classList.toggle('on', !d); document.getElementById('tLabel').textContent = d ? 'Light' : 'Dark'; }
 
-  <a class="card" href="takeoff.html">
-    <div class="card-left">
-      <span class="card-tag">Takeoff</span>
-      <span class="card-title">Startstrecke</span>
-      <span class="card-desc">Startrollstrecke &amp; Startstrecke über Hindernis · inkl. Massen-, Wind- und Neigungskorrektur</span>
-    </div>
-    <span class="arrow">→</span>
-  </a>
-
-  <a class="card" href="climb_rate.html">
-    <div class="card-left">
-      <span class="card-tag">Climb</span>
-      <span class="card-title">Steiggeschwindigkeit</span>
-      <span class="card-desc">Rate of Climb · V<sub>Y</sub> nach Masse und Dichtehöhe · POH 5.3.8</span>
-    </div>
-    <span class="arrow">→</span>
-  </a>
-
-  <a class="card" href="climb.html">
-    <div class="card-left">
-      <span class="card-tag">Climb Performance</span>
-      <span class="card-title">Steigflug</span>
-      <span class="card-desc">Zeit, Kraftstoff und Distanz im Steigflug · POH 5.3.9</span>
-    </div>
-    <span class="arrow">→</span>
-  </a>
-
-  <a class="card" href="cruise.html">
-    <div class="card-left">
-      <span class="card-tag">Cruise</span>
-      <span class="card-title">Reiseflug</span>
-      <span class="card-desc">Drehzahl, Kraftstoffverbrauch &amp; wahre Fluggeschwindigkeit · POH 5.3.10–12</span>
-    </div>
-    <span class="arrow">→</span>
-  </a>
-
-  <a class="card" href="range.html">
-    <div class="card-left">
-      <span class="card-tag">Range</span>
-      <span class="card-title">Reichweite</span>
-      <span class="card-desc">Maximale Reichweite nach Kraftstoff und Leistung · POH 5.3.13 · inkl. 45 min Reserve</span>
-    </div>
-    <span class="arrow">→</span>
-  </a>
-
-  <a class="card" href="endurance.html">
-    <div class="card-left">
-      <span class="card-tag">Endurance</span>
-      <span class="card-title">Maximale Flugdauer</span>
-      <span class="card-desc">Flugzeit nach Kraftstoff und Leistung · POH 5.3.14 · inkl. 45 min Reserve</span>
-    </div>
-    <span class="arrow">→</span>
-  </a>
-
-  <a class="card" href="landing.html">
-    <div class="card-left">
-      <span class="card-tag">Landing</span>
-      <span class="card-title">Landestrecke</span>
-      <span class="card-desc">Landerollstrecke &amp; Landestrecke über Hindernis · POH 5.3.15</span>
-    </div>
-    <span class="arrow">→</span>
-  </a>
-
-</main>
-
-<footer style="position:sticky;bottom:0;z-index:100;border-top:1px solid var(--border);padding:0.6rem 2.5rem;background:var(--bg2);display:flex;align-items:baseline;gap:0.75rem;flex-wrap:wrap">
-  <span style="color:var(--warning);font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;font-family:var(--sans);white-space:nowrap">⚠ Wichtiger Hinweis</span>
-  <span style="font-size:10px;color:var(--muted);font-family:var(--sans);line-height:1.6">
-    Diese Anwendung ersetzt nicht das originale, zugelassene AFM/POH der jeweiligen Maschine.
-    Tabellenwerte wurden teilweise aus Diagrammen digitalisiert und sind vor dem Flug mit dem offiziellen POH abzugleichen.
-    Die Verantwortung für alle Flugentscheidungen liegt ausschließlich beim Piloten.
-  </span>
-</footer>
-
+  </script>
 </body>
+
 </html>
