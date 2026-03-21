@@ -28,22 +28,22 @@
     }
 
     :root[data-theme="light"] {
-      --bg-app: #eef2f7;
+      --bg-app: #f0f4f9;
       --bg-nav: #ffffff;
       --bg-card: #ffffff;
-      --bg-input: #f0f4f9;
-      --bg-active: #dce8f5;
-      --border: #ccd9e8;
-      --border2: #a8c0d8;
-      --text: #1a2332;
-      --text-sub: #3a5272;
-      --text-dim: #7a96b2;
-      --cyan: #0077aa;
-      --cyan-dim: #005580;
-      --cyan-bg: rgba(0, 119, 170, 0.08);
-      --green: #1a9e40;
-      --amber: #c47a00;
-      --red: #c62828;
+      --bg-input: #e4ecf4;
+      --bg-active: #d4e4f0;
+      --border: #c0d0e0;
+      --border2: #90b0cc;
+      --text: #0f1c2e;
+      --text-sub: #2a4060;
+      --text-dim: #5a7a9a;
+      --cyan: #005f8a;
+      --cyan-dim: #004466;
+      --cyan-bg: rgba(0, 95, 138, 0.10);
+      --green: #136b2e;
+      --amber: #8a5000;
+      --red: #a01010;
     }
 
     *,
@@ -54,9 +54,7 @@
       padding: 0;
     }
 
-    html,
-    body {
-      height: 100%;
+    html {
       background: var(--bg-app);
       color: var(--text);
       font-family: 'Nunito Sans', sans-serif;
@@ -71,13 +69,14 @@
       transition: background 0.2s, color 0.2s;
     }
 
+    /* NAV */
     .nav-bar {
       position: sticky;
       top: 0;
       z-index: 200;
       background: var(--bg-nav);
       border-bottom: 2px solid var(--cyan);
-      padding: 0 1.5rem;
+      padding: 0 1.25rem;
       height: 52px;
       display: flex;
       align-items: center;
@@ -88,7 +87,7 @@
     .nav-left {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.875rem;
     }
 
     .nav-logo {
@@ -117,7 +116,7 @@
     .nav-right {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.625rem;
     }
 
     .theme-toggle {
@@ -196,22 +195,47 @@
       color: var(--cyan);
     }
 
-    main {
-      flex: 1;
+    /* LAYOUT — desktop: sidebar + results side by side, mobile: stacked */
+    .page-layout {
       display: grid;
       grid-template-columns: 300px 1fr;
-      min-height: 0;
-      overflow: hidden;
+      align-items: start;
     }
 
     .sidebar {
       background: var(--bg-nav);
       border-right: 1px solid var(--border);
+      position: sticky;
+      top: 52px;
+      max-height: calc(100vh - 52px);
       overflow-y: auto;
-      display: flex;
-      flex-direction: column;
     }
 
+    .results {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    @media(max-width:800px) {
+      .page-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        max-height: none;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .nav-sub {
+        display: none;
+      }
+    }
+
+    /* SIDEBAR */
     .sidebar-section {
       padding: 1rem 1.25rem;
       border-bottom: 1px solid var(--border);
@@ -311,6 +335,7 @@
       font-size: 10px;
       color: var(--text-dim);
       margin-top: 2px;
+      line-height: 1.5;
     }
 
     .mode-toggle {
@@ -425,15 +450,36 @@
       text-align: right;
     }
 
-    .results-panel {
-      overflow-y: auto;
-      padding: 1.25rem 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      background: var(--bg-app);
+    /* CARDS */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
     }
 
+    .card-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 12px;
+      background: var(--cyan);
+      border-radius: 2px;
+    }
+
+    /* WARNINGS */
     .warnings {
       display: flex;
       flex-direction: column;
@@ -470,34 +516,31 @@
       margin-top: 5px;
     }
 
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
+    /* DISCLAIMER CARD */
+    .disclaimer-card {
+      background: rgba(245, 166, 35, 0.06);
+      border: 1px solid rgba(245, 166, 35, 0.35);
+      border-left: 4px solid var(--amber);
       border-radius: 10px;
       padding: 1rem 1.25rem;
     }
 
-    .card-title {
-      font-size: 10px;
+    .disclaimer-tag {
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--text-dim);
-      margin-bottom: 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      color: var(--amber);
+      margin-bottom: 6px;
     }
 
-    .card-title::before {
-      content: '';
-      display: block;
-      width: 3px;
-      height: 12px;
-      background: var(--cyan);
-      border-radius: 2px;
+    .disclaimer-text {
+      font-size: 13px;
+      color: var(--text-sub);
+      line-height: 1.6;
     }
 
+    /* ATMOS */
     .atmos-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -534,6 +577,7 @@
       color: var(--green);
     }
 
+    /* PIPELINE */
     .pipeline {
       display: flex;
       flex-direction: column;
@@ -604,6 +648,7 @@
       padding-top: 2px;
     }
 
+    /* RESULTS */
     .result-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -627,7 +672,7 @@
     }
 
     .result-item-value {
-      font-size: 2.6rem;
+      font-size: 2.4rem;
       font-weight: 700;
       color: var(--cyan);
       line-height: 1;
@@ -742,46 +787,7 @@
       color: var(--text);
     }
 
-    .disclaimer {
-      position: sticky;
-      bottom: 0;
-      z-index: 200;
-      background: var(--bg-nav);
-      border-top: 2px solid var(--amber);
-      padding: 0.5rem 1.5rem;
-      display: flex;
-      align-items: baseline;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-      flex-shrink: 0;
-    }
-
-    .disclaimer-tag {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--amber);
-      white-space: nowrap;
-    }
-
-    .disclaimer-text {
-      font-size: 12px;
-      color: var(--text-dim);
-      line-height: 1.5;
-    }
-
-    @media(max-width:860px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        max-height: 55vh;
-      }
-
+    @media(max-width:480px) {
       .result-grid {
         grid-template-columns: 1fr;
       }
@@ -794,6 +800,10 @@
         grid-template-columns: 1fr;
       }
 
+      .conditions-grid {
+        grid-template-columns: 1fr;
+      }
+
       .climb-cols {
         grid-template-columns: 1fr;
       }
@@ -801,16 +811,21 @@
       .climb-arrow {
         transform: rotate(90deg);
       }
+
+      .result-item-value {
+        font-size: 2rem;
+      }
     }
   </style>
   <style>
-    .idx-main {
+    .idx-body {
       flex: 1;
-      padding: 1.5rem 2rem;
+      padding: 1.25rem 1.5rem;
       display: flex;
       flex-direction: column;
-      gap: 0.625rem;
-      max-width: 760px;
+      gap: 0.75rem;
+      max-width: 720px;
+      width: 100%;
     }
 
     .idx-card {
@@ -836,7 +851,7 @@
       color: var(--cyan);
     }
 
-    .idx-card-left {
+    .idx-left {
       display: flex;
       flex-direction: column;
       gap: 3px;
@@ -859,7 +874,6 @@
     .idx-desc {
       font-size: 11px;
       color: var(--text-dim);
-      margin-top: 2px;
     }
 
     .idx-arrow {
@@ -867,6 +881,7 @@
       font-weight: 700;
       color: var(--border2);
       transition: color 0.15s;
+      flex-shrink: 0;
     }
 
     .idx-section {
@@ -877,7 +892,6 @@
       color: var(--cyan);
       padding-bottom: 0.5rem;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 0.25rem;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -891,6 +905,29 @@
       background: var(--cyan);
       border-radius: 2px;
     }
+
+    .idx-disclaimer {
+      background: var(--bg-nav);
+      border: 2px solid var(--amber);
+      border-left: 4px solid var(--amber);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+    }
+
+    .idx-disclaimer-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 6px;
+    }
+
+    .idx-disclaimer-text {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.6;
+    }
   </style>
 </head>
 
@@ -902,18 +939,23 @@
     </div>
     <div class="nav-right">
       <div class="theme-toggle" onclick="toggleTheme()">
-        <div class="toggle-track on" id="tTrack">
-          <div class="toggle-thumb on" id="tThumb"></div>
+        <div class="toggle-track" id="tTrack">
+          <div class="toggle-thumb" id="tThumb"></div>
         </div>
         <span id="tLabel">Dark</span>
       </div>
       <div class="nav-badge">AFM / POH</div>
     </div>
   </nav>
-  <main class="idx-main">
+  <div class="idx-body">
+    <div class="idx-disclaimer">
+      <div class="idx-disclaimer-tag">⚠ Wichtiger Hinweis</div>
+      <div class="idx-disclaimer-text">Diese Anwendung ersetzt nicht das originale, zugelassene AFM/POH der jeweiligen
+        Maschine. Die Verantwortung für alle Flugentscheidungen liegt ausschließlich beim Piloten.</div>
+    </div>
     <div class="idx-section">Verfügbare Rechner</div>
     <a href="takeoff.html" class="idx-card">
-      <div class="idx-card-left">
+      <div class="idx-left">
         <div class="idx-tag">Takeoff</div>
         <div class="idx-title">Startstrecke</div>
         <div class="idx-desc">Startrollstrecke & Startstrecke über Hindernis · POH 5</div>
@@ -921,7 +963,7 @@
       <div class="idx-arrow">→</div>
     </a>
     <a href="climb_rate.html" class="idx-card">
-      <div class="idx-card-left">
+      <div class="idx-left">
         <div class="idx-tag">Climb</div>
         <div class="idx-title">Steiggeschwindigkeit</div>
         <div class="idx-desc">Rate of Climb · VY nach Masse und Dichtehöhe · POH 5.3.8</div>
@@ -929,7 +971,7 @@
       <div class="idx-arrow">→</div>
     </a>
     <a href="climb.html" class="idx-card">
-      <div class="idx-card-left">
+      <div class="idx-left">
         <div class="idx-tag">Climb Performance</div>
         <div class="idx-title">Steigflug</div>
         <div class="idx-desc">Zeit, Kraftstoff und Distanz im Steigflug · POH 5.3.9</div>
@@ -937,15 +979,15 @@
       <div class="idx-arrow">→</div>
     </a>
     <a href="cruise.html" class="idx-card">
-      <div class="idx-card-left">
+      <div class="idx-left">
         <div class="idx-tag">Cruise</div>
         <div class="idx-title">Reiseflug</div>
-        <div class="idx-desc">Drehzahl, Kraftstoffverbrauch & TAS · POH 5.3.10–12</div>
+        <div class="idx-desc">Drehzahl, Kraftstoffverbrauch und TAS · POH 5.3.10–12</div>
       </div>
       <div class="idx-arrow">→</div>
     </a>
     <a href="range.html" class="idx-card">
-      <div class="idx-card-left">
+      <div class="idx-left">
         <div class="idx-tag">Range</div>
         <div class="idx-title">Reichweite</div>
         <div class="idx-desc">Maximale Reichweite inkl. 45 min Reserve · POH 5.3.13</div>
@@ -953,7 +995,7 @@
       <div class="idx-arrow">→</div>
     </a>
     <a href="endurance.html" class="idx-card">
-      <div class="idx-card-left">
+      <div class="idx-left">
         <div class="idx-tag">Endurance</div>
         <div class="idx-title">Maximale Flugdauer</div>
         <div class="idx-desc">Flugzeit nach Kraftstoff und Leistung · POH 5.3.14</div>
@@ -961,23 +1003,20 @@
       <div class="idx-arrow">→</div>
     </a>
     <a href="landing.html" class="idx-card">
-      <div class="idx-card-left">
+      <div class="idx-left">
         <div class="idx-tag">Landing</div>
         <div class="idx-title">Landestrecke</div>
         <div class="idx-desc">Landerollstrecke & Landestrecke über Hindernis · POH 5.3.15</div>
       </div>
       <div class="idx-arrow">→</div>
     </a>
-  </main>
-  <div class="disclaimer">
-    <span class="disclaimer-tag">⚠ Wichtiger Hinweis</span>
-    <span class="disclaimer-text">Diese Anwendung ersetzt nicht das originale, zugelassene AFM/POH der jeweiligen
-      Maschine. Die Verantwortung für alle Flugentscheidungen liegt ausschließlich beim Piloten.</span>
   </div>
   <script>
 
-    function toggleTheme() { const h = document.documentElement; const d = h.dataset.theme === 'dark'; h.dataset.theme = d ? 'light' : 'dark'; document.getElementById('tTrack').classList.toggle('on', !d); document.getElementById('tThumb').classList.toggle('on', !d); document.getElementById('tLabel').textContent = d ? 'Light' : 'Dark'; }
+    function initTheme() { const t = localStorage.getItem('g115b-theme') || 'dark'; document.documentElement.dataset.theme = t; const on = t === 'dark'; document.getElementById('tTrack').classList.toggle('on', on); document.getElementById('tThumb').classList.toggle('on', on); document.getElementById('tLabel').textContent = on ? 'Dark' : 'Light'; }
+    function toggleTheme() { const d = document.documentElement.dataset.theme === 'dark'; const t = d ? 'light' : 'dark'; document.documentElement.dataset.theme = t; localStorage.setItem('g115b-theme', t); document.getElementById('tTrack').classList.toggle('on', !d); document.getElementById('tThumb').classList.toggle('on', !d); document.getElementById('tLabel').textContent = d ? 'Light' : 'Dark'; }
 
+    document.addEventListener('DOMContentLoaded', () => { initTheme(); });
   </script>
 </body>
 

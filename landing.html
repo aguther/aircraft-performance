@@ -28,22 +28,22 @@
     }
 
     :root[data-theme="light"] {
-      --bg-app: #eef2f7;
+      --bg-app: #f0f4f9;
       --bg-nav: #ffffff;
       --bg-card: #ffffff;
-      --bg-input: #f0f4f9;
-      --bg-active: #dce8f5;
-      --border: #ccd9e8;
-      --border2: #a8c0d8;
-      --text: #1a2332;
-      --text-sub: #3a5272;
-      --text-dim: #7a96b2;
-      --cyan: #0077aa;
-      --cyan-dim: #005580;
-      --cyan-bg: rgba(0, 119, 170, 0.08);
-      --green: #1a9e40;
-      --amber: #c47a00;
-      --red: #c62828;
+      --bg-input: #e4ecf4;
+      --bg-active: #d4e4f0;
+      --border: #c0d0e0;
+      --border2: #90b0cc;
+      --text: #0f1c2e;
+      --text-sub: #2a4060;
+      --text-dim: #5a7a9a;
+      --cyan: #005f8a;
+      --cyan-dim: #004466;
+      --cyan-bg: rgba(0, 95, 138, 0.10);
+      --green: #136b2e;
+      --amber: #8a5000;
+      --red: #a01010;
     }
 
     *,
@@ -54,9 +54,7 @@
       padding: 0;
     }
 
-    html,
-    body {
-      height: 100%;
+    html {
       background: var(--bg-app);
       color: var(--text);
       font-family: 'Nunito Sans', sans-serif;
@@ -71,13 +69,14 @@
       transition: background 0.2s, color 0.2s;
     }
 
+    /* NAV */
     .nav-bar {
       position: sticky;
       top: 0;
       z-index: 200;
       background: var(--bg-nav);
       border-bottom: 2px solid var(--cyan);
-      padding: 0 1.5rem;
+      padding: 0 1.25rem;
       height: 52px;
       display: flex;
       align-items: center;
@@ -88,7 +87,7 @@
     .nav-left {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.875rem;
     }
 
     .nav-logo {
@@ -117,7 +116,7 @@
     .nav-right {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.625rem;
     }
 
     .theme-toggle {
@@ -196,22 +195,47 @@
       color: var(--cyan);
     }
 
-    main {
-      flex: 1;
+    /* LAYOUT — desktop: sidebar + results side by side, mobile: stacked */
+    .page-layout {
       display: grid;
       grid-template-columns: 300px 1fr;
-      min-height: 0;
-      overflow: hidden;
+      align-items: start;
     }
 
     .sidebar {
       background: var(--bg-nav);
       border-right: 1px solid var(--border);
+      position: sticky;
+      top: 52px;
+      max-height: calc(100vh - 52px);
       overflow-y: auto;
-      display: flex;
-      flex-direction: column;
     }
 
+    .results {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    @media(max-width:800px) {
+      .page-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        max-height: none;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .nav-sub {
+        display: none;
+      }
+    }
+
+    /* SIDEBAR */
     .sidebar-section {
       padding: 1rem 1.25rem;
       border-bottom: 1px solid var(--border);
@@ -311,6 +335,7 @@
       font-size: 10px;
       color: var(--text-dim);
       margin-top: 2px;
+      line-height: 1.5;
     }
 
     .mode-toggle {
@@ -425,15 +450,36 @@
       text-align: right;
     }
 
-    .results-panel {
-      overflow-y: auto;
-      padding: 1.25rem 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      background: var(--bg-app);
+    /* CARDS */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
     }
 
+    .card-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 12px;
+      background: var(--cyan);
+      border-radius: 2px;
+    }
+
+    /* WARNINGS */
     .warnings {
       display: flex;
       flex-direction: column;
@@ -470,34 +516,30 @@
       margin-top: 5px;
     }
 
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
+    /* DISCLAIMER CARD */
+    .disclaimer-card {
+      background: var(--bg-nav);
+      border: 2px solid var(--amber);
       border-radius: 10px;
       padding: 1rem 1.25rem;
     }
 
-    .card-title {
-      font-size: 10px;
+    .disclaimer-tag {
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--text-dim);
-      margin-bottom: 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      color: var(--amber);
+      margin-bottom: 6px;
     }
 
-    .card-title::before {
-      content: '';
-      display: block;
-      width: 3px;
-      height: 12px;
-      background: var(--cyan);
-      border-radius: 2px;
+    .disclaimer-text {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.6;
     }
 
+    /* ATMOS */
     .atmos-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -534,6 +576,7 @@
       color: var(--green);
     }
 
+    /* PIPELINE */
     .pipeline {
       display: flex;
       flex-direction: column;
@@ -604,6 +647,7 @@
       padding-top: 2px;
     }
 
+    /* RESULTS */
     .result-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -627,7 +671,7 @@
     }
 
     .result-item-value {
-      font-size: 2.6rem;
+      font-size: 2.4rem;
       font-weight: 700;
       color: var(--cyan);
       line-height: 1;
@@ -742,46 +786,7 @@
       color: var(--text);
     }
 
-    .disclaimer {
-      position: sticky;
-      bottom: 0;
-      z-index: 200;
-      background: var(--bg-nav);
-      border-top: 2px solid var(--amber);
-      padding: 0.5rem 1.5rem;
-      display: flex;
-      align-items: baseline;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-      flex-shrink: 0;
-    }
-
-    .disclaimer-tag {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--amber);
-      white-space: nowrap;
-    }
-
-    .disclaimer-text {
-      font-size: 12px;
-      color: var(--text-dim);
-      line-height: 1.5;
-    }
-
-    @media(max-width:860px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        max-height: 55vh;
-      }
-
+    @media(max-width:480px) {
       .result-grid {
         grid-template-columns: 1fr;
       }
@@ -794,12 +799,20 @@
         grid-template-columns: 1fr;
       }
 
+      .conditions-grid {
+        grid-template-columns: 1fr;
+      }
+
       .climb-cols {
         grid-template-columns: 1fr;
       }
 
       .climb-arrow {
         transform: rotate(90deg);
+      }
+
+      .result-item-value {
+        font-size: 2rem;
       }
     }
   </style>
@@ -813,8 +826,8 @@
     </div>
     <div class="nav-right">
       <div class="theme-toggle" onclick="toggleTheme()">
-        <div class="toggle-track on" id="tTrack">
-          <div class="toggle-thumb on" id="tThumb"></div>
+        <div class="toggle-track" id="tTrack">
+          <div class="toggle-thumb" id="tThumb"></div>
         </div>
         <span id="tLabel">Dark</span>
       </div>
@@ -822,7 +835,7 @@
       <div class="nav-badge">AFM / POH</div>
     </div>
   </nav>
-  <main>
+  <div class="page-layout">
     <aside class="sidebar">
       <div class="sidebar-section">
         <div class="section-header">Atmosphäre</div>
@@ -872,7 +885,7 @@
       <div class="sidebar-section">
         <div class="section-header">Pistenbedingungen</div>
         <div class="field">
-          <div class="field-label">Slope <span>% · bergauf(+)/bergab(−)</span></div>
+          <div class="field-label">Slope <span>% · bergauf(+) bergab(−)</span></div>
           <div class="slider-row"><input type="range" id="slope-range" min="-2" max="2" step="0.1" value="0"
               oninput="syncSlider('slope','slope-range')"><span class="slider-val" id="slope-range-val">0.0 %</span>
           </div>
@@ -881,7 +894,7 @@
               oninput="syncInput('slope','slope-range')"><span class="unit">%</span></div>
         </div>
         <div class="field">
-          <div class="field-label">Wind <span>kt · HW(+)/TW(−)</span></div>
+          <div class="field-label">Wind <span>kt · HW(+) TW(−)</span></div>
           <div class="slider-row"><input type="range" id="wind-range" min="-11" max="22" step="1" value="0"
               oninput="syncSlider('wind','wind-range')"><span class="slider-val" id="wind-range-val">0 kt</span></div>
           <div class="input-wrap" style="margin-top:6px"><input type="number" id="wind" value="0" step="1" min="-11"
@@ -899,21 +912,17 @@
           <div class="input-wrap" style="margin-top:6px"><input type="number" id="zuschl" value="40" step="1" min="0"
               max="100" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()"
               oninput="syncInput('zuschl','zuschl-range')"><span class="unit">%</span></div>
-          <div class="hint" style="margin-top:4px">Trockene Grasbahn: +40% · Hartbelag trocken: 0%</div>
+          <div class="hint">Trockene Grasbahn: +40% · Hartbelag trocken: 0%</div>
         </div>
       </div>
       <input type="hidden" id="obs" value="15">
     </aside>
-    <section class="results-panel" id="rp"></section>
-  </main>
-  <div class="disclaimer">
-    <span class="disclaimer-tag">⚠ Wichtiger Hinweis</span>
-    <span class="disclaimer-text">Diese Anwendung ersetzt nicht das originale, zugelassene AFM/POH der jeweiligen
-      Maschine. Die Verantwortung für alle Flugentscheidungen liegt ausschließlich beim Piloten.</span>
+    <div class="results" id="rp"></div>
   </div>
   <script>
 
-    function toggleTheme() { const h = document.documentElement; const d = h.dataset.theme === 'dark'; h.dataset.theme = d ? 'light' : 'dark'; document.getElementById('tTrack').classList.toggle('on', !d); document.getElementById('tThumb').classList.toggle('on', !d); document.getElementById('tLabel').textContent = d ? 'Light' : 'Dark'; }
+    function initTheme() { const t = localStorage.getItem('g115b-theme') || 'dark'; document.documentElement.dataset.theme = t; const on = t === 'dark'; document.getElementById('tTrack').classList.toggle('on', on); document.getElementById('tThumb').classList.toggle('on', on); document.getElementById('tLabel').textContent = on ? 'Dark' : 'Light'; }
+    function toggleTheme() { const d = document.documentElement.dataset.theme === 'dark'; const t = d ? 'light' : 'dark'; document.documentElement.dataset.theme = t; localStorage.setItem('g115b-theme', t); document.getElementById('tTrack').classList.toggle('on', !d); document.getElementById('tThumb').classList.toggle('on', !d); document.getElementById('tLabel').textContent = d ? 'Light' : 'Dark'; }
 
 
     function lookup2D(t, x1, x2) { const { bp1, bp2, data } = t; let i0 = 0, i1 = 0, j0 = 0, j1 = 0; if (x1 <= bp1[0]) { i0 = i1 = 0; } else if (x1 >= bp1[bp1.length - 1]) { i0 = i1 = bp1.length - 1; } else { for (let i = 0; i < bp1.length - 1; i++)if (x1 >= bp1[i] && x1 <= bp1[i + 1]) { i0 = i; i1 = i + 1; break; } } if (x2 <= bp2[0]) { j0 = j1 = 0; } else if (x2 >= bp2[bp2.length - 1]) { j0 = j1 = bp2.length - 1; } else { for (let j = 0; j < bp2.length - 1; j++)if (x2 >= bp2[j] && x2 <= bp2[j + 1]) { j0 = j; j1 = j + 1; break; } } const t1 = (i0 === i1) ? 0 : (x1 - bp1[i0]) / (bp1[i1] - bp1[i0]); const t2 = (j0 === j1) ? 0 : (x2 - bp2[j0]) / (bp2[j1] - bp2[j0]); const v0 = data[i0][j0] + t2 * (data[i0][j1] - data[i0][j0]); const v1 = data[i1][j0] + t2 * (data[i1][j1] - data[i1][j0]); return v0 + t1 * (v1 - v0); }
@@ -924,7 +933,6 @@
     function syncSlider(iId, rId) { const v = document.getElementById(rId).value; document.getElementById(iId).value = v; updateLbl(rId, v); }
     function syncInput(iId, rId) { const v = document.getElementById(iId).value; document.getElementById(rId).value = v; updateLbl(rId, v); }
     function updateLbl(rId, v) { const el = document.getElementById(rId + '-val'); if (!el) return; const u = { 'slope-range': ' %', 'wind-range': ' kt', 'zuschl-range': ' %', 'pwr-range': ' %', 'fuel-range': ' l', 'mass-range': ' kg' }; const d = { 'slope-range': 1, 'wind-range': 0, 'zuschl-range': 0, 'pwr-range': 0, 'fuel-range': 0, 'mass-range': 0 }; el.textContent = parseFloat(v).toFixed(d[rId] ?? 0) + (u[rId] || ''); }
-    function paSection(modeIds, modes) { modeIds.forEach((m, i) => { const el = document.getElementById(m); if (el) el.style.display = i === 0 ? 'flex' : 'none'; const b = document.getElementById(modes[i]); if (b) b.classList.toggle('active', i === 0); }); }
 
 
     const T1 = { data: [[115, 158], [123, 169], [131, 180], [140, 192], [150, 206], [161, 221], [173, 237], [185, 255], [199, 273], [213, 293]], bp1: [-1000, 0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000], bp2: [-20, 40] };
@@ -936,7 +944,7 @@
     function calcPAFromQNH() { const e = parseFloat(document.getElementById('elev').value) || 0; const q = parseFloat(document.getElementById('qnh').value) || 1013; const p = Math.round(e + (1013.25 - q) * 27); document.getElementById('pa-derived-val').textContent = p.toLocaleString('de-DE') + ' ft'; document.getElementById('pa').value = p; }
     function calculate() {
       const pa = parseFloat(document.getElementById('pa').value) || 0;
-      const oatRaw = document.getElementById('oat').value; const oat = oatRaw === '' ? 15 : parseFloat(oatRaw);
+      const raw = document.getElementById('oat').value; const oat = raw === '' ? 15 : parseFloat(raw);
       const mass = parseFloat(document.getElementById('mass').value) || 920;
       const slope = parseFloat(document.getElementById('slope').value) || 0;
       const windKt = parseFloat(document.getElementById('wind').value) || 0;
@@ -944,9 +952,9 @@
       const windKmh = windKt * 1.852;
       const { da, isadev } = densityAltitude(pa, oat);
       const vappKmh = interp1D(VAPP_BP, VAPP_KMH, mass); const vappKt = vappKmh * 0.539957;
-      let s3coeff = slope >= 0 ? (1 - 0.04 * slope) : (1 + 0.03 * Math.abs(slope));
-      const s1 = lookup2D(T1, pa, oat); const s2 = lookup2D(T2, s1, mass); const s3 = s2 * s3coeff;
-      const s4 = lookup2D(T3, s3, windKmh); const s4z = s4 * (1 + zPct / 100); const s5 = lookup2D(T4, s4z, 15);
+      let sc = slope >= 0 ? (1 - 0.04 * slope) : (1 + 0.03 * Math.abs(slope));
+      const s1 = lookup2D(T1, pa, oat), s2 = lookup2D(T2, s1, mass), s3 = s2 * sc;
+      const s4 = lookup2D(T3, s3, windKmh), s4z = s4 * (1 + zPct / 100), s5 = lookup2D(T4, s4z, 15);
       const W = [];
       if (mass > 920) W.push({ t: 'Masse überschreitet MTOW (920 kg)!', d: true });
       if (windKt < -5) W.push({ t: 'Rückenwind überschreitet AFM-Grenzwert.', d: false });
@@ -955,34 +963,34 @@
       const wDir = windKt > 0 ? 'HW' : windKt < 0 ? 'TW' : 'Kein Wind';
       const wLbl = windKt !== 0 ? `${Math.abs(windKt)} kt (${Math.abs(windKmh).toFixed(1)} km/h) ${wDir}` : 'Kein Wind';
       const sLbl = slope > 0 ? `${slope.toFixed(1)}% bergauf` : slope < 0 ? `${Math.abs(slope).toFixed(1)}% bergab` : 'eben';
-      document.getElementById('rp').innerHTML = `
-    ${W.length ? `<div class="warnings">${W.map(w => `<div class="warn-item${w.d ? ' danger' : ''}">${w.t}</div>`).join('')}</div>` : ''}
-    <div class="card"><div class="card-title">Atmosphäre</div><div class="atmos-grid">
+      document.getElementById('rp').innerHTML =
+        `<div class="disclaimer-card"><div class="disclaimer-tag">⚠ Wichtiger Hinweis</div><div class="disclaimer-text">Diese Anwendung ersetzt nicht das originale, zugelassene AFM/POH der jeweiligen Maschine. Die Verantwortung für alle Flugentscheidungen liegt ausschließlich beim Piloten.</div></div>`
+        + (W.length ? `<div class="warnings">${W.map(w => `<div class="warn-item${w.d ? ' danger' : ''}">${w.t}</div>`).join('')}</div>` : '')
+        + `<div class="card"><div class="card-title">Atmosphäre</div><div class="atmos-grid">
       <div class="atmos-item"><div class="atmos-item-label">Density Altitude</div><div class="atmos-item-value ${da > 5000 ? 'warn' : ''}">${da.toLocaleString('de-DE')} ft</div></div>
       <div class="atmos-item"><div class="atmos-item-label">ISA-Abweichung</div><div class="atmos-item-value ${Math.abs(isadev) >= 0.1 ? (isadev > 0 ? 'warn' : 'good') : ''}">${fmtS(isadev)} °C</div></div>
-    </div></div>
-    <div class="card"><div class="card-title">Berechnungsschritte</div><div class="pipeline">
+    </div></div>`
+        + `<div class="card"><div class="card-title">Berechnungsschritte</div><div class="pipeline">
       <div class="step"><div class="step-rail"><div class="step-dot active"></div><div class="step-line"></div></div><div class="step-body"><div class="step-name">Schritt 1 — Atmosphäre</div><div class="step-detail">PA ${pa.toLocaleString('de-DE')} ft · OAT ${oat} °C</div></div><div class="step-val">${fmt(s1)} m</div></div>
       <div class="step"><div class="step-rail"><div class="step-dot active"></div><div class="step-line"></div></div><div class="step-body"><div class="step-name">Schritt 2 — Masse</div><div class="step-detail">${fmt(s1)} m · ${mass} kg</div></div><div class="step-val">${fmt(s2)} m</div></div>
       <div class="step"><div class="step-rail"><div class="step-dot active"></div><div class="step-line"></div></div><div class="step-body"><div class="step-name">Schritt 3 — Slope</div><div class="step-detail">${fmt(s2)} m · ${sLbl}</div></div><div class="step-val">${fmt(s3)} m</div></div>
       <div class="step"><div class="step-rail"><div class="step-dot active"></div><div class="step-line"></div></div><div class="step-body"><div class="step-name">Schritt 4 — Wind</div><div class="step-detail">${fmt(s3)} m · ${wLbl}</div></div><div class="step-val">${fmt(s4)} m</div></div>
       <div class="step"><div class="step-rail"><div class="step-dot active"></div><div class="step-line"></div></div><div class="step-body"><div class="step-name">Zuschlag ${zPct}%${zPct === 40 ? ' · Grasbahn' : zPct === 0 ? ' · kein Zuschlag' : ''}</div><div class="step-detail">${fmt(s4)} m × ${(1 + zPct / 100).toFixed(2)}</div></div><div class="step-val">${fmt(s4z)} m</div></div>
       <div class="step"><div class="step-rail"><div class="step-dot active"></div></div><div class="step-body"><div class="step-name">Schritt 5 — Hindernis 15 m</div><div class="step-detail">${fmt(s4z)} m → über 15 m</div></div><div class="step-val">${fmt(s5)} m</div></div>
-    </div></div>
-    <div class="card"><div class="card-title">Ergebnis</div><div class="result-grid">
+    </div></div>`
+        + `<div class="card"><div class="card-title">Ergebnis</div><div class="result-grid">
       <div class="result-item"><div class="result-item-label">Landerollstrecke · Landing Roll</div><div class="result-item-value">${fmt(s4z)} <span>m</span></div></div>
       <div class="result-item"><div class="result-item-label">Landestrecke · Landing Distance</div><div class="result-item-value">${fmt(s5)} <span>m</span></div></div>
-    </div></div>
-    <div class="card"><div class="card-title">Anfluggeschwindigkeit · V<sub>APP</sub></div><div class="speed-grid">
-      <div class="speed-item"><div class="speed-item-label">V<sub>APP</sub> IAS</div><div class="speed-item-value">${vappKt.toFixed(1)} <span>kt</span></div><div class="speed-item-sub">${vappKmh.toFixed(0)} km/h</div></div>
-    </div></div>
-    <div class="card"><div class="card-title">Bedingungen</div><div class="conditions-grid">
-      <span>Befestigte, trockene Bahn</span><span>Leerlauf</span>
-      <span>Klappen 40°</span><span>Max. vordere Schwerpunktlage</span>
-    </div></div>`;
+    </div></div>`
+        + `<div class="card"><div class="card-title">Anfluggeschwindigkeit VAPP</div><div class="speed-grid">
+      <div class="speed-item"><div class="speed-item-label">VAPP IAS</div><div class="speed-item-value">${vappKt.toFixed(1)} <span>kt</span></div><div class="speed-item-sub">${vappKmh.toFixed(0)} km/h</div></div>
+    </div></div>`
+        + `<div class="card"><div class="card-title">Bedingungen</div><div class="conditions-grid"><span>Befestigte, trockene Bahn</span><span>Leerlauf</span><span>Klappen 40°</span><span>Max. vordere Schwerpunktlage</span></div></div>`
+        ;
     }
     document.addEventListener('DOMContentLoaded', () => { calcPAFromQNH(); document.querySelector('.sidebar').addEventListener('input', calculate); calculate(); });
 
+    document.addEventListener('DOMContentLoaded', () => { initTheme(); });
   </script>
 </body>
 
