@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de" data-theme="dark">
+<html lang="de" data-theme="light">
 
 <head>
   <meta charset="UTF-8">
@@ -518,8 +518,8 @@
 
     /* DISCLAIMER CARD */
     .disclaimer-card {
-      background: var(--bg-nav);
-      border: 2px solid var(--amber);
+      background: #e8820a;
+      border: none;
       border-radius: 10px;
       padding: 1rem 1.25rem;
     }
@@ -529,13 +529,14 @@
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--amber);
-      margin-bottom: 6px;
+      color: rgba(0, 0, 0, 0.5);
+      margin-bottom: 4px;
     }
 
     .disclaimer-text {
       font-size: 13px;
-      color: var(--text);
+      color: #000;
+      font-weight: 600;
       line-height: 1.6;
     }
 
@@ -866,7 +867,7 @@
   </div>
   <script>
 
-    function initTheme() { const t = localStorage.getItem('g115b-theme') || 'dark'; document.documentElement.dataset.theme = t; const on = t === 'dark'; document.getElementById('tTrack').classList.toggle('on', on); document.getElementById('tThumb').classList.toggle('on', on); document.getElementById('tLabel').textContent = on ? 'Dark' : 'Light'; }
+    function initTheme() { const t = localStorage.getItem('g115b-theme') || 'light'; document.documentElement.dataset.theme = t; const on = t === 'dark'; document.getElementById('tTrack').classList.toggle('on', on); document.getElementById('tThumb').classList.toggle('on', on); document.getElementById('tLabel').textContent = on ? 'Dark' : 'Light'; }
     function toggleTheme() { const d = document.documentElement.dataset.theme === 'dark'; const t = d ? 'light' : 'dark'; document.documentElement.dataset.theme = t; localStorage.setItem('g115b-theme', t); document.getElementById('tTrack').classList.toggle('on', !d); document.getElementById('tThumb').classList.toggle('on', !d); document.getElementById('tLabel').textContent = d ? 'Light' : 'Dark'; }
 
 

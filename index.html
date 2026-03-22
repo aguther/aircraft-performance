@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de" data-theme="dark">
+<html lang="de" data-theme="light">
 
 <head>
   <meta charset="UTF-8">
@@ -907,8 +907,8 @@
     }
 
     .idx-disclaimer {
-      background: var(--bg-nav);
-      border: 2px solid var(--amber);
+      background: #e8820a;
+      border: none;
       border-left: 4px solid var(--amber);
       border-radius: 10px;
       padding: 1rem 1.25rem;
@@ -919,13 +919,14 @@
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--amber);
-      margin-bottom: 6px;
+      color: rgba(0, 0, 0, 0.55);
+      margin-bottom: 4px;
     }
 
     .idx-disclaimer-text {
       font-size: 13px;
-      color: var(--text);
+      color: #000;
+      font-weight: 600;
       line-height: 1.6;
     }
   </style>
@@ -962,11 +963,19 @@
       </div>
       <div class="idx-arrow">→</div>
     </a>
-    <a href="climb_rate.html" class="idx-card">
+    <a href="landing.html" class="idx-card">
       <div class="idx-left">
-        <div class="idx-tag">Climb</div>
-        <div class="idx-title">Steiggeschwindigkeit</div>
-        <div class="idx-desc">Rate of Climb · VY nach Masse und Dichtehöhe · POH 5.3.8</div>
+        <div class="idx-tag">Landing</div>
+        <div class="idx-title">Landestrecke</div>
+        <div class="idx-desc">Landerollstrecke & Landestrecke über Hindernis · POH 5.3.15</div>
+      </div>
+      <div class="idx-arrow">→</div>
+    </a>
+    <a href="cruise.html" class="idx-card">
+      <div class="idx-left">
+        <div class="idx-tag">Cruise</div>
+        <div class="idx-title">Reiseflug</div>
+        <div class="idx-desc">Drehzahl, Kraftstoffverbrauch und TAS · POH 5.3.10–12</div>
       </div>
       <div class="idx-arrow">→</div>
     </a>
@@ -978,11 +987,11 @@
       </div>
       <div class="idx-arrow">→</div>
     </a>
-    <a href="cruise.html" class="idx-card">
+    <a href="climb_rate.html" class="idx-card">
       <div class="idx-left">
-        <div class="idx-tag">Cruise</div>
-        <div class="idx-title">Reiseflug</div>
-        <div class="idx-desc">Drehzahl, Kraftstoffverbrauch und TAS · POH 5.3.10–12</div>
+        <div class="idx-tag">Climb</div>
+        <div class="idx-title">Steiggeschwindigkeit</div>
+        <div class="idx-desc">Rate of Climb · VY nach Masse und Dichtehöhe · POH 5.3.8</div>
       </div>
       <div class="idx-arrow">→</div>
     </a>
@@ -1002,18 +1011,18 @@
       </div>
       <div class="idx-arrow">→</div>
     </a>
-    <a href="landing.html" class="idx-card">
+    <a href="stall.html" class="idx-card">
       <div class="idx-left">
-        <div class="idx-tag">Landing</div>
-        <div class="idx-title">Landestrecke</div>
-        <div class="idx-desc">Landerollstrecke & Landestrecke über Hindernis · POH 5.3.15</div>
+        <div class="idx-tag">Stall Speed</div>
+        <div class="idx-title">Überziehgeschwindigkeit</div>
+        <div class="idx-desc">VS0 / VS1 nach Masse, Klappen und Leistung · POH 5.3.4</div>
       </div>
       <div class="idx-arrow">→</div>
     </a>
   </div>
   <script>
 
-    function initTheme() { const t = localStorage.getItem('g115b-theme') || 'dark'; document.documentElement.dataset.theme = t; const on = t === 'dark'; document.getElementById('tTrack').classList.toggle('on', on); document.getElementById('tThumb').classList.toggle('on', on); document.getElementById('tLabel').textContent = on ? 'Dark' : 'Light'; }
+    function initTheme() { const t = localStorage.getItem('g115b-theme') || 'light'; document.documentElement.dataset.theme = t; const on = t === 'dark'; document.getElementById('tTrack').classList.toggle('on', on); document.getElementById('tThumb').classList.toggle('on', on); document.getElementById('tLabel').textContent = on ? 'Dark' : 'Light'; }
     function toggleTheme() { const d = document.documentElement.dataset.theme === 'dark'; const t = d ? 'light' : 'dark'; document.documentElement.dataset.theme = t; localStorage.setItem('g115b-theme', t); document.getElementById('tTrack').classList.toggle('on', !d); document.getElementById('tThumb').classList.toggle('on', !d); document.getElementById('tLabel').textContent = d ? 'Light' : 'Dark'; }
 
     document.addEventListener('DOMContentLoaded', () => { initTheme(); });

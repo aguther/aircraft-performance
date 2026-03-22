@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grob G115B — Steiggeschwindigkeit</title>
+  <title>Grob G115B — Überziehgeschwindigkeit</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -823,15 +823,15 @@
   <nav class="nav-bar">
     <div class="nav-left">
       <div class="nav-logo">G115B</div>
-      <div><span class="nav-title">Steiggeschwindigkeit</span><span class="nav-sub">POH 5.3.8 · Rate of Climb ·
-          VY</span></div>
+      <div><span class="nav-title">Überziehgeschwindigkeit</span><span class="nav-sub">POH 5.3.4 · VSO / VS1</span>
+      </div>
     </div>
     <div class="nav-right">
       <div class="theme-toggle" onclick="toggleTheme()">
         <div class="toggle-track" id="tTrack">
           <div class="toggle-thumb" id="tThumb"></div>
         </div>
-        <span id="tLabel">Dark</span>
+        <span id="tLabel">Light</span>
       </div>
       <a href="index.html" class="nav-back">← Back</a>
       <div class="nav-badge">AFM / POH</div>
@@ -840,58 +840,42 @@
   <div class="page-layout">
     <aside class="sidebar">
       <div class="sidebar-section">
-        <div class="section-header">Höhe</div>
-        <div class="mode-toggle" style="grid-template-columns:1fr 1fr 1fr">
-          <button class="mode-btn active" id="mode-alt-btn" onclick="setMode('alt')">Altitude</button>
-          <button class="mode-btn" id="mode-fl-btn" onclick="setMode('fl')">Flight Level</button>
-          <button class="mode-btn" id="mode-da-btn" onclick="setMode('da')">Density Alt.</button>
-        </div>
-        <div id="mode-alt" class="pa-mode">
-          <div class="field">
-            <div class="field-label">Flughöhe <span>ft</span></div>
-            <div class="input-wrap"><input type="number" id="alt" value="4000" step="100" onfocus="this.select()"
-                onkeydown="if(event.key==='Enter')this.blur()" oninput="calcDA()"><span class="unit">ft</span></div>
+        <div class="section-header">Flugzeug</div>
+        <div class="field">
+          <div class="field-label">Flugmasse <span>kg</span></div>
+          <div class="slider-row">
+            <input type="range" id="mass-range" min="750" max="920" step="1" value="920"
+              oninput="syncSlider('mass','mass-range')">
+            <span class="slider-val" id="mass-range-val">920 kg</span>
           </div>
-          <div class="field">
-            <div class="field-label">QNH <span>hPa</span></div>
-            <div class="input-wrap"><input type="number" id="qnh" value="1013" step="1" min="900" max="1100"
-                onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="calcDA()"><span
-                class="unit">hPa</span></div>
+          <div class="input-wrap" style="margin-top:6px">
+            <input type="number" id="mass" value="920" step="5" min="750" max="920" onfocus="this.select()"
+              onkeydown="if(event.key==='Enter')this.blur()" oninput="syncInput('mass','mass-range')">
+            <span class="unit">kg</span>
           </div>
-        </div>
-        <div id="mode-fl" class="pa-mode" style="display:none">
-          <div class="field">
-            <div class="field-label">Flight Level</div>
-            <div class="input-wrap"><input type="number" id="fl" value="40" step="5" onfocus="this.select()"
-                onkeydown="if(event.key==='Enter')this.blur()" oninput="calcDA()"><span class="unit">FL</span></div>
-          </div>
-        </div>
-        <div id="mode-da" class="pa-mode" style="display:none">
-          <div class="field">
-            <div class="field-label">Density Altitude <span>ft</span></div>
-            <div class="input-wrap"><input type="number" id="da-direct" value="4000" step="100" onfocus="this.select()"
-                onkeydown="if(event.key==='Enter')this.blur()" oninput="calcDA()"><span class="unit">ft</span></div>
-          </div>
-        </div>
-        <div class="field" id="oat-field">
-          <div class="field-label">OAT <span>°C</span></div>
-          <div class="input-wrap"><input type="number" id="oat" value="5" step="1" onfocus="this.select()"
-              onkeydown="if(event.key==='Enter')this.blur()" oninput="calcDA()"><span class="unit">°C</span></div>
-        </div>
-        <div class="derived-box" id="da-box">
-          <div class="derived-label">Density Altitude</div>
-          <div class="derived-value" id="da-val">— ft</div>
+          <div class="hint">MTOW 920 kg · Minimalgewicht ca. 750 kg</div>
         </div>
       </div>
       <div class="sidebar-section">
-        <div class="section-header">Flugzeug</div>
+        <div class="section-header">Triebwerk</div>
         <div class="field">
-          <div class="field-label">Masse <span>kg</span></div>
-          <div class="slider-row"><input type="range" id="mass-range" min="750" max="920" step="1" value="920"
-              oninput="syncSlider('mass','mass-range')"><span class="slider-val" id="mass-range-val">920 kg</span></div>
-          <div class="input-wrap" style="margin-top:6px"><input type="number" id="mass" value="920" step="5" min="600"
-              max="920" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()"
-              oninput="syncInput('mass','mass-range')"><span class="unit">kg</span></div>
+          <div class="field-label">Leistungsstellung</div>
+          <div class="mode-toggle" style="grid-template-columns:1fr 1fr">
+            <button class="mode-btn active" id="mode-leerlauf-btn" onclick="setPower('leerlauf')">Leerlauf</button>
+            <button class="mode-btn" id="mode-vollast-btn" onclick="setPower('vollast')">Vollast</button>
+          </div>
+          <div class="hint">Leerlauf = kritischer Fall für Landung<br>Vollast = Durchstartbedingung</div>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="section-header">Klappenstellung</div>
+        <div class="field">
+          <div class="mode-toggle" style="grid-template-columns:1fr 1fr 1fr">
+            <button class="mode-btn active" id="mode-f0-btn" onclick="setFlaps(0)">0°</button>
+            <button class="mode-btn" id="mode-f12-btn" onclick="setFlaps(12)">12°</button>
+            <button class="mode-btn" id="mode-f40-btn" onclick="setFlaps(40)">40°</button>
+          </div>
+          <div class="hint">40° = Landung (VSO) · 0° = Reiseflug (VS1)</div>
         </div>
       </div>
     </aside>
@@ -903,73 +887,73 @@
     function toggleTheme() { const d = document.documentElement.dataset.theme === 'dark'; const t = d ? 'light' : 'dark'; document.documentElement.dataset.theme = t; localStorage.setItem('g115b-theme', t); document.getElementById('tTrack').classList.toggle('on', !d); document.getElementById('tThumb').classList.toggle('on', !d); document.getElementById('tLabel').textContent = d ? 'Light' : 'Dark'; }
 
 
-    function lookup2D(t, x1, x2) { const { bp1, bp2, data } = t; let i0 = 0, i1 = 0, j0 = 0, j1 = 0; if (x1 <= bp1[0]) { i0 = i1 = 0; } else if (x1 >= bp1[bp1.length - 1]) { i0 = i1 = bp1.length - 1; } else { for (let i = 0; i < bp1.length - 1; i++)if (x1 >= bp1[i] && x1 <= bp1[i + 1]) { i0 = i; i1 = i + 1; break; } } if (x2 <= bp2[0]) { j0 = j1 = 0; } else if (x2 >= bp2[bp2.length - 1]) { j0 = j1 = bp2.length - 1; } else { for (let j = 0; j < bp2.length - 1; j++)if (x2 >= bp2[j] && x2 <= bp2[j + 1]) { j0 = j; j1 = j + 1; break; } } const t1 = (i0 === i1) ? 0 : (x1 - bp1[i0]) / (bp1[i1] - bp1[i0]); const t2 = (j0 === j1) ? 0 : (x2 - bp2[j0]) / (bp2[j1] - bp2[j0]); const v0 = data[i0][j0] + t2 * (data[i0][j1] - data[i0][j0]); const v1 = data[i1][j0] + t2 * (data[i1][j1] - data[i1][j0]); return v0 + t1 * (v1 - v0); }
     function interp1D(bp, vals, x) { if (x <= bp[0]) return vals[0]; if (x >= bp[bp.length - 1]) return vals[bp.length - 1]; for (let i = 0; i < bp.length - 1; i++)if (x >= bp[i] && x <= bp[i + 1]) { const t = (x - bp[i]) / (bp[i + 1] - bp[i]); return vals[i] + t * (vals[i + 1] - vals[i]); } return vals[vals.length - 1]; }
-    function densityAltitude(pa, oat) { const isa = 15 - 1.98 * (pa / 1000); const dev = oat - isa; return { da: Math.round(pa + 120 * dev), isadev: dev }; }
-    const fmt = v => Math.round(v);
     const fmtS = v => (v >= 0 ? '+' : '') + v.toFixed(1);
     function syncSlider(iId, rId) { const v = document.getElementById(rId).value; document.getElementById(iId).value = v; updateLbl(rId, v); }
     function syncInput(iId, rId) { const v = document.getElementById(iId).value; document.getElementById(rId).value = v; updateLbl(rId, v); }
-    function updateLbl(rId, v) { const el = document.getElementById(rId + '-val'); if (!el) return; const u = { 'slope-range': ' %', 'wind-range': ' kt', 'zuschl-range': ' %', 'pwr-range': ' %', 'fuel-range': ' l', 'mass-range': ' kg' }; const d = { 'slope-range': 1, 'wind-range': 0, 'zuschl-range': 0, 'pwr-range': 0, 'fuel-range': 0, 'mass-range': 0 }; el.textContent = parseFloat(v).toFixed(d[rId] ?? 0) + (u[rId] || ''); }
+    function updateLbl(rId, v) { const el = document.getElementById(rId + '-val'); if (!el) return; const u = { 'mass-range': ' kg' }; const d = { 'mass-range': 0 }; el.textContent = parseFloat(v).toFixed(d[rId] ?? 0) + (u[rId] || ''); }
 
 
-    let curMode = 'alt';
-    function setMode(m) {
-      curMode = m;
-      ['alt', 'fl', 'da'].forEach(k => {
-        document.getElementById('mode-' + k).style.display = k === m ? 'flex' : 'none';
-        document.getElementById('mode-' + k + '-btn').classList.toggle('active', k === m);
+    // POH 5.3.4 — Überziehgeschwindigkeiten (IAS km/h)
+    // bp: Flugmasse [kg] = 750, 850, 950
+    const BP = [750, 850, 950];
+    const DATA = {
+      vollast: { f0: [73, 80, 87], f12: [72, 78, 85], f40: [72, 77, 83] },
+      leerlauf: { f0: [82, 90, 97], f12: [81, 88, 95], f40: [81, 87, 93] },
+    };
+
+    let curPower = 'leerlauf';
+    let curFlaps = 0;
+
+    function setPower(p) {
+      curPower = p;
+      ['leerlauf', 'vollast'].forEach(k => {
+        document.getElementById('mode-' + k + '-btn').classList.toggle('active', k === p);
       });
-      const needOAT = m !== 'da';
-      document.getElementById('oat-field').style.display = needOAT ? 'flex' : 'none';
-      document.getElementById('da-box').style.display = needOAT ? 'flex' : 'none';
-      calcDA();
-    }
-    function calcDA() {
-      let da;
-      if (curMode === 'da') { da = parseFloat(document.getElementById('da-direct').value) || 0; }
-      else {
-        let pa;
-        if (curMode === 'alt') { const a = parseFloat(document.getElementById('alt').value) || 0; const q = parseFloat(document.getElementById('qnh').value) || 1013; pa = Math.round(a + (1013.25 - q) * 27); }
-        else { pa = (parseFloat(document.getElementById('fl').value) || 0) * 100; }
-        const raw = document.getElementById('oat').value; const oat = raw === '' ? 15 : parseFloat(raw);
-        const r = densityAltitude(pa, oat); da = r.da;
-        document.getElementById('da-val').textContent = da.toLocaleString('de-DE') + ' ft';
-      }
-      window._da = da; calculate(da);
+      calculate();
     }
 
-    const VY_TABLE = { data: [[135, 119, 107], [143, 124, 115], [150, 131, 120]], bp1: [750, 835, 920], bp2: [0, 8000, 16000] };
-    const ROC_TABLE = { data: [[1470, 1340, 1200, 1055, 905, 755, 600, 440, 275, 90, 0], [1360, 1225, 1085, 940, 790, 635, 475, 310, 140, 0, 0], [1250, 1115, 970, 820, 670, 515, 355, 190, 25, 0, 0]], bp1: [750, 835, 920], bp2: [0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000] };
-    function calculate(da) {
-      if (da === undefined) return;
-      const mass = parseFloat(document.getElementById('mass').value) || 920;
-      let pa = 0;
-      if (curMode === 'alt') { const a = parseFloat(document.getElementById('alt').value) || 0; const q = parseFloat(document.getElementById('qnh').value) || 1013; pa = Math.round(a + (1013.25 - q) * 27); }
-      else if (curMode === 'fl') { pa = (parseFloat(document.getElementById('fl').value) || 0) * 100; }
-      else { pa = da; }
-      const vy = lookup2D(VY_TABLE, mass, pa); const vyKt = vy * 0.539957;
-      const roc = Math.max(0, lookup2D(ROC_TABLE, mass, da)); const rocMs = roc * 0.00508;
-      const raw = document.getElementById('oat').value; const oat = raw === '' ? 15 : parseFloat(raw);
-      let isadev = 0; if (curMode !== 'da') isadev = densityAltitude(pa, oat).isadev;
-      const W = roc < 50 ? [{ t: 'Steigrate sehr gering — Diagrammgrenze erreicht.', d: false }] : [];
+    function setFlaps(f) {
+      curFlaps = f;
+      [0, 12, 40].forEach(k => {
+        document.getElementById('mode-f' + k + '-btn').classList.toggle('active', k === f);
+      });
+      calculate();
+    }
+
+    function calculate() {
+      const mass = parseFloat(document.getElementById('mass').value) || 850;
+      const key = 'f' + curFlaps;
+      const vals = DATA[curPower][key];
+      const vsKmh = interp1D(BP, vals, mass);
+      const vsKt = vsKmh * 0.539957;
+
+      const powerLbl = curPower === 'leerlauf' ? 'Leerlauf' : 'Vollast';
+      const flapsLbl = curFlaps + '°';
+      const vsLabel = curFlaps === 40 ? 'VSO' : 'VS1';
+
       document.getElementById('rp').innerHTML =
         `<div class="disclaimer-card"><div class="disclaimer-tag">⚠ Wichtiger Hinweis</div><div class="disclaimer-text">Diese Anwendung ersetzt nicht das originale, zugelassene AFM/POH der jeweiligen Maschine. Die Verantwortung für alle Flugentscheidungen liegt ausschließlich beim Piloten.</div></div>`
-        + (W.length ? `<div class="warnings">${W.map(w => `<div class="warn-item${w.d ? ' danger' : ''}">${w.t}</div>`).join('')}</div>` : '')
-        + (curMode !== 'da' ? `<div class="card"><div class="card-title">Atmosphäre</div><div class="atmos-grid">
-      <div class="atmos-item"><div class="atmos-item-label">Density Altitude</div><div class="atmos-item-value ${da > 10000 ? 'warn' : ''}">${da.toLocaleString('de-DE')} ft</div></div>
-      <div class="atmos-item"><div class="atmos-item-label">ISA-Abweichung</div><div class="atmos-item-value ${Math.abs(isadev) >= 0.1 ? (isadev > 0 ? 'warn' : 'good') : ''}">${fmtS(isadev)} °C</div></div>
-    </div></div>`: '')
-        + `<div class="card"><div class="card-title">Ergebnis — ${mass} kg · DA ${da.toLocaleString('de-DE')} ft</div><div class="result-grid">
-      <div class="result-item"><div class="result-item-label">Steigrate · Rate of Climb</div><div class="result-item-value">${Math.round(roc)} <span>ft/min</span></div><div class="result-item-sub">${rocMs.toFixed(1)} m/s</div></div>
-      <div class="result-item"><div class="result-item-label">VY · Climb Speed</div><div class="result-item-value">${vyKt.toFixed(1)} <span>kt</span></div><div class="result-item-sub">${Math.round(vy)} km/h IAS</div></div>
-    </div></div>`
-        + `<div class="card"><div class="card-title">Bedingungen</div><div class="conditions-grid"><span>Vollgas</span><span>Gemisch für größte Leistung</span><span>Klappen 0°</span><span>V = VY</span><span>Mittlere Schwerpunktlage</span></div></div>`
-        ;
+        + `<div class="card"><div class="card-title">Ergebnis — ${mass} kg · ${powerLbl} · Klappen ${flapsLbl}</div>
+      <div class="result-grid" style="grid-template-columns:1fr">
+        <div class="result-item">
+          <div class="result-item-label">Überziehgeschwindigkeit · ${vsLabel}</div>
+          <div class="result-item-value">${vsKt.toFixed(1)} <span>kt</span></div>
+          <div class="result-item-sub">${vsKmh.toFixed(0)} km/h IAS</div>
+        </div>
+      </div>
+    </div>`
+        + `<div class="card"><div class="card-title">Bedingungen</div><div class="conditions-grid">
+      <span>Lastvielfaches n = 1</span><span>Gerade Fluglage</span>
+      <span>IAS-Angaben</span><span>Ablesewert aus POH Bild 5.3.4</span>
+    </div></div>`;
     }
-    document.addEventListener('DOMContentLoaded', () => { calcDA(); document.querySelector('.sidebar').addEventListener('input', calcDA); });
 
-    document.addEventListener('DOMContentLoaded', () => { initTheme(); });
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      document.querySelector('.sidebar').addEventListener('input', calculate);
+      calculate();
+    });
   </script>
 </body>
 
