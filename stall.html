@@ -896,10 +896,10 @@
 
     // POH 5.3.4 — Überziehgeschwindigkeiten (IAS km/h)
     // bp: Flugmasse [kg] = 750, 850, 950
-    const BP = [750, 850, 950];
+    const BP = [750, 920];
     const DATA = {
-      vollast: { f0: [73, 80, 87], f12: [72, 78, 85], f40: [72, 77, 83] },
-      leerlauf: { f0: [82, 90, 97], f12: [81, 88, 95], f40: [81, 87, 93] },
+      vollast: { f0: [79, 87], f12: [74, 81], f40: [73, 79] },
+      leerlauf: { f0: [89, 97], f12: [86, 94], f40: [82, 91] },
     };
 
     let curPower = 'leerlauf';
