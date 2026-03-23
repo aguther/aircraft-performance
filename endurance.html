@@ -386,8 +386,8 @@
     .field {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      margin-bottom: 0.75rem;
+      gap: 6px;
+      margin-bottom: 1.25rem;
     }
 
     .field:last-child {
@@ -1097,8 +1097,8 @@
     function updateSliderLabel(rangeId, value) {
       const el = document.getElementById(rangeId + '-val');
       if (!el) return;
-      const units = { 'slope-range': ' %', 'wind-range': ' kt', 'zuschl-range': ' %', 'pwr-range': ' %', 'fuel-range': ' l', 'mass-range': ' kg' };
-      const decimals = { 'slope-range': 1, 'wind-range': 0, 'zuschl-range': 0, 'pwr-range': 0, 'fuel-range': 0, 'mass-range': 0 };
+      const units = { 'slope-range': ' %', 'wind-range': ' kt', 'zuschl-range': ' %', 'pwr-range': ' %', 'fuel-range': ' l', 'mass-range': ' kg', 'oat-range': ' °C', 'qnh-range': ' hPa', 'from-qnh-range': ' hPa', 'to-qnh-range': ' hPa', 'from-oat-range': ' °C', 'to-oat-range': ' °C' };
+      const decimals = { 'slope-range': 1, 'wind-range': 0, 'zuschl-range': 0, 'pwr-range': 0, 'fuel-range': 0, 'mass-range': 0, 'oat-range': 0, 'qnh-range': 0, 'from-qnh-range': 0, 'to-qnh-range': 0, 'from-oat-range': 0, 'to-oat-range': 0 };
       el.textContent = parseFloat(value).toFixed(decimals[rangeId] ?? 0) + (units[rangeId] || '');
     }
 

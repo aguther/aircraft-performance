@@ -386,8 +386,8 @@
     .field {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      margin-bottom: 0.75rem;
+      gap: 6px;
+      margin-bottom: 1.25rem;
     }
 
     .field:last-child {
@@ -983,9 +983,16 @@
           </div>
           <div class="field">
             <div class="field-label">QNH <span>hPa</span></div>
-            <div class="input-wrap"><input type="number" id="qnh" value="1013" step="1" min="900" max="1100"
-                onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()" oninput="calcPAFromQNH()"><span
-                class="unit">hPa</span></div>
+            <div class="slider-row">
+              <input type="range" id="qnh-range" min="950" max="1050" step="1" value="1013"
+                oninput="syncSlider('qnh','qnh-range'); calcPAFromQNH()">
+              <span class="slider-val" id="qnh-range-val">1013 hPa</span>
+            </div>
+            <div class="input-wrap" style="margin-top:6px">
+              <input type="number" id="qnh" value="1013" step="1" min="950" max="1050" onfocus="this.select()"
+                onkeydown="if(event.key==='Enter')this.blur()" oninput="syncInput('qnh','qnh-range'); calcPAFromQNH()">
+              <span class="unit">hPa</span>
+            </div>
           </div>
           <div class="derived-box">
             <div class="derived-label">Pressure Altitude</div>
@@ -999,18 +1006,34 @@
                 onkeydown="if(event.key==='Enter')this.blur()"><span class="unit">ft</span></div>
           </div>
         </div>
-        <div class="field" style="margin-top:0.75rem">
+        <div class="field" style="margin-top:1.25rem">
           <div class="field-label">OAT <span>°C</span></div>
-          <div class="input-wrap"><input type="number" id="oat" value="15" step="1" onfocus="this.select()"
-              onkeydown="if(event.key==='Enter')this.blur()"><span class="unit">°C</span></div>
+          <div class="slider-row">
+            <input type="range" id="oat-range" min="-40" max="50" step="1" value="15"
+              oninput="syncSlider('oat','oat-range')">
+            <span class="slider-val" id="oat-range-val">15 °C</span>
+          </div>
+          <div class="input-wrap" style="margin-top:6px">
+            <input type="number" id="oat" value="15" step="1" min="-40" max="50" onfocus="this.select()"
+              onkeydown="if(event.key==='Enter')this.blur()" oninput="syncInput('oat','oat-range')">
+            <span class="unit">°C</span>
+          </div>
         </div>
       </div>
       <div class="sidebar-section">
         <div class="section-header">Flugzeug</div>
         <div class="field">
           <div class="field-label">Masse <span>kg · MTOW 920</span></div>
-          <div class="input-wrap"><input type="number" id="mass" value="920" step="5" min="600" max="950"
-              onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()"><span class="unit">kg</span></div>
+          <div class="slider-row">
+            <input type="range" id="mass-range" min="750" max="920" step="1" value="920"
+              oninput="syncSlider('mass','mass-range')">
+            <span class="slider-val" id="mass-range-val">920 kg</span>
+          </div>
+          <div class="input-wrap" style="margin-top:6px">
+            <input type="number" id="mass" value="920" step="5" min="750" max="920" onfocus="this.select()"
+              onkeydown="if(event.key==='Enter')this.blur()" oninput="syncInput('mass','mass-range')">
+            <span class="unit">kg</span>
+          </div>
         </div>
       </div>
       <div class="sidebar-section">
@@ -1153,8 +1176,8 @@
     function updateSliderLabel(rangeId, value) {
       const el = document.getElementById(rangeId + '-val');
       if (!el) return;
-      const units = { 'slope-range': ' %', 'wind-range': ' kt', 'zuschl-range': ' %', 'pwr-range': ' %', 'fuel-range': ' l', 'mass-range': ' kg' };
-      const decimals = { 'slope-range': 1, 'wind-range': 0, 'zuschl-range': 0, 'pwr-range': 0, 'fuel-range': 0, 'mass-range': 0 };
+      const units = { 'slope-range': ' %', 'wind-range': ' kt', 'zuschl-range': ' %', 'pwr-range': ' %', 'fuel-range': ' l', 'mass-range': ' kg', 'oat-range': ' °C', 'qnh-range': ' hPa', 'from-qnh-range': ' hPa', 'to-qnh-range': ' hPa', 'from-oat-range': ' °C', 'to-oat-range': ' °C' };
+      const decimals = { 'slope-range': 1, 'wind-range': 0, 'zuschl-range': 0, 'pwr-range': 0, 'fuel-range': 0, 'mass-range': 0, 'oat-range': 0, 'qnh-range': 0, 'from-qnh-range': 0, 'to-qnh-range': 0, 'from-oat-range': 0, 'to-oat-range': 0 };
       el.textContent = parseFloat(value).toFixed(decimals[rangeId] ?? 0) + (units[rangeId] || '');
     }
 
