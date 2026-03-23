@@ -55,7 +55,7 @@
     }
 
     html {
-      background: var(--bg-app);
+      background: var(--bg-nav);
       color: var(--text);
       font-family: 'Nunito Sans', sans-serif;
       font-size: 14px;
@@ -76,47 +76,89 @@
       z-index: 200;
       background: var(--bg-nav);
       border-bottom: 2px solid var(--cyan);
-      padding: 0 1.25rem;
+      padding: 0 1rem;
       height: 52px;
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      justify-content: space-between;
       flex-shrink: 0;
     }
 
-    .nav-left {
+    .nav-back {
       display: flex;
       align-items: center;
-      gap: 0.875rem;
+      gap: 5px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-decoration: none;
+      padding: 6px 10px 6px 6px;
+      border-radius: 6px;
+      transition: all 0.15s;
+      white-space: nowrap;
+      justify-self: start;
+    }
+
+    .nav-back:hover {
+      color: var(--cyan);
+      background: var(--bg-active);
+    }
+
+    .nav-back-arrow {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .nav-back-home {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-decoration: none;
+      padding: 6px 10px 6px 6px;
+      border-radius: 6px;
+      transition: all 0.15s;
+      white-space: nowrap;
+      justify-self: start;
+    }
+
+    .nav-back-home:hover {
+      color: var(--cyan);
+      background: var(--bg-active);
+    }
+
+    .nav-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
     }
 
     .nav-logo {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.15em;
       text-transform: uppercase;
       color: var(--cyan);
-      border: 1px solid var(--cyan);
-      padding: 3px 8px;
-      border-radius: 3px;
     }
 
     .nav-title {
-      font-size: 15px;
-      font-weight: 600;
+      font-size: 14px;
+      font-weight: 700;
       color: var(--text);
-    }
-
-    .nav-sub {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-left: 0.5rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
     }
 
     .nav-right {
       display: flex;
       align-items: center;
-      gap: 0.625rem;
+      justify-content: flex-end;
     }
 
     .theme-toggle {
@@ -127,12 +169,13 @@
       background: var(--bg-input);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 4px 10px;
+      padding: 5px 10px;
       font-size: 11px;
       font-weight: 600;
       color: var(--text-sub);
       transition: all 0.15s;
       user-select: none;
+      white-space: nowrap;
     }
 
     .theme-toggle:hover {
@@ -147,6 +190,7 @@
       border-radius: 8px;
       position: relative;
       transition: background 0.2s;
+      flex-shrink: 0;
     }
 
     .toggle-track.on {
@@ -168,31 +212,103 @@
       transform: translateX(12px);
     }
 
-    .nav-badge {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--bg-app);
-      background: var(--cyan);
-      padding: 3px 8px;
-      border-radius: 3px;
+    @media(max-width:480px) {
+      .nav-logo {
+        display: none;
+      }
+
+      .theme-toggle span {
+        display: none;
+      }
     }
 
-    .nav-back {
-      font-size: 11px;
+    /* NAV DROPDOWN */
+    .nav-menu-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
       font-weight: 700;
       color: var(--text-dim);
       text-decoration: none;
-      padding: 4px 10px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
+      padding: 6px 10px 6px 6px;
+      border-radius: 6px;
       transition: all 0.15s;
+      white-space: nowrap;
+      justify-self: start;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
     }
 
-    .nav-back:hover {
-      border-color: var(--cyan);
+    .nav-menu-btn:hover {
       color: var(--cyan);
+      background: var(--bg-active);
+    }
+
+    .nav-menu-btn .nav-back-arrow {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .nav-dropdown {
+      position: absolute;
+      top: 54px;
+      left: 0;
+      background: var(--bg-nav);
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--cyan);
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      z-index: 300;
+      min-width: 240px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .nav-dropdown.open {
+      display: block;
+    }
+
+    .nav-dropdown a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.25rem;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s, color 0.1s;
+    }
+
+    .nav-dropdown a:last-child {
+      border-bottom: none;
+    }
+
+    .nav-dropdown a:hover {
+      background: var(--bg-active);
+      color: var(--cyan);
+    }
+
+    .nav-dropdown a.current {
+      color: var(--cyan);
+      background: var(--cyan-bg);
+    }
+
+    .nav-dropdown a.current::after {
+      content: '✓';
+      font-size: 12px;
+      color: var(--cyan);
+    }
+
+    .nav-dropdown-home {
+      border-bottom: 2px solid var(--border) !important;
+      font-size: 11px !important;
+      color: var(--text-dim) !important;
+      letter-spacing: 0.05em;
     }
 
     /* LAYOUT — desktop: sidebar + results side by side, mobile: stacked */
@@ -216,6 +332,7 @@
       display: flex;
       flex-direction: column;
       gap: 1rem;
+      background: var(--bg-nav);
     }
 
     @media(max-width:800px) {
@@ -820,21 +937,33 @@
 </head>
 
 <body>
-  <nav class="nav-bar">
-    <div class="nav-left">
-      <div class="nav-logo">G115B</div>
-      <div><span class="nav-title">Steigflug</span><span class="nav-sub">POH 5.3.9 · Zeit · Kraftstoff · Strecke</span>
+  <nav class="nav-bar" style="position:relative">
+    <div style="position:relative;justify-self:start;">
+      <button class="nav-menu-btn" id="navMenuBtn" onclick="toggleMenu()">
+        <span class="nav-back-arrow">‹</span> Rechner
+      </button>
+      <div class="nav-dropdown" id="navDropdown"><a href="index.html" class="nav-dropdown-home">← Übersicht</a>
+        <a href="takeoff.html">Startstrecke</a>
+        <a href="landing.html">Landestrecke</a>
+        <a href="cruise.html">Reiseflug</a>
+        <a href="climb.html" class="current">Steigflug</a>
+        <a href="climb_rate.html">Steiggeschwindigkeit</a>
+        <a href="range.html">Reichweite</a>
+        <a href="endurance.html">Maximale Flugdauer</a>
+        <a href="stall.html">Überziehgeschwindigkeit</a>
       </div>
+    </div>
+    <div class="nav-center">
+      <div class="nav-logo">G115B</div>
+      <div class="nav-title">Steigflug</div>
     </div>
     <div class="nav-right">
       <div class="theme-toggle" onclick="toggleTheme()">
         <div class="toggle-track" id="tTrack">
           <div class="toggle-thumb" id="tThumb"></div>
         </div>
-        <span id="tLabel">Dark</span>
+        <span id="tLabel">Light</span>
       </div>
-      <a href="index.html" class="nav-back">← Back</a>
-      <div class="nav-badge">AFM / POH</div>
     </div>
   </nav>
   <div class="page-layout">
@@ -939,19 +1068,111 @@
   </div>
   <script>
 
-    function initTheme() { const t = localStorage.getItem('g115b-theme') || 'light'; document.documentElement.dataset.theme = t; const on = t === 'dark'; document.getElementById('tTrack').classList.toggle('on', on); document.getElementById('tThumb').classList.toggle('on', on); document.getElementById('tLabel').textContent = on ? 'Dark' : 'Light'; }
-    function toggleTheme() { const d = document.documentElement.dataset.theme === 'dark'; const t = d ? 'light' : 'dark'; document.documentElement.dataset.theme = t; localStorage.setItem('g115b-theme', t); document.getElementById('tTrack').classList.toggle('on', !d); document.getElementById('tThumb').classList.toggle('on', !d); document.getElementById('tLabel').textContent = d ? 'Light' : 'Dark'; }
+    // ── Theme: restore saved preference on page load ──────────────────────────
+    function initTheme() {
+      const saved = localStorage.getItem('g115b-theme') || 'light';
+      applyTheme(saved);
+    }
 
+    function applyTheme(theme) {
+      const isDark = theme === 'dark';
+      document.documentElement.dataset.theme = theme;
+      document.getElementById('tTrack').classList.toggle('on', isDark);
+      document.getElementById('tThumb').classList.toggle('on', isDark);
+      document.getElementById('tLabel').textContent = isDark ? 'Dark' : 'Light';
+    }
+    // ── Theme: toggle between dark and light and persist choice ───────────────
+    function toggleTheme() {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('g115b-theme', next);
+      applyTheme(next);
+    }
 
-    function lookup2D(t, x1, x2) { const { bp1, bp2, data } = t; let i0 = 0, i1 = 0, j0 = 0, j1 = 0; if (x1 <= bp1[0]) { i0 = i1 = 0; } else if (x1 >= bp1[bp1.length - 1]) { i0 = i1 = bp1.length - 1; } else { for (let i = 0; i < bp1.length - 1; i++)if (x1 >= bp1[i] && x1 <= bp1[i + 1]) { i0 = i; i1 = i + 1; break; } } if (x2 <= bp2[0]) { j0 = j1 = 0; } else if (x2 >= bp2[bp2.length - 1]) { j0 = j1 = bp2.length - 1; } else { for (let j = 0; j < bp2.length - 1; j++)if (x2 >= bp2[j] && x2 <= bp2[j + 1]) { j0 = j; j1 = j + 1; break; } } const t1 = (i0 === i1) ? 0 : (x1 - bp1[i0]) / (bp1[i1] - bp1[i0]); const t2 = (j0 === j1) ? 0 : (x2 - bp2[j0]) / (bp2[j1] - bp2[j0]); const v0 = data[i0][j0] + t2 * (data[i0][j1] - data[i0][j0]); const v1 = data[i1][j0] + t2 * (data[i1][j1] - data[i1][j0]); return v0 + t1 * (v1 - v0); }
-    function interp1D(bp, vals, x) { if (x <= bp[0]) return vals[0]; if (x >= bp[bp.length - 1]) return vals[bp.length - 1]; for (let i = 0; i < bp.length - 1; i++)if (x >= bp[i] && x <= bp[i + 1]) { const t = (x - bp[i]) / (bp[i + 1] - bp[i]); return vals[i] + t * (vals[i + 1] - vals[i]); } return vals[vals.length - 1]; }
-    function densityAltitude(pa, oat) { const isa = 15 - 1.98 * (pa / 1000); const dev = oat - isa; return { da: Math.round(pa + 120 * dev), isadev: dev }; }
-    const fmt = v => Math.round(v);
-    const fmtS = v => (v >= 0 ? '+' : '') + v.toFixed(1);
-    function syncSlider(iId, rId) { const v = document.getElementById(rId).value; document.getElementById(iId).value = v; updateLbl(rId, v); }
-    function syncInput(iId, rId) { const v = document.getElementById(iId).value; document.getElementById(rId).value = v; updateLbl(rId, v); }
-    function updateLbl(rId, v) { const el = document.getElementById(rId + '-val'); if (!el) return; const u = { 'slope-range': ' %', 'wind-range': ' kt', 'zuschl-range': ' %', 'pwr-range': ' %', 'fuel-range': ' l', 'mass-range': ' kg' }; const d = { 'slope-range': 1, 'wind-range': 0, 'zuschl-range': 0, 'pwr-range': 0, 'fuel-range': 0, 'mass-range': 0 }; el.textContent = parseFloat(v).toFixed(d[rId] ?? 0) + (u[rId] || ''); }
+    // ── Bilinear interpolation in a 2D lookup table ───────────────────────────
+    // table: { bp1: [...], bp2: [...], data: [[...], ...] }
+    // x1 indexes rows (bp1), x2 indexes columns (bp2)
+    function lookup2D(table, x1, x2) {
+      const { bp1, bp2, data } = table;
 
+      // Find surrounding row indices for x1
+      let i0 = 0, i1 = 0;
+      if (x1 <= bp1[0]) {
+        i0 = i1 = 0;
+      } else if (x1 >= bp1[bp1.length - 1]) {
+        i0 = i1 = bp1.length - 1;
+      } else {
+        for (let i = 0; i < bp1.length - 1; i++) {
+          if (x1 >= bp1[i] && x1 <= bp1[i + 1]) { i0 = i; i1 = i + 1; break; }
+        }
+      }
+
+      // Find surrounding column indices for x2
+      let j0 = 0, j1 = 0;
+      if (x2 <= bp2[0]) {
+        j0 = j1 = 0;
+      } else if (x2 >= bp2[bp2.length - 1]) {
+        j0 = j1 = bp2.length - 1;
+      } else {
+        for (let j = 0; j < bp2.length - 1; j++) {
+          if (x2 >= bp2[j] && x2 <= bp2[j + 1]) { j0 = j; j1 = j + 1; break; }
+        }
+      }
+
+      // Interpolation weights
+      const t1 = (i0 === i1) ? 0 : (x1 - bp1[i0]) / (bp1[i1] - bp1[i0]);
+      const t2 = (j0 === j1) ? 0 : (x2 - bp2[j0]) / (bp2[j1] - bp2[j0]);
+
+      // Bilinear interpolation
+      const v0 = data[i0][j0] + t2 * (data[i0][j1] - data[i0][j0]);
+      const v1 = data[i1][j0] + t2 * (data[i1][j1] - data[i1][j0]);
+      return v0 + t1 * (v1 - v0);
+    }
+    // ── Linear interpolation in a 1D lookup table ─────────────────────────────
+    function interp1D(bp, vals, x) {
+      if (x <= bp[0]) return vals[0];
+      if (x >= bp[bp.length - 1]) return vals[bp.length - 1];
+      for (let i = 0; i < bp.length - 1; i++) {
+        if (x >= bp[i] && x <= bp[i + 1]) {
+          const t = (x - bp[i]) / (bp[i + 1] - bp[i]);
+          return vals[i] + t * (vals[i + 1] - vals[i]);
+        }
+      }
+      return vals[vals.length - 1];
+    }
+    // ── Density altitude from pressure altitude and OAT ───────────────────────
+    // Formula: DA = PA + 120 × (OAT − ISA_temp)
+    // ISA temperature at altitude: 15°C − 1.98°C per 1000 ft
+    function densityAltitude(pa, oat) {
+      const isaTemp = 15 - 1.98 * (pa / 1000);
+      const isadev = oat - isaTemp;
+      return {
+        da: Math.round(pa + 120 * isadev),
+        isadev: isadev,
+      };
+    }
+    // ── Formatting helpers ─────────────────────────────────────────────────────
+    const fmt = v => Math.round(v);                            // round to integer
+    const fmtS = v => (v >= 0 ? '+' : '') + v.toFixed(1);      // signed, 1 decimal
+    // ── Slider ↔ number input sync ─────────────────────────────────────────────
+    function syncSlider(inputId, rangeId) {
+      const v = document.getElementById(rangeId).value;
+      document.getElementById(inputId).value = v;
+      updateSliderLabel(rangeId, v);
+    }
+
+    function syncInput(inputId, rangeId) {
+      const v = document.getElementById(inputId).value;
+      document.getElementById(rangeId).value = v;
+      updateSliderLabel(rangeId, v);
+    }
+
+    function updateSliderLabel(rangeId, value) {
+      const el = document.getElementById(rangeId + '-val');
+      if (!el) return;
+      const units = { 'slope-range': ' %', 'wind-range': ' kt', 'zuschl-range': ' %', 'pwr-range': ' %', 'fuel-range': ' l', 'mass-range': ' kg' };
+      const decimals = { 'slope-range': 1, 'wind-range': 0, 'zuschl-range': 0, 'pwr-range': 0, 'fuel-range': 0, 'mass-range': 0 };
+      el.textContent = parseFloat(value).toFixed(decimals[rangeId] ?? 0) + (units[rangeId] || '');
+    }
 
     const CLIMB_TABLE = [[0, 0, 0, 0], [1000, 0.9, 0.7, 2.5], [2000, 2.0, 1.4, 5.5], [3000, 3.0, 2.1, 7.4], [4000, 4.1, 2.9, 9.5], [5000, 5.1, 3.5, 11.4], [6000, 6.2, 4.2, 13.5], [7000, 7.5, 5.2, 17.5], [8000, 9.0, 6.5, 22.2], [9000, 10.6, 7.5, 25.5], [10000, 12.5, 8.8, 29.0], [11000, 14.5, 10.0, 32.8], [12000, 17.0, 11.5, 37.0], [13000, 19.5, 13.0, 41.5], [14000, 22.5, 14.5, 46.0], [15000, 26.0, 16.2, 51.0], [16000, 29.0, 18.0, 57.0], [17000, 33.0, 20.0, 63.0], [18000, 37.0, 22.0, 70.0]];
     function interpClimb(da) { if (da <= 0) return { z: 0, f: 0, d: 0 }; const last = CLIMB_TABLE[CLIMB_TABLE.length - 1]; if (da >= last[0]) return { z: last[1], f: last[2], d: last[3] }; for (let i = 0; i < CLIMB_TABLE.length - 1; i++) { const [d0, z0, f0, s0] = CLIMB_TABLE[i]; const [d1, z1, f1, s1] = CLIMB_TABLE[i + 1]; if (da >= d0 && da <= d1) { const r = (da - d0) / (d1 - d0); return { z: z0 + r * (z1 - z0), f: f0 + r * (f1 - f0), d: s0 + r * (s1 - s0) }; } } return { z: 0, f: 0, d: 0 }; }
@@ -962,6 +1183,7 @@
         document.getElementById(w + '-mode-' + k).style.display = k === m ? 'flex' : 'none';
         document.getElementById('mode-' + w + '-' + k + '-btn').classList.toggle('active', k === m);
       });
+
       const need = m !== 'da';
       document.getElementById(w + '-oat-field').style.display = need ? 'flex' : 'none';
       document.getElementById(w + '-da-box').style.display = need ? 'flex' : 'none';
@@ -1002,9 +1224,24 @@
         + `<div class="card"><div class="card-title">Bedingungen</div><div class="conditions-grid"><span>Vollgas</span><span>Gemisch für größte Leistung</span><span>Klappen 0°</span><span>V = VY</span><span>Standardatmosphäre</span><span>Max. Abfluggewicht · vorderste SL</span></div></div>`
         ;
     }
-    document.addEventListener('DOMContentLoaded', () => { calcLeg('from'); calcLeg('to'); document.querySelector('.page-layout').addEventListener('input', calculate); });
 
-    document.addEventListener('DOMContentLoaded', () => { initTheme(); });
+    // ── Navigation dropdown ────────────────────────────────────────────────────
+    function toggleMenu() {
+      document.getElementById('navDropdown').classList.toggle('open');
+    }
+
+    document.addEventListener('click', function (e) {
+      const dropdown = document.getElementById('navDropdown');
+      const button = document.getElementById('navMenuBtn');
+      if (dropdown && !dropdown.contains(e.target) && !button.contains(e.target)) {
+        dropdown.classList.remove('open');
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      initTheme(); calcLeg('from'); calcLeg('to'); document.querySelector('.page-layout').addEventListener('input', calculate);
+    });
+
   </script>
 </body>
 
