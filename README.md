@@ -33,3 +33,27 @@ python -m http.server 8080
 ```
 
 Danach die App unter `http://localhost:8080` im Browser oeffnen und von dort installieren.
+
+---
+
+## Code-Struktur
+
+Die Rechenlogik ist jetzt bewusst von der HTML-Oberflaeche getrennt:
+
+- `js/g115b-core.js`
+  Enthält die gemeinsamen Rechenhilfen wie Interpolation, Pressure Altitude, Density Altitude und Einheitenumrechnungen.
+- `js/performance-data.js`
+  Enthält die Tabellen und Datensaetze der einzelnen Rechner in lesbarer Form.
+- `js/g115b-calculators.js`
+  Enthält die eigentlichen fachlichen Berechnungen als pure Funktionen ohne DOM-Zugriffe.
+- `js/pages/*.js`
+  Enthält pro Rechner nur noch den Seiten-Controller: Eingaben auslesen, Calculator aufrufen, Ergebnis rendern.
+- `css/theme.css`
+  Enthält die zentralen Theme-Variablen sowie die gemeinsamen App-/Navigations-Styles.
+- `css/calculator.css`
+  Enthält die gemeinsame Oberflaeche aller Rechnerseiten.
+- `css/index.css`
+  Enthält die spezifischen Styles der Uebersichtsseite.
+
+Damit sind die fachlichen Daten und die eigentliche Berechnung deutlich einfacher zu prüfen als in den vorherigen großen Inline-Skripten der HTML-Dateien.
+Die DOM-Zugriffe sind auf die Page-Controller beschraenkt, waehrend die Berechnungen selbst browserunabhaengig bleiben.
