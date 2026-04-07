@@ -57,3 +57,13 @@ Die Rechenlogik ist jetzt bewusst von der HTML-Oberflaeche getrennt:
 
 Damit sind die fachlichen Daten und die eigentliche Berechnung deutlich einfacher zu prüfen als in den vorherigen großen Inline-Skripten der HTML-Dateien.
 Die DOM-Zugriffe sind auf die Page-Controller beschraenkt, waehrend die Berechnungen selbst browserunabhaengig bleiben.
+
+## Tests
+
+Die Rechenlogik kann automatisiert mit Node.js geprueft werden:
+
+```powershell
+npm test
+```
+
+Die Tests verwenden feste Referenzfaelle gegen die pure Calculator-Logik in `js/g115b-calculators.js`.
