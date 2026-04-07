@@ -32,82 +32,118 @@
       </div>
     </div>
   </nav>
-  <div class="idx-body">
-    <div class="idx-disclaimer">
+
+  <main class="idx-shell">
+    <section class="idx-disclaimer">
       <div class="idx-disclaimer-tag">⚠ Wichtiger Hinweis</div>
       <div class="idx-disclaimer-text">Diese Anwendung ersetzt nicht das originale, zugelassene AFM/POH der jeweiligen
-        Maschine. Die Verantwortung für alle Flugentscheidungen liegt ausschließlich beim Piloten.</div>
-    </div>
-    <div class="idx-section">Verfügbare Rechner</div>
-    <a href="takeoff.html" class="idx-card">
-      <div class="idx-left">
-        <div class="idx-tag">Takeoff</div>
-        <div class="idx-title">Startstrecke</div>
-        <div class="idx-desc">Startrollstrecke & Startstrecke über Hindernis · POH 5</div>
+        Maschine. Die Verantwortung fuer alle Flugentscheidungen liegt ausschliesslich beim Piloten.</div>
+    </section>
+
+    <section class="idx-group">
+      <div class="idx-group-head">
+        <div class="idx-section">Flugplatz & Performance</div>
+        <div class="idx-group-copy">Alles, was du rund um Start, Landung und direkte Leistungsbewertung am Platz
+          brauchst.</div>
       </div>
-      <div class="idx-arrow">→</div>
-    </a>
-    <a href="landing.html" class="idx-card">
-      <div class="idx-left">
-        <div class="idx-tag">Landing</div>
-        <div class="idx-title">Landestrecke</div>
-        <div class="idx-desc">Landerollstrecke & Landestrecke über Hindernis · POH 5.3.15</div>
+      <div class="idx-grid">
+        <a href="takeoff.html" class="idx-card">
+          <div class="idx-icon">T</div>
+          <div class="idx-left">
+            <div class="idx-tag">Takeoff</div>
+            <div class="idx-title">Startstrecke</div>
+            <div class="idx-desc">Startrollstrecke und Startstrecke ueber Hindernis.</div>
+            <div class="idx-meta">POH 5</div>
+          </div>
+          <div class="idx-arrow">→</div>
+        </a>
+        <a href="landing.html" class="idx-card">
+          <div class="idx-icon">L</div>
+          <div class="idx-left">
+            <div class="idx-tag">Landing</div>
+            <div class="idx-title">Landestrecke</div>
+            <div class="idx-desc">Landerollstrecke und Landestrecke ueber Hindernis.</div>
+            <div class="idx-meta">POH 5.3.15</div>
+          </div>
+          <div class="idx-arrow">→</div>
+        </a>
+        <a href="climb_rate.html" class="idx-card">
+          <div class="idx-icon">VY</div>
+          <div class="idx-left">
+            <div class="idx-tag">Climb</div>
+            <div class="idx-title">Steiggeschwindigkeit</div>
+            <div class="idx-desc">Rate of Climb und VY nach Masse und Dichtehoehe.</div>
+            <div class="idx-meta">POH 5.3.8</div>
+          </div>
+          <div class="idx-arrow">→</div>
+        </a>
+        <a href="stall.html" class="idx-card">
+          <div class="idx-icon">VS</div>
+          <div class="idx-left">
+            <div class="idx-tag">Stall Speed</div>
+            <div class="idx-title">Ueberziehgeschwindigkeit</div>
+            <div class="idx-desc">VS0 und VS1 nach Masse, Klappen und Leistung.</div>
+            <div class="idx-meta">POH 5.3.4</div>
+          </div>
+          <div class="idx-arrow">→</div>
+        </a>
       </div>
-      <div class="idx-arrow">→</div>
-    </a>
-    <a href="cruise.html" class="idx-card">
-      <div class="idx-left">
-        <div class="idx-tag">Cruise</div>
-        <div class="idx-title">Reiseflug</div>
-        <div class="idx-desc">Drehzahl, Kraftstoffverbrauch und TAS · POH 5.3.10–12</div>
+    </section>
+
+    <section class="idx-group">
+      <div class="idx-group-head">
+        <div class="idx-section">Enroute & Planung</div>
+        <div class="idx-group-copy">Leistungs- und Reserveplanung fuer den Reiseflug und den Steigflug zwischen zwei
+          Hoehen.</div>
       </div>
-      <div class="idx-arrow">→</div>
-    </a>
-    <a href="climb.html" class="idx-card">
-      <div class="idx-left">
-        <div class="idx-tag">Climb Performance</div>
-        <div class="idx-title">Steigflug</div>
-        <div class="idx-desc">Zeit, Kraftstoff und Distanz im Steigflug · POH 5.3.9</div>
+      <div class="idx-grid">
+        <a href="cruise.html" class="idx-card">
+          <div class="idx-icon">CR</div>
+          <div class="idx-left">
+            <div class="idx-tag">Cruise</div>
+            <div class="idx-title">Reiseflug</div>
+            <div class="idx-desc">Drehzahl, Kraftstoffverbrauch und TAS.</div>
+            <div class="idx-meta">POH 5.3.10-12</div>
+          </div>
+          <div class="idx-arrow">→</div>
+        </a>
+        <a href="climb.html" class="idx-card">
+          <div class="idx-icon">CL</div>
+          <div class="idx-left">
+            <div class="idx-tag">Climb Performance</div>
+            <div class="idx-title">Steigflug</div>
+            <div class="idx-desc">Zeit, Kraftstoff und Distanz zwischen zwei Hoehen.</div>
+            <div class="idx-meta">POH 5.3.9</div>
+          </div>
+          <div class="idx-arrow">→</div>
+        </a>
+        <a href="range.html" class="idx-card">
+          <div class="idx-icon">RG</div>
+          <div class="idx-left">
+            <div class="idx-tag">Range</div>
+            <div class="idx-title">Reichweite</div>
+            <div class="idx-desc">Maximale Reichweite inklusive 45 Minuten Reserve.</div>
+            <div class="idx-meta">POH 5.3.13</div>
+          </div>
+          <div class="idx-arrow">→</div>
+        </a>
+        <a href="endurance.html" class="idx-card">
+          <div class="idx-icon">EN</div>
+          <div class="idx-left">
+            <div class="idx-tag">Endurance</div>
+            <div class="idx-title">Maximale Flugdauer</div>
+            <div class="idx-desc">Flugzeit nach verfuegbarem Kraftstoff und Leistung.</div>
+            <div class="idx-meta">POH 5.3.14</div>
+          </div>
+          <div class="idx-arrow">→</div>
+        </a>
       </div>
-      <div class="idx-arrow">→</div>
-    </a>
-    <a href="climb_rate.html" class="idx-card">
-      <div class="idx-left">
-        <div class="idx-tag">Climb</div>
-        <div class="idx-title">Steiggeschwindigkeit</div>
-        <div class="idx-desc">Rate of Climb · VY nach Masse und Dichtehöhe · POH 5.3.8</div>
-      </div>
-      <div class="idx-arrow">→</div>
-    </a>
-    <a href="range.html" class="idx-card">
-      <div class="idx-left">
-        <div class="idx-tag">Range</div>
-        <div class="idx-title">Reichweite</div>
-        <div class="idx-desc">Maximale Reichweite inkl. 45 min Reserve · POH 5.3.13</div>
-      </div>
-      <div class="idx-arrow">→</div>
-    </a>
-    <a href="endurance.html" class="idx-card">
-      <div class="idx-left">
-        <div class="idx-tag">Endurance</div>
-        <div class="idx-title">Maximale Flugdauer</div>
-        <div class="idx-desc">Flugzeit nach Kraftstoff und Leistung · POH 5.3.14</div>
-      </div>
-      <div class="idx-arrow">→</div>
-    </a>
-    <a href="stall.html" class="idx-card">
-      <div class="idx-left">
-        <div class="idx-tag">Stall Speed</div>
-        <div class="idx-title">Überziehgeschwindigkeit</div>
-        <div class="idx-desc">VS0 / VS1 nach Masse, Klappen und Leistung · POH 5.3.4</div>
-      </div>
-      <div class="idx-arrow">→</div>
-    </a>
-  </div>
+    </section>
+  </main>
+
   <script src="js/g115b-core.js"></script>
   <script src="js/g115b-ui.js"></script>
   <script src="app.js"></script>
 </body>
 
 </html>
-

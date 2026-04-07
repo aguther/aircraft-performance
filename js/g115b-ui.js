@@ -1,4 +1,8 @@
 (function () {
+  const THEME_STORAGE_KEY = "g115b-theme";
+  const THEME_AUTO = "auto";
+  const systemThemeQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+
   const defaultSliderUnits = {
     "slope-range": " %",
     "wind-range": " kt",
@@ -80,26 +84,67 @@
     return el("div", { className, style }, children);
   }
 
-  function applyTheme(theme) {
-    const isDarkTheme = theme === "dark";
-    document.documentElement.dataset.theme = theme;
+  function getStoredThemePreference() {
+    return localStorage.getItem(THEME_STORAGE_KEY) || THEME_AUTO;
+  }
+
+  function resolveTheme(themePreference) {
+    if (themePreference === THEME_AUTO) {
+      return systemThemeQuery && systemThemeQuery.matches ? "dark" : "light";
+    }
+
+    return themePreference === "dark" ? "dark" : "light";
+  }
+
+  function updateThemeMeta(theme) {
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (!metaThemeColor) {
+      return;
+    }
+
+    metaThemeColor.setAttribute("content", theme === "dark" ? "#08131d" : "#005f8a");
+  }
+
+  function applyTheme(themePreference) {
+    const resolvedTheme = resolveTheme(themePreference);
+    const isDarkTheme = resolvedTheme === "dark";
+    document.documentElement.dataset.theme = resolvedTheme;
+    document.documentElement.dataset.themePreference = themePreference;
+    updateThemeMeta(resolvedTheme);
 
     const track = document.getElementById("tTrack");
     const thumb = document.getElementById("tThumb");
     const label = document.getElementById("tLabel");
+    const toggle = track ? track.closest(".theme-toggle") : document.querySelector(".theme-toggle");
 
     if (track) track.classList.toggle("on", isDarkTheme);
     if (thumb) thumb.classList.toggle("on", isDarkTheme);
-    if (label) label.textContent = isDarkTheme ? "Dark" : "Light";
+    if (label) {
+      label.textContent = themePreference === THEME_AUTO ? `Auto (${isDarkTheme ? "Dark" : "Light"})` : isDarkTheme ? "Dark" : "Light";
+    }
+    if (toggle) {
+      toggle.setAttribute(
+        "title",
+        themePreference === THEME_AUTO
+          ? `Theme folgt dem Geraet: ${isDarkTheme ? "Dark" : "Light"}`
+          : `Theme manuell gesetzt: ${isDarkTheme ? "Dark" : "Light"}`
+      );
+    }
   }
 
   function initTheme() {
-    applyTheme(localStorage.getItem("g115b-theme") || "light");
+    applyTheme(getStoredThemePreference());
   }
 
   function toggleTheme() {
-    const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-    localStorage.setItem("g115b-theme", nextTheme);
+    const currentPreference = document.documentElement.dataset.themePreference || getStoredThemePreference();
+    const nextTheme =
+      currentPreference === THEME_AUTO
+        ? "light"
+        : currentPreference === "light"
+          ? "dark"
+          : THEME_AUTO;
+    localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
     applyTheme(nextTheme);
   }
 
@@ -197,7 +242,7 @@
       ),
     ];
 
-    if (config.isaDeviationC !== undefined && config.isaDeviationText) {
+    if (config.isaDeviationText) {
       atmosphereItems.push(
         el(
           "div",
@@ -298,6 +343,7 @@
     createConditionsCard,
     createPipelineCard,
     replaceContent,
+    resolveTheme,
   };
 
   window.toggleTheme = toggleTheme;
@@ -309,4 +355,12 @@
     initTheme();
     setupNavigationDropdown();
   });
+
+  if (systemThemeQuery) {
+    systemThemeQuery.addEventListener("change", () => {
+      if (getStoredThemePreference() === THEME_AUTO) {
+        applyTheme(THEME_AUTO);
+      }
+    });
+  }
 })();
