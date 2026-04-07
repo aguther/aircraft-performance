@@ -17,3 +17,19 @@ The provided data and information are intended for demonstration, educational, a
 No warranty is given regarding the accuracy, completeness, or currency of the data. Any use of this information for operational or safety-critical decisions is entirely at the user's own risk.
 
 **For actual flight operations, only officially published and approved sources (e.g., AIP, aircraft flight manuals, certified performance data) must be used.**
+
+---
+
+## PWA / Homescreen Installation
+
+Die Seiten sind als Progressive Web App (PWA) vorbereitet und koennen auf iOS und Android zum Homescreen hinzugefuegt werden.
+
+Wichtig: Die Installation funktioniert nur ueber `http://localhost` oder ueber HTTPS, nicht beim direkten Oeffnen der HTML-Dateien via `file://`.
+
+Zum lokalen Testen reicht ein einfacher statischer Webserver im Repository-Ordner, zum Beispiel:
+
+```powershell
+python -m http.server 8080
+```
+
+Danach die App unter `http://localhost:8080` im Browser oeffnen und von dort installieren.

@@ -5,8 +5,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grob G115B — Reiseflug</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#005f8a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="G115B Perf">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <style>
     :root[data-theme="dark"] {
       --bg-app: #0f1520;
@@ -57,7 +62,7 @@
     html {
       background: var(--bg-nav);
       color: var(--text);
-      font-family: 'Nunito Sans', sans-serif;
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
       font-size: 14px;
       line-height: 1.5;
     }
@@ -419,7 +424,7 @@
       border: 1px solid var(--border);
       border-radius: 6px;
       color: var(--text);
-      font-family: 'Nunito Sans', sans-serif;
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
       font-size: 15px;
       font-weight: 600;
       -moz-appearance: textfield;
@@ -467,7 +472,7 @@
       background: transparent;
       border: none;
       padding: 7px 4px;
-      font-family: 'Nunito Sans', sans-serif;
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
       font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.06em;
@@ -1226,6 +1231,7 @@
     });
 
   </script>
+  <script src="app.js"></script>
 </body>
 
 </html>
