@@ -112,7 +112,8 @@
   margin-bottom: 0;
 }
 
-.field.range-field {
+.field.range-field,
+.field:has(> .slider-row) {
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(88px, 28vw, 98px);
   gap: 0.35rem 0.65rem;
@@ -120,22 +121,28 @@
 }
 
 .field.range-field > .field-label,
-.field.range-field > .hint {
+.field.range-field > .hint,
+.field:has(> .slider-row) > .field-label,
+.field:has(> .slider-row) > .hint {
   grid-column: 1 / -1;
 }
 
 .field.range-field > .slider-row,
-.field.range-field > .input-wrap {
+.field.range-field > .input-wrap,
+.field:has(> .slider-row) > .slider-row,
+.field:has(> .slider-row) > .input-wrap {
   margin-top: 0 !important;
   align-self: center;
 }
 
-.field.range-field > .slider-row {
+.field.range-field > .slider-row,
+.field:has(> .slider-row) > .slider-row {
   min-width: 0;
   gap: 0;
 }
 
-.field.range-field .slider-val {
+.field.range-field .slider-val,
+.field:has(> .slider-row) .slider-val {
   display: none;
 }
 
@@ -156,6 +163,7 @@
 
 .input-wrap {
   position: relative;
+  min-width: 0;
 }
 
 .input-wrap input[type="number"] {
@@ -302,6 +310,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   display: flex;
   align-items: center;
   gap: 0.65rem;
+  min-width: 0;
 }
 
 .slider-row input[type="range"] {
@@ -726,6 +735,12 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
   .results {
     padding: 1rem 1rem 1.4rem;
+  }
+
+  .field.range-field,
+  .field:has(> .slider-row) {
+    grid-template-columns: minmax(0, 1fr) clamp(78px, 24vw, 90px);
+    gap: 0.35rem 0.55rem;
   }
 
   .atmos-grid,

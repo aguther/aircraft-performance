@@ -93,8 +93,8 @@
       }),
       ui.createPipelineCard(createLandingSteps(inputs, result)),
       ui.createGridCard("Ergebnis", "result-grid", [
-        ui.createMetricItem({ label: "Landerollstrecke · Landing Roll", value: result.landingRollMeters, unit: "m" }),
-        ui.createMetricItem({ label: "Landestrecke · Landing Distance", value: result.landingDistanceMeters, unit: "m" }),
+        ui.createMetricItem({ label: "Landing Roll · Landerollstrecke", value: result.landingRollMeters, unit: "m" }),
+        ui.createMetricItem({ label: "Landing Distance · Landestrecke", value: result.landingDistanceMeters, unit: "m" }),
       ]),
       ui.createGridCard("Anfluggeschwindigkeit VAPP", "speed-grid", [
         ui.createMetricItem({

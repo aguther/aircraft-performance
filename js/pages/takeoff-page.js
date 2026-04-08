@@ -93,8 +93,8 @@
       }),
       ui.createPipelineCard(createTakeoffSteps(inputs, result)),
       ui.createGridCard("Ergebnis", "result-grid", [
-        ui.createMetricItem({ label: "Startrollstrecke · Ground Roll", value: result.groundRollMeters, unit: "m" }),
-        ui.createMetricItem({ label: "Startstrecke · Takeoff Distance", value: result.takeoffDistanceMeters, unit: "m" }),
+        ui.createMetricItem({ label: "Ground Roll · Startrollstrecke", value: result.groundRollMeters, unit: "m" }),
+        ui.createMetricItem({ label: "Takeoff Distance · Startstrecke", value: result.takeoffDistanceMeters, unit: "m" }),
       ]),
       ui.createGridCard("Geschwindigkeiten", "speed-grid", [
         ui.createMetricItem({

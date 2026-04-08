@@ -107,7 +107,7 @@
       ui.createCard(
         `Ergebnis - ${inputs.powerPercent}% Leistung · DA ${inputs.densityAltitudeFt.toLocaleString("de-DE")} ft`,
         ui.createMetricItem({
-          label: "Reichweite · Range",
+          label: "Range · Reichweite",
           value: Math.round(result.rangeNm),
           unit: "nm",
           subtext: `${Math.round(result.rangeKm)} km`,
