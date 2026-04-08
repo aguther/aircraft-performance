@@ -11,7 +11,7 @@
 
   function readNumberValue(element, defaultValue) {
     if (!element || element.value === "") return defaultValue;
-    return Number.parseFloat(element.value);
+    return Number.parseFloat(String(element.value).replace(",", "."));
   }
 
   function formatWindLabel(windKt) {

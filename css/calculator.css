@@ -166,7 +166,8 @@
   min-width: 0;
 }
 
-.input-wrap input[type="number"] {
+.input-wrap input[type="number"],
+.input-wrap input[type="text"] {
   width: 100%;
   padding: 0.72rem 2.85rem 0.72rem 0.88rem;
   border: 1px solid var(--border);
@@ -186,7 +187,8 @@
   -webkit-appearance: none;
 }
 
-.input-wrap input[type="number"]:focus {
+.input-wrap input[type="number"]:focus,
+.input-wrap input[type="text"]:focus {
   outline: none;
   background: var(--bg-active);
   border-color: var(--border-strong);
@@ -664,7 +666,8 @@ input[type="range"]::-webkit-slider-thumb:hover {
     margin-bottom: 0.72rem;
   }
 
-  .field.range-field > .input-wrap input[type="number"] {
+  .field.range-field > .input-wrap input[type="number"],
+  .field.range-field > .input-wrap input[type="text"] {
     padding: 0.64rem 2.2rem 0.64rem 0.72rem;
     font-size: 14px;
   }

@@ -117,12 +117,22 @@
     const label = document.getElementById("tLabel");
     const toggle = track ? track.closest(".theme-toggle") : document.querySelector(".theme-toggle");
 
-    if (track) track.classList.toggle("on", isDarkTheme);
-    if (thumb) thumb.classList.toggle("on", isDarkTheme);
+    if (track) {
+      track.dataset.themeMode = themePreference;
+      track.dataset.resolvedTheme = resolvedTheme;
+    }
+    if (thumb) {
+      thumb.dataset.themeMode = themePreference;
+      thumb.dataset.resolvedTheme = resolvedTheme;
+    }
     if (label) {
-      label.textContent = themePreference === THEME_AUTO ? `Auto (${isDarkTheme ? "Dark" : "Light"})` : isDarkTheme ? "Dark" : "Light";
+      label.textContent =
+        themePreference === THEME_AUTO ? "Auto" : isDarkTheme ? "Dark" : "Light";
     }
     if (toggle) {
+      toggle.dataset.themeMode = themePreference;
+      toggle.dataset.resolvedTheme = resolvedTheme;
+      toggle.setAttribute("aria-label", `Theme: ${themePreference === THEME_AUTO ? `Auto (${isDarkTheme ? "Dark" : "Light"})` : isDarkTheme ? "Dark" : "Light"}`);
       toggle.setAttribute(
         "title",
         themePreference === THEME_AUTO
@@ -169,20 +179,57 @@
     if (dropdown) dropdown.classList.toggle("open");
   }
 
+  function normalizeNumericString(value) {
+    const source = String(value ?? "").trim().replace(/,/g, ".");
+    let normalized = "";
+    let hasDecimalSeparator = false;
+
+    for (const character of source) {
+      if (character >= "0" && character <= "9") {
+        normalized += character;
+        continue;
+      }
+
+      if (character === "." && !hasDecimalSeparator) {
+        normalized += character;
+        hasDecimalSeparator = true;
+        continue;
+      }
+
+      if (character === "-" && normalized === "") {
+        normalized += character;
+      }
+    }
+
+    return normalized;
+  }
+
+  function parseNormalizedNumber(value) {
+    const normalized = normalizeNumericString(value);
+    if (normalized === "" || normalized === "-" || normalized === "." || normalized === "-.") {
+      return null;
+    }
+
+    const parsedValue = Number.parseFloat(normalized);
+    return Number.isFinite(parsedValue) ? parsedValue : null;
+  }
+
   function updateSliderLabel(rangeId, value, config) {
     const label = document.getElementById(`${rangeId}-val`);
     if (!label) return;
 
     const units = (config && config.units) || defaultSliderUnits;
     const decimals = (config && config.decimals) || defaultSliderDecimals;
-    label.textContent = `${Number.parseFloat(value).toFixed(decimals[rangeId] ?? 0)}${units[rangeId] || ""}`;
+    const parsedValue = parseNormalizedNumber(value);
+    if (parsedValue === null) return;
+    label.textContent = `${parsedValue.toFixed(decimals[rangeId] ?? 0)}${units[rangeId] || ""}`;
   }
 
   function syncSlider(inputId, rangeId, config) {
     const range = document.getElementById(rangeId);
     const input = document.getElementById(inputId);
     if (!range || !input) return;
-    input.value = range.value;
+    input.value = normalizeNumericString(range.value);
     updateSliderLabel(rangeId, range.value, config);
   }
 
@@ -190,8 +237,43 @@
     const input = document.getElementById(inputId);
     const range = document.getElementById(rangeId);
     if (!input || !range) return;
-    range.value = input.value;
-    updateSliderLabel(rangeId, input.value, config);
+
+    const normalizedValue = normalizeNumericString(input.value);
+    if (input.value !== normalizedValue) {
+      input.value = normalizedValue;
+    }
+
+    if (
+      normalizedValue === "" ||
+      normalizedValue === "-" ||
+      normalizedValue === "." ||
+      normalizedValue === "-." ||
+      normalizedValue.endsWith(".")
+    ) {
+      return;
+    }
+
+    range.value = String(parseNormalizedNumber(normalizedValue));
+    updateSliderLabel(rangeId, range.value, config);
+  }
+
+  function commitInput(inputId, rangeId, config) {
+    const input = document.getElementById(inputId);
+    const range = document.getElementById(rangeId);
+    if (!input || !range) return;
+
+    syncInput(inputId, rangeId, config);
+
+    const parsedValue = parseNormalizedNumber(input.value);
+    if (parsedValue === null) {
+      input.value = normalizeNumericString(range.value);
+      updateSliderLabel(rangeId, range.value, config);
+      return;
+    }
+
+    input.value = String(parsedValue);
+    range.value = String(parsedValue);
+    updateSliderLabel(rangeId, range.value, config);
   }
 
   function createCard(title, content) {
@@ -364,6 +446,7 @@
     updateSliderLabel,
     syncSlider,
     syncInput,
+    commitInput,
     createCard,
     createDisclaimerCard,
     createWarnings,
@@ -382,6 +465,7 @@
   window.toggleMenu = toggleMenu;
   window.syncSlider = syncSlider;
   window.syncInput = syncInput;
+  window.commitInput = commitInput;
 
   document.addEventListener("DOMContentLoaded", () => {
     initTheme();
