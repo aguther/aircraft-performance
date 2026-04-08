@@ -29,9 +29,9 @@ test("takeoff calculator returns stable reference result", () => {
   });
 
   assert.equal(result.atmosphere.densityAltitudeFt, 3075);
-  assert.equal(result.results.groundRollMeters, 293);
-  assert.equal(result.results.takeoffDistanceMeters, 537);
-  assert.equal(result.speeds.rotateSpeedKmh.toFixed(1), "91.6");
+  assert.equal(result.groundRollMeters, 293);
+  assert.equal(result.takeoffDistanceMeters, 537);
+  assert.equal(result.rotateSpeedKmh.toFixed(1), "91.6");
   assert.equal(result.warnings.length, 0);
 });
 
@@ -46,9 +46,9 @@ test("landing calculator returns stable reference result", () => {
   });
 
   assert.equal(result.atmosphere.densityAltitudeFt, 3075);
-  assert.equal(result.results.landingRollMeters, 238);
-  assert.equal(result.results.landingDistanceMeters, 432);
-  assert.equal(Math.round(result.speeds.approachSpeedKmh), 118);
+  assert.equal(result.landingRollMeters, 238);
+  assert.equal(result.landingDistanceMeters, 432);
+  assert.equal(Math.round(result.approachSpeedKmh), 118);
 });
 
 test("cruise calculator returns stable RPM, fuel flow and TAS values", () => {
@@ -61,6 +61,7 @@ test("cruise calculator returns stable RPM, fuel flow and TAS values", () => {
   assert.equal(result.fuelFlowLitersPerHour, 28.8);
   assert.equal(Math.round(result.tasKmh), 218);
   assert.equal(result.tasKt.toFixed(1), "117.7");
+  assert.equal(result.powerLabel, "65%");
 });
 
 test("climb rate calculator returns stable VY and ROC values", () => {

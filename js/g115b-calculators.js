@@ -1,25 +1,6 @@
 (function () {
   const { core, data } = window.G115B;
 
-  function formatWindLabel(windKt) {
-    const windKmh = core.knotsToKilometersPerHour(windKt);
-    if (windKt === 0) {
-      return "Kein Wind";
-    }
-    return `${Math.abs(windKt)} kt (${Math.abs(windKmh).toFixed(1)} km/h) ${windKt > 0 ? "HW" : "TW"}`;
-  }
-
-  function formatSlopeLabel(slopePercent) {
-    if (slopePercent > 0) return `${slopePercent.toFixed(1)}% bergauf`;
-    if (slopePercent < 0) return `${Math.abs(slopePercent).toFixed(1)}% bergab`;
-    return "eben";
-  }
-
-  function createIsaDeviationClass(isaDeviationC) {
-    if (Math.abs(isaDeviationC) < 0.1) return "";
-    return isaDeviationC > 0 ? "warn" : "good";
-  }
-
   function calculateTakeoff(inputs) {
     const pageData = data.takeoff;
     const windKmh = core.knotsToKilometersPerHour(inputs.windKt);
@@ -44,21 +25,14 @@
     return {
       warnings,
       atmosphere,
-      atmosphereDisplay: {
-        densityAltitudeWarn: atmosphere.densityAltitudeFt > 5000,
-        isaDeviationText: `${core.formatSigned(atmosphere.isaDeviationC, 1)} °C`,
-        isaDeviationClass: createIsaDeviationClass(atmosphere.isaDeviationC),
-      },
-      steps: [
-        { name: "Schritt 1 - Atmosphaere", detail: `PA ${inputs.pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT ${inputs.oatC} °C`, value: `${core.round(step1GroundRollMeters)} m` },
-        { name: "Schritt 2 - Masse", detail: `${core.round(step1GroundRollMeters)} m · ${inputs.massKg} kg`, value: `${core.round(step2GroundRollMeters)} m` },
-        { name: "Schritt 3 - Slope", detail: `${core.round(step2GroundRollMeters)} m · ${formatSlopeLabel(inputs.slopePercent)}`, value: `${core.round(step3GroundRollMeters)} m` },
-        { name: "Schritt 4 - Wind", detail: `${core.round(step3GroundRollMeters)} m · ${formatWindLabel(inputs.windKt)}`, value: `${core.round(step4GroundRollMeters)} m` },
-        { name: `Zuschlag ${inputs.safetyMarginPercent}%`, detail: `${core.round(step4GroundRollMeters)} m × ${(1 + inputs.safetyMarginPercent / 100).toFixed(2)}`, value: `${core.round(groundRollWithMarginMeters)} m` },
-        { name: "Schritt 5 - Hindernis 15 m", detail: `${core.round(groundRollWithMarginMeters)} m -> ueber 15 m`, value: `${core.round(takeoffDistanceMeters)} m` },
-      ],
-      results: { groundRollMeters: core.round(groundRollWithMarginMeters), takeoffDistanceMeters: core.round(takeoffDistanceMeters) },
-      speeds: { rotateSpeedKmh, speedAt15mKmh },
+      groundRollByAtmosphereMeters: step1GroundRollMeters,
+      groundRollByMassMeters: step2GroundRollMeters,
+      groundRollBySlopeMeters: step3GroundRollMeters,
+      groundRollByWindMeters: step4GroundRollMeters,
+      groundRollMeters: core.round(groundRollWithMarginMeters),
+      takeoffDistanceMeters: core.round(takeoffDistanceMeters),
+      rotateSpeedKmh,
+      speedAt15mKmh,
       conditions: ["Vorderste Schwerpunktlage", "Vollgas", "Gemisch fuer groesste Leistung", "Klappen 12°", "Befestigte, trockene Startbahn"],
     };
   }
@@ -85,21 +59,13 @@
     return {
       warnings,
       atmosphere,
-      atmosphereDisplay: {
-        densityAltitudeWarn: atmosphere.densityAltitudeFt > 5000,
-        isaDeviationText: `${core.formatSigned(atmosphere.isaDeviationC, 1)} °C`,
-        isaDeviationClass: createIsaDeviationClass(atmosphere.isaDeviationC),
-      },
-      steps: [
-        { name: "Schritt 1 - Atmosphaere", detail: `PA ${inputs.pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT ${inputs.oatC} °C`, value: `${core.round(step1LandingRollMeters)} m` },
-        { name: "Schritt 2 - Masse", detail: `${core.round(step1LandingRollMeters)} m · ${inputs.massKg} kg`, value: `${core.round(step2LandingRollMeters)} m` },
-        { name: "Schritt 3 - Slope", detail: `${core.round(step2LandingRollMeters)} m · ${formatSlopeLabel(inputs.slopePercent)}`, value: `${core.round(step3LandingRollMeters)} m` },
-        { name: "Schritt 4 - Wind", detail: `${core.round(step3LandingRollMeters)} m · ${formatWindLabel(inputs.windKt)}`, value: `${core.round(step4LandingRollMeters)} m` },
-        { name: `Zuschlag ${inputs.safetyMarginPercent}%`, detail: `${core.round(step4LandingRollMeters)} m × ${(1 + inputs.safetyMarginPercent / 100).toFixed(2)}`, value: `${core.round(landingRollWithMarginMeters)} m` },
-        { name: "Schritt 5 - Hindernis 15 m", detail: `${core.round(landingRollWithMarginMeters)} m -> ueber 15 m`, value: `${core.round(landingDistanceMeters)} m` },
-      ],
-      results: { landingRollMeters: core.round(landingRollWithMarginMeters), landingDistanceMeters: core.round(landingDistanceMeters) },
-      speeds: { approachSpeedKmh },
+      landingRollByAtmosphereMeters: step1LandingRollMeters,
+      landingRollByMassMeters: step2LandingRollMeters,
+      landingRollBySlopeMeters: step3LandingRollMeters,
+      landingRollByWindMeters: step4LandingRollMeters,
+      landingRollMeters: core.round(landingRollWithMarginMeters),
+      landingDistanceMeters: core.round(landingDistanceMeters),
+      approachSpeedKmh,
       conditions: ["Befestigte, trockene Bahn", "Leerlauf", "Klappen 40°", "Max. vordere Schwerpunktlage"],
     };
   }
@@ -117,7 +83,7 @@
       tasKmh,
       tasKt,
       nauticalMilesPerLiter: tasKt / fuelFlowLitersPerHour,
-      displayPowerLabel: inputs.powerPercent >= 100 ? "Vollgas" : `${inputs.powerPercent}%`,
+      powerLabel: inputs.powerPercent >= 100 ? "Vollgas" : `${inputs.powerPercent}%`,
     };
   }
 

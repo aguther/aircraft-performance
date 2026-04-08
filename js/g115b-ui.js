@@ -229,7 +229,7 @@
     );
   }
 
-  function createAtmosphereCard(config) {
+  function createAtmosphereContent(config) {
     const atmosphereItems = [
       el(
         "div",
@@ -256,7 +256,11 @@
       );
     }
 
-    return createCard("Atmosphaere", el("div", { className: "atmos-grid" }, atmosphereItems));
+    return el("div", { className: "atmos-grid" }, atmosphereItems);
+  }
+
+  function createAtmosphereCard(config) {
+    return createCard("Atmosphaere", createAtmosphereContent(config));
   }
 
   function createMetricItem(config) {
@@ -279,15 +283,35 @@
     return createCard(title, el("div", { className: gridClassName }, items));
   }
 
-  function createConditionsCard(conditions) {
-    return createCard(
-      "Bedingungen",
-      el(
-        "div",
-        { className: "conditions-grid" },
-        conditions.map((condition) => el("span", { text: condition }))
-      )
+  function createConditionsContent(conditions) {
+    return el(
+      "div",
+      { className: "conditions-grid" },
+      conditions.map((condition) => el("span", { text: condition }))
     );
+  }
+
+  function createConditionsCard(conditions) {
+    return createCard("Bedingungen", createConditionsContent(conditions));
+  }
+
+  function createContextCard(config) {
+    const sections = [];
+
+    if (config.atmosphere) {
+      sections.push(createAtmosphereContent(config.atmosphere));
+    }
+
+    if (config.conditions && config.conditions.length > 0) {
+      sections.push(
+        el("div", { className: "context-card-block" }, [
+          sections.length > 0 ? el("div", { className: "context-divider", text: "Bedingungen" }) : null,
+          createConditionsContent(config.conditions),
+        ])
+      );
+    }
+
+    return createCard(config.title || "Rahmenbedingungen", el("div", { className: "context-card-body" }, sections));
   }
 
   function createPipelineCard(steps) {
@@ -323,6 +347,12 @@
     target.replaceChildren(...nodes.filter(Boolean));
   }
 
+  function markResponsiveFields() {
+    document.querySelectorAll(".field").forEach((field) => {
+      field.classList.toggle("range-field", Boolean(field.querySelector(".slider-row")));
+    });
+  }
+
   window.G115B = window.G115B || {};
   window.G115B.ui = {
     el,
@@ -341,8 +371,10 @@
     createMetricItem,
     createGridCard,
     createConditionsCard,
+    createContextCard,
     createPipelineCard,
     replaceContent,
+    markResponsiveFields,
     resolveTheme,
   };
 
@@ -354,6 +386,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     initTheme();
     setupNavigationDropdown();
+    markResponsiveFields();
   });
 
   if (systemThemeQuery) {

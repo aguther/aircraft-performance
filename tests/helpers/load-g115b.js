@@ -8,6 +8,11 @@ function loadScriptIntoContext(context, relativePath) {
   vm.runInContext(source, context, { filename: absolutePath });
 }
 
+/**
+ * Creates an isolated browser-like runtime for the calculator scripts.
+ *
+ * @returns {G115B.AppContext}
+ */
 function createG115BContext() {
   const context = vm.createContext({
     window: {},

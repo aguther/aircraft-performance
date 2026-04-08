@@ -1,6 +1,17 @@
 (function () {
   const { calculators, core, ui } = window.G115B;
+  const DEFAULT_ALTITUDE_FT = 4500;
+  const DEFAULT_FLIGHT_LEVEL = 45;
+  const DEFAULT_DENSITY_ALTITUDE_FT = 4500;
+  const DEFAULT_QNH_HPA = 1013;
+  const DEFAULT_OAT_C = 6;
+  const DEFAULT_POWER_PERCENT = 65;
   let currentMode = "alt";
+
+  function readNumberValue(element, defaultValue) {
+    if (!element || element.value === "") return defaultValue;
+    return Number.parseFloat(element.value);
+  }
 
   function getElements() {
     return {
@@ -21,29 +32,28 @@
   function resolvePressureAltitudeFt(elements) {
     if (currentMode === "alt") {
       return core.pressureAltitudeFromQnh(
-        Number.parseFloat(elements.altitude.value) || 0,
-        Number.parseFloat(elements.qnh.value) || 1013
+        readNumberValue(elements.altitude, DEFAULT_ALTITUDE_FT),
+        readNumberValue(elements.qnh, DEFAULT_QNH_HPA)
       );
     }
     if (currentMode === "fl") {
-      return core.flightLevelToFeet(Number.parseFloat(elements.flightLevel.value) || 0);
+      return core.flightLevelToFeet(readNumberValue(elements.flightLevel, DEFAULT_FLIGHT_LEVEL));
     }
     return null;
   }
 
   function readInputs(elements) {
-    const powerPercent = Number.parseFloat(elements.power.value) || 65;
+    const powerPercent = readNumberValue(elements.power, DEFAULT_POWER_PERCENT);
     if (currentMode === "da") {
       return {
         mode: currentMode,
-        densityAltitudeFt: Number.parseFloat(elements.densityAltitudeDirect.value) || 0,
+        densityAltitudeFt: readNumberValue(elements.densityAltitudeDirect, DEFAULT_DENSITY_ALTITUDE_FT),
         powerPercent,
       };
     }
 
     const pressureAltitudeFt = resolvePressureAltitudeFt(elements);
-    const oatValue = elements.oat.value;
-    const oatC = oatValue === "" ? 15 : Number.parseFloat(oatValue);
+    const oatC = readNumberValue(elements.oat, DEFAULT_OAT_C);
     const atmosphere = core.densityAltitude(pressureAltitudeFt, oatC);
 
     return {
@@ -58,14 +68,40 @@
   function renderResult(elements, inputs, result) {
     const nodes = [ui.createDisclaimerCard(), ui.createWarnings(result.warnings)];
 
-    if (inputs.mode !== "da") {
-      nodes.push(
-        ui.createAtmosphereCard({
-          densityAltitudeFt: inputs.densityAltitudeFt,
-          densityAltitudeWarn: inputs.densityAltitudeFt > 10000,
-        })
-      );
-    }
+    nodes.push(
+      ui.createCard(
+        "Grundlagen",
+        ui.el("div", { className: "context-card-body" }, [
+          inputs.mode !== "da"
+            ? ui.el(
+                "div",
+                { className: "context-card-block" },
+                ui.el(
+                  "div",
+                  { className: "atmos-grid" },
+                  ui.el(
+                    "div",
+                    { className: "atmos-item" },
+                    ui.el("div", { className: "atmos-item-label", text: "Density Altitude" }),
+                    ui.el("div", {
+                      className: `atmos-item-value${inputs.densityAltitudeFt > 10000 ? " warn" : ""}`,
+                      text: `${inputs.densityAltitudeFt.toLocaleString("de-DE")} ft`,
+                    })
+                  )
+                )
+              )
+            : null,
+          ui.el("div", { className: "context-card-block" }, [
+            inputs.mode !== "da" ? ui.el("div", { className: "context-divider", text: "Hinweis" }) : null,
+            ui.el("div", {
+              className: "result-item-sub",
+              text: result.note,
+              style: { fontSize: "12px", lineHeight: "1.6", color: "var(--text-sub)" },
+            }),
+          ]),
+        ])
+      )
+    );
 
     nodes.push(
       ui.createCard(
@@ -75,13 +111,6 @@
           value: Math.round(result.rangeNm),
           unit: "nm",
           subtext: `${Math.round(result.rangeKm)} km`,
-        })
-      ),
-      ui.createCard(
-        "Bemerkung POH",
-        ui.el("div", {
-          text: result.note,
-          style: { fontSize: "12px", color: "var(--text-sub)", lineHeight: "1.6" },
         })
       )
     );
@@ -106,8 +135,9 @@
     });
     const elements = getElements();
     const requiresOat = mode !== "da";
-    elements.oatField.style.display = requiresOat ? "flex" : "none";
-    elements.densityAltitudeBox.style.display = requiresOat ? "flex" : "none";
+    elements.oatField.style.display = requiresOat ? "" : "none";
+    elements.densityAltitudeBox.style.display = requiresOat ? "" : "none";
+    ui.markResponsiveFields();
     refresh();
   }
 

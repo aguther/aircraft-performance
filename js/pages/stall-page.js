@@ -1,7 +1,7 @@
 (function () {
   const { calculators, ui } = window.G115B;
   let currentPower = "leerlauf";
-  let currentFlaps = 0;
+  let currentFlaps = 40;
 
   function getElements() {
     return {
@@ -13,7 +13,7 @@
 
   function readInputs(elements) {
     return {
-      massKg: Number.parseFloat(elements.mass.value) || 850,
+      massKg: Number.parseFloat(elements.mass.value) || 920,
       powerMode: currentPower,
       flapsDegrees: currentFlaps,
     };
@@ -22,6 +22,7 @@
   function renderResult(elements, inputs, result) {
     ui.replaceContent(elements.resultRoot, [
       ui.createDisclaimerCard(),
+      ui.createConditionsCard(result.conditions),
       ui.createCard(
         `Ergebnis - ${inputs.massKg} kg · ${inputs.powerMode === "leerlauf" ? "Leerlauf" : "Vollast"} · Klappen ${inputs.flapsDegrees}°`,
         ui.el(
@@ -35,7 +36,6 @@
           })
         )
       ),
-      ui.createConditionsCard(result.conditions),
     ]);
   }
 

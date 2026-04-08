@@ -1,5 +1,50 @@
 (function () {
   const { calculators, core, ui } = window.G115B;
+  const DEFAULT_ELEVATION_FT = 0;
+  const DEFAULT_PRESSURE_ALTITUDE_FT = 0;
+  const DEFAULT_QNH_HPA = 1013;
+  const DEFAULT_OAT_C = 15;
+  const DEFAULT_MASS_KG = 920;
+  const DEFAULT_SLOPE_PERCENT = 0;
+  const DEFAULT_WIND_KT = 0;
+  const DEFAULT_SAFETY_MARGIN_PERCENT = 15;
+
+  function readNumberValue(element, defaultValue) {
+    if (!element || element.value === "") return defaultValue;
+    return Number.parseFloat(element.value);
+  }
+
+  function formatWindLabel(windKt) {
+    const windKmh = core.knotsToKilometersPerHour(windKt);
+    if (windKt === 0) return "Kein Wind";
+    return `${Math.abs(windKt)} kt (${Math.abs(windKmh).toFixed(1)} km/h) ${windKt > 0 ? "HW" : "TW"}`;
+  }
+
+  function formatSlopeLabel(slopePercent) {
+    if (slopePercent > 0) return `${slopePercent.toFixed(1)}% bergauf`;
+    if (slopePercent < 0) return `${Math.abs(slopePercent).toFixed(1)}% bergab`;
+    return "eben";
+  }
+
+  function createAtmosphereCardProps(atmosphere) {
+    return {
+      densityAltitudeFt: atmosphere.densityAltitudeFt,
+      densityAltitudeWarn: atmosphere.densityAltitudeFt > 5000,
+      isaDeviationText: `${core.formatSigned(atmosphere.isaDeviationC, 1)} °C`,
+      isaDeviationClass: Math.abs(atmosphere.isaDeviationC) < 0.1 ? "" : atmosphere.isaDeviationC > 0 ? "warn" : "good",
+    };
+  }
+
+  function createTakeoffSteps(inputs, result) {
+    return [
+      { name: "Schritt 1 - Atmosphaere", detail: `PA ${inputs.pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT ${inputs.oatC} °C`, value: `${core.round(result.groundRollByAtmosphereMeters)} m` },
+      { name: "Schritt 2 - Masse", detail: `${core.round(result.groundRollByAtmosphereMeters)} m · ${inputs.massKg} kg`, value: `${core.round(result.groundRollByMassMeters)} m` },
+      { name: "Schritt 3 - Slope", detail: `${core.round(result.groundRollByMassMeters)} m · ${formatSlopeLabel(inputs.slopePercent)}`, value: `${core.round(result.groundRollBySlopeMeters)} m` },
+      { name: "Schritt 4 - Wind", detail: `${core.round(result.groundRollBySlopeMeters)} m · ${formatWindLabel(inputs.windKt)}`, value: `${core.round(result.groundRollByWindMeters)} m` },
+      { name: `Zuschlag ${inputs.safetyMarginPercent}%`, detail: `${core.round(result.groundRollByWindMeters)} m × ${(1 + inputs.safetyMarginPercent / 100).toFixed(2)}`, value: `${result.groundRollMeters} m` },
+      { name: "Schritt 5 - Hindernis 15 m", detail: `${result.groundRollMeters} m -> ueber 15 m`, value: `${result.takeoffDistanceMeters} m` },
+    ];
+  }
 
   function getElements() {
     return {
@@ -20,22 +65,21 @@
   function calcPAFromQNH() {
     const elements = getElements();
     const pressureAltitudeFt = core.pressureAltitudeFromQnh(
-      Number.parseFloat(elements.elevation.value) || 0,
-      Number.parseFloat(elements.qnh.value) || 1013
+      readNumberValue(elements.elevation, DEFAULT_ELEVATION_FT),
+      readNumberValue(elements.qnh, DEFAULT_QNH_HPA)
     );
     elements.pressureAltitudeValue.textContent = `${pressureAltitudeFt.toLocaleString("de-DE")} ft`;
     elements.pressureAltitude.value = pressureAltitudeFt;
   }
 
   function readInputs(elements) {
-    const oatValue = elements.oat.value;
     return {
-      pressureAltitudeFt: Number.parseFloat(elements.pressureAltitude.value) || 0,
-      oatC: oatValue === "" ? 15 : Number.parseFloat(oatValue),
-      massKg: Number.parseFloat(elements.mass.value) || 920,
-      slopePercent: Number.parseFloat(elements.slope.value) || 0,
-      windKt: Number.parseFloat(elements.wind.value) || 0,
-      safetyMarginPercent: Number.parseFloat(elements.safetyMargin.value) || 0,
+      pressureAltitudeFt: readNumberValue(elements.pressureAltitude, DEFAULT_PRESSURE_ALTITUDE_FT),
+      oatC: readNumberValue(elements.oat, DEFAULT_OAT_C),
+      massKg: readNumberValue(elements.mass, DEFAULT_MASS_KG),
+      slopePercent: readNumberValue(elements.slope, DEFAULT_SLOPE_PERCENT),
+      windKt: readNumberValue(elements.wind, DEFAULT_WIND_KT),
+      safetyMarginPercent: readNumberValue(elements.safetyMargin, DEFAULT_SAFETY_MARGIN_PERCENT),
     };
   }
 
@@ -43,16 +87,14 @@
     ui.replaceContent(elements.resultRoot, [
       ui.createDisclaimerCard(),
       ui.createWarnings(result.warnings),
-      ui.createAtmosphereCard({
-        densityAltitudeFt: result.atmosphere.densityAltitudeFt,
-        densityAltitudeWarn: result.atmosphereDisplay.densityAltitudeWarn,
-        isaDeviationText: result.atmosphereDisplay.isaDeviationText,
-        isaDeviationClass: result.atmosphereDisplay.isaDeviationClass,
+      ui.createContextCard({
+        atmosphere: createAtmosphereCardProps(result.atmosphere),
+        conditions: result.conditions,
       }),
-      ui.createPipelineCard(result.steps),
+      ui.createPipelineCard(createTakeoffSteps(inputs, result)),
       ui.createGridCard("Ergebnis", "result-grid", [
-        ui.createMetricItem({ label: "Startrollstrecke · Ground Roll", value: result.results.groundRollMeters, unit: "m" }),
-        ui.createMetricItem({ label: "Startstrecke · Takeoff Distance", value: result.results.takeoffDistanceMeters, unit: "m" }),
+        ui.createMetricItem({ label: "Startrollstrecke · Ground Roll", value: result.groundRollMeters, unit: "m" }),
+        ui.createMetricItem({ label: "Startstrecke · Takeoff Distance", value: result.takeoffDistanceMeters, unit: "m" }),
       ]),
       ui.createGridCard("Geschwindigkeiten", "speed-grid", [
         ui.createMetricItem({
@@ -61,9 +103,9 @@
           valueClassName: "speed-item-value",
           subtextClassName: "speed-item-sub",
           label: "VR · Rotate",
-          value: core.kilometersPerHourToKnots(result.speeds.rotateSpeedKmh).toFixed(1),
+          value: core.kilometersPerHourToKnots(result.rotateSpeedKmh).toFixed(1),
           unit: "kt",
-          subtext: `${result.speeds.rotateSpeedKmh.toFixed(0)} km/h IAS`,
+          subtext: `${result.rotateSpeedKmh.toFixed(0)} km/h IAS`,
         }),
         ui.createMetricItem({
           className: "speed-item",
@@ -71,12 +113,11 @@
           valueClassName: "speed-item-value",
           subtextClassName: "speed-item-sub",
           label: "Geschw. 15 m Hoehe",
-          value: core.kilometersPerHourToKnots(result.speeds.speedAt15mKmh).toFixed(1),
+          value: core.kilometersPerHourToKnots(result.speedAt15mKmh).toFixed(1),
           unit: "kt",
-          subtext: `${result.speeds.speedAt15mKmh.toFixed(0)} km/h IAS`,
+          subtext: `${result.speedAt15mKmh.toFixed(0)} km/h IAS`,
         }),
       ]),
-      ui.createConditionsCard(result.conditions),
     ]);
   }
 
@@ -91,6 +132,7 @@
       document.getElementById(`mode-${key}`).style.display = key === mode ? "flex" : "none";
       document.getElementById(`mode-${key}-btn`).classList.toggle("active", key === mode);
     });
+    ui.markResponsiveFields();
     if (mode === "qnh") calcPAFromQNH();
   }
 

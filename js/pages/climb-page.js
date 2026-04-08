@@ -1,6 +1,15 @@
 (function () {
   const { calculators, core, ui } = window.G115B;
+  const LEG_DEFAULTS = {
+    from: { altitudeFt: 0, flightLevel: 0, densityAltitudeFt: 0, oatC: 15, qnhHpa: 1013 },
+    to: { altitudeFt: 4500, flightLevel: 45, densityAltitudeFt: 4500, oatC: 6, qnhHpa: 1013 },
+  };
   const legModes = { from: "alt", to: "alt" };
+
+  function readNumberValue(element, defaultValue) {
+    if (!element || element.value === "") return defaultValue;
+    return Number.parseFloat(element.value);
+  }
 
   function getElements() {
     return {
@@ -25,22 +34,22 @@
   function readLegDensityAltitudeFt(whichLeg) {
     const mode = legModes[whichLeg];
     const elements = getLegElements(whichLeg);
+    const defaults = LEG_DEFAULTS[whichLeg];
     if (mode === "da") {
-      return Number.parseFloat(elements.densityAltitudeDirect.value) || 0;
+      return readNumberValue(elements.densityAltitudeDirect, defaults.densityAltitudeFt);
     }
 
     let pressureAltitudeFt;
     if (mode === "alt") {
       pressureAltitudeFt = core.pressureAltitudeFromQnh(
-        Number.parseFloat(elements.altitude.value) || 0,
-        Number.parseFloat(elements.qnh.value) || 1013
+        readNumberValue(elements.altitude, defaults.altitudeFt),
+        readNumberValue(elements.qnh, defaults.qnhHpa)
       );
     } else {
-      pressureAltitudeFt = core.flightLevelToFeet(Number.parseFloat(elements.flightLevel.value) || 0);
+      pressureAltitudeFt = core.flightLevelToFeet(readNumberValue(elements.flightLevel, defaults.flightLevel));
     }
 
-    const oatValue = elements.oat.value;
-    const oatC = oatValue === "" ? 15 : Number.parseFloat(oatValue);
+    const oatC = readNumberValue(elements.oat, defaults.oatC);
     const atmosphere = core.densityAltitude(pressureAltitudeFt, oatC);
     elements.densityAltitudeValue.textContent = `${atmosphere.densityAltitudeFt.toLocaleString("de-DE")} ft`;
     return atmosphere.densityAltitudeFt;
@@ -52,38 +61,52 @@
       return;
     }
 
-    const basisCard = ui.createCard(
-      "Berechnungsbasis",
-      ui.el(
-        "div",
-        { className: "climb-cols" },
+    const contextCard = ui.createCard(
+      "Rahmenbedingungen",
+      ui.el("div", { className: "context-card-body" }, [
         ui.el(
           "div",
-          { className: "atmos-item" },
-          ui.el("div", { className: "atmos-item-label", text: "Start DA" }),
-          ui.el("div", { className: "atmos-item-value", text: `${inputs.departureDensityAltitudeFt.toLocaleString("de-DE")} ft` }),
-          ui.el("div", {
-            text: `Zeit kum.: ${result.departureCumulative.timeMinutes.toFixed(1)} min · Kraft.: ${result.departureCumulative.fuelLiters.toFixed(1)} l · Str.: ${result.departureCumulative.distanceKm.toFixed(1)} km`,
-            style: { fontSize: "11px", color: "var(--text-dim)", marginTop: "4px" },
-          })
+          { className: "context-card-block" },
+          ui.el(
+            "div",
+            { className: "climb-cols" },
+            ui.el(
+              "div",
+              { className: "atmos-item" },
+              ui.el("div", { className: "atmos-item-label", text: "Start DA" }),
+              ui.el("div", { className: "atmos-item-value", text: `${inputs.departureDensityAltitudeFt.toLocaleString("de-DE")} ft` }),
+              ui.el("div", {
+                text: `Zeit kum.: ${result.departureCumulative.timeMinutes.toFixed(1)} min · Kraft.: ${result.departureCumulative.fuelLiters.toFixed(1)} l · Str.: ${result.departureCumulative.distanceKm.toFixed(1)} km`,
+                style: { fontSize: "11px", color: "var(--text-dim)", marginTop: "4px" },
+              })
+            ),
+            ui.el("div", { className: "climb-arrow", text: "→" }),
+            ui.el(
+              "div",
+              { className: "atmos-item" },
+              ui.el("div", { className: "atmos-item-label", text: "Ziel DA" }),
+              ui.el("div", { className: "atmos-item-value", text: `${inputs.destinationDensityAltitudeFt.toLocaleString("de-DE")} ft` }),
+              ui.el("div", {
+                text: `Zeit kum.: ${result.destinationCumulative.timeMinutes.toFixed(1)} min · Kraft.: ${result.destinationCumulative.fuelLiters.toFixed(1)} l · Str.: ${result.destinationCumulative.distanceKm.toFixed(1)} km`,
+                style: { fontSize: "11px", color: "var(--text-dim)", marginTop: "4px" },
+              })
+            )
+          )
         ),
-        ui.el("div", { className: "climb-arrow", text: "→" }),
-        ui.el(
-          "div",
-          { className: "atmos-item" },
-          ui.el("div", { className: "atmos-item-label", text: "Ziel DA" }),
-          ui.el("div", { className: "atmos-item-value", text: `${inputs.destinationDensityAltitudeFt.toLocaleString("de-DE")} ft` }),
-          ui.el("div", {
-            text: `Zeit kum.: ${result.destinationCumulative.timeMinutes.toFixed(1)} min · Kraft.: ${result.destinationCumulative.fuelLiters.toFixed(1)} l · Str.: ${result.destinationCumulative.distanceKm.toFixed(1)} km`,
-            style: { fontSize: "11px", color: "var(--text-dim)", marginTop: "4px" },
-          })
-        )
-      )
+        ui.el("div", { className: "context-card-block" }, [
+          ui.el("div", { className: "context-divider", text: "Bedingungen" }),
+          ui.el(
+            "div",
+            { className: "conditions-grid" },
+            result.conditions.map((condition) => ui.el("span", { text: condition }))
+          ),
+        ]),
+      ])
     );
 
     ui.replaceContent(elements.resultRoot, [
       ui.createDisclaimerCard(),
-      basisCard,
+      contextCard,
       ui.createGridCard(
         `Ergebnis - ${inputs.departureDensityAltitudeFt.toLocaleString("de-DE")} -> ${inputs.destinationDensityAltitudeFt.toLocaleString("de-DE")} ft DA`,
         "result-grid",
@@ -93,7 +116,6 @@
           ui.createMetricItem({ label: "Strecke · Distance", value: result.climbDistanceNm.toFixed(1), unit: "nm", subtext: `${result.climbDistanceKm.toFixed(1)} km`, valueStyle: { fontSize: "2.2rem" } }),
         ]
       ),
-      ui.createConditionsCard(result.conditions),
     ]);
   }
 
@@ -114,8 +136,9 @@
     });
     const legElements = getLegElements(whichLeg);
     const requiresOat = mode !== "da";
-    legElements.oatField.style.display = requiresOat ? "flex" : "none";
-    legElements.densityAltitudeBox.style.display = requiresOat ? "flex" : "none";
+    legElements.oatField.style.display = requiresOat ? "" : "none";
+    legElements.densityAltitudeBox.style.display = requiresOat ? "" : "none";
+    ui.markResponsiveFields();
     refresh();
   }
 

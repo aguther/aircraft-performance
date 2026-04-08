@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grob G115B — Reichweite</title>
+  <title>Grob 115B — Reichweite · Range</title>
   <meta name="theme-color" content="#005f8a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -17,25 +17,28 @@
 </head>
 
 <body>
-  <nav class="nav-bar" style="position:relative">
-    <div style="position:relative;justify-self:start;">
-      <button class="nav-menu-btn" id="navMenuBtn" onclick="toggleMenu()">
-        <span class="nav-back-arrow">‹</span> Rechner
-      </button>
-      <div class="nav-dropdown" id="navDropdown"><a href="index.html" class="nav-dropdown-home">← Übersicht</a>
-        <a href="takeoff.html">Startstrecke</a>
-        <a href="landing.html">Landestrecke</a>
-        <a href="cruise.html">Reiseflug</a>
-        <a href="climb.html">Steigflug</a>
-        <a href="climb_rate.html">Steiggeschwindigkeit</a>
-        <a href="range.html" class="current">Reichweite</a>
-        <a href="endurance.html">Maximale Flugdauer</a>
-        <a href="stall.html">Überziehgeschwindigkeit</a>
+  <nav class="nav-bar">
+    <div class="nav-left">
+      <a class="nav-back" href="index.html"><span class="nav-back-arrow">‹</span><span>Zurück</span></a>
+      <div class="nav-menu-wrap">
+        <button class="nav-menu-btn" id="navMenuBtn" onclick="toggleMenu()">
+          <span class="nav-back-arrow">≡</span><span>Rechner</span>
+        </button>
+        <div class="nav-dropdown" id="navDropdown">
+          <a href="takeoff.html">Startstrecke · Takeoff</a>
+          <a href="landing.html">Landestrecke · Landing</a>
+          <a href="cruise.html">Reiseflug · Cruise</a>
+          <a href="climb.html">Steigflug · Climb</a>
+          <a href="climb_rate.html">Steiggeschwindigkeit · Climb Rate</a>
+          <a href="range.html" class="current">Reichweite · Range</a>
+          <a href="endurance.html">Flugdauer · Endurance</a>
+          <a href="stall.html">Überziehgeschwindigkeit · Stall</a>
+        </div>
       </div>
     </div>
     <div class="nav-center">
-      <div class="nav-logo">G115B</div>
-      <div class="nav-title">Reichweite</div>
+      <div class="nav-logo">Grob 115B</div>
+      <div class="nav-title">Reichweite · Range</div>
     </div>
     <div class="nav-right">
       <div class="theme-toggle" onclick="toggleTheme()">
@@ -58,7 +61,7 @@
         <div id="mode-alt" class="pa-mode">
           <div class="field">
             <div class="field-label">Flughöhe <span>ft</span></div>
-            <div class="input-wrap"><input type="number" id="alt" value="8000" step="100" onfocus="this.select()"
+            <div class="input-wrap"><input type="number" id="alt" value="4500" step="100" onfocus="this.select()"
                 onkeydown="if(event.key==='Enter')this.blur()" oninput="calcDA()"><span class="unit">ft</span></div>
           </div>
           <div class="field">
@@ -78,26 +81,26 @@
         <div id="mode-fl" class="pa-mode" style="display:none">
           <div class="field">
             <div class="field-label">Flight Level</div>
-            <div class="input-wrap"><input type="number" id="fl" value="80" step="5" onfocus="this.select()"
+            <div class="input-wrap"><input type="number" id="fl" value="45" step="5" onfocus="this.select()"
                 onkeydown="if(event.key==='Enter')this.blur()" oninput="calcDA()"><span class="unit">FL</span></div>
           </div>
         </div>
         <div id="mode-da" class="pa-mode" style="display:none">
           <div class="field">
             <div class="field-label">Density Altitude <span>ft</span></div>
-            <div class="input-wrap"><input type="number" id="da-direct" value="8600" step="100" onfocus="this.select()"
+            <div class="input-wrap"><input type="number" id="da-direct" value="4500" step="100" onfocus="this.select()"
                 onkeydown="if(event.key==='Enter')this.blur()" oninput="calcDA()"><span class="unit">ft</span></div>
           </div>
         </div>
-        <div class="field" id="oat-field" style="margin-top:1.25rem">
+        <div class="field range-field" id="oat-field" style="margin-top:1.25rem">
           <div class="field-label">OAT <span>°C</span></div>
           <div class="slider-row">
-            <input type="range" id="oat-range" min="-40" max="50" step="1" value="5"
+            <input type="range" id="oat-range" min="-40" max="50" step="1" value="6"
               oninput="syncSlider('oat','oat-range'); calcDA()">
-            <span class="slider-val" id="oat-range-val">5 °C</span>
+            <span class="slider-val" id="oat-range-val">6 °C</span>
           </div>
           <div class="input-wrap" style="margin-top:6px">
-            <input type="number" id="oat" value="5" step="1" min="-40" max="50" onfocus="this.select()"
+            <input type="number" id="oat" value="6" step="1" min="-40" max="50" onfocus="this.select()"
               onkeydown="if(event.key==='Enter')this.blur()" oninput="syncInput('oat','oat-range'); calcDA()">
             <span class="unit">°C</span>
           </div>
