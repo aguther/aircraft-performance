@@ -1,4 +1,4 @@
-const CACHE_NAME = "g115b-performance-v1";
+const CACHE_NAME = "g115b-performance-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -12,6 +12,21 @@ const APP_SHELL = [
   "./stall.html",
   "./manifest.webmanifest",
   "./app.js",
+  "./css/theme.css",
+  "./css/index.css",
+  "./css/calculator.css",
+  "./js/g115b-core.js",
+  "./js/g115b-ui.js",
+  "./js/g115b-calculators.js",
+  "./js/performance-data.js",
+  "./js/pages/takeoff-page.js",
+  "./js/pages/landing-page.js",
+  "./js/pages/cruise-page.js",
+  "./js/pages/climb-page.js",
+  "./js/pages/climb-rate-page.js",
+  "./js/pages/range-page.js",
+  "./js/pages/endurance-page.js",
+  "./js/pages/stall-page.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",
@@ -61,6 +76,23 @@ self.addEventListener("fetch", (event) => {
         .catch(async () => {
           return (await caches.match(request)) || caches.match("./index.html");
         })
+    );
+    return;
+  }
+
+  if (request.destination === "style" || request.destination === "script") {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (!response || response.status !== 200 || response.type === "opaque") {
+            return response;
+          }
+
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          return response;
+        })
+        .catch(() => caches.match(request))
     );
     return;
   }
