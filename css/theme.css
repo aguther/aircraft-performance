@@ -139,6 +139,11 @@ a {
   position: relative;
 }
 
+.nav-left-placeholder {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .nav-back,
 .nav-back-home,
 .nav-menu-btn {
