@@ -1,4 +1,4 @@
-const CACHE_NAME = "g115b-performance-v2";
+const CACHE_NAME = "g115b-performance-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -27,10 +27,10 @@ const APP_SHELL = [
   "./js/pages/range-page.js",
   "./js/pages/endurance-page.js",
   "./js/pages/stall-page.js",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/apple-touch-icon.png",
-  "./icons/favicon-32.png"
+  "./icons/icon-192-v2.png",
+  "./icons/icon-512-v2.png",
+  "./icons/apple-touch-icon-v2.png",
+  "./icons/favicon-32-v2.png"
 ];
 
 self.addEventListener("install", (event) => {
