@@ -9,6 +9,37 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="G115B Perf">
+  <script>
+    (function () {
+      var themePreference = "auto";
+      var resolvedTheme = "light";
+
+      try {
+        themePreference = localStorage.getItem("g115b-theme") || "auto";
+      } catch (_) {
+        themePreference = "auto";
+      }
+
+      if (themePreference === "dark") {
+        resolvedTheme = "dark";
+      } else if (
+        themePreference === "auto" &&
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      ) {
+        resolvedTheme = "dark";
+      }
+
+      document.documentElement.dataset.theme = resolvedTheme;
+      document.documentElement.dataset.themePreference = themePreference;
+      document.documentElement.style.colorScheme = resolvedTheme;
+
+      var metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute("content", resolvedTheme === "dark" ? "#08131d" : "#005f8a");
+      }
+    })();
+  </script>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32-v2.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon-v2.png">
