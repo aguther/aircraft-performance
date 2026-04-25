@@ -12,8 +12,9 @@
     const step2GroundRollMeters = core.lookup2D(pageData.groundRollFromMass, step1GroundRollMeters, inputs.massKg);
     const step3GroundRollMeters = core.lookup2D(pageData.groundRollFromSlope, step2GroundRollMeters, inputs.slopePercent);
     const step4GroundRollMeters = core.lookup2D(pageData.groundRollFromWind, step3GroundRollMeters, windKmh);
-    const groundRollWithMarginMeters = step4GroundRollMeters * (1 + inputs.safetyMarginPercent / 100);
-    const takeoffDistanceMeters = core.lookup2D(pageData.takeoffDistanceOver15m, groundRollWithMarginMeters, 15);
+    const groundRollMarginMeters = step4GroundRollMeters * (inputs.safetyMarginPercent / 100);
+    const groundRollWithMarginMeters = step4GroundRollMeters + groundRollMarginMeters;
+    const takeoffDistanceMeters = groundRollMarginMeters + core.lookup2D(pageData.takeoffDistanceOver15m, step4GroundRollMeters, 15);
 
     const warnings = [];
     if (inputs.massKg > 920) warnings.push({ text: "Masse ueberschreitet MTOW (920 kg).", danger: true });
@@ -47,8 +48,9 @@
     const slopeCorrectionFactor = inputs.slopePercent >= 0 ? 1 - 0.04 * inputs.slopePercent : 1 + 0.03 * Math.abs(inputs.slopePercent);
     const step3LandingRollMeters = step2LandingRollMeters * slopeCorrectionFactor;
     const step4LandingRollMeters = core.lookup2D(pageData.landingRollFromWind, step3LandingRollMeters, windKmh);
-    const landingRollWithMarginMeters = step4LandingRollMeters * (1 + inputs.safetyMarginPercent / 100);
-    const landingDistanceMeters = core.lookup2D(pageData.landingDistanceOver15m, landingRollWithMarginMeters, 15);
+    const landingRollMarginMeters = step4LandingRollMeters * (inputs.safetyMarginPercent / 100);
+    const landingRollWithMarginMeters = step4LandingRollMeters + landingRollMarginMeters;
+    const landingDistanceMeters = landingRollMarginMeters + core.lookup2D(pageData.landingDistanceOver15m, step4LandingRollMeters, 15);
 
     const warnings = [];
     if (inputs.massKg > 920) warnings.push({ text: "Masse ueberschreitet MTOW (920 kg).", danger: true });
