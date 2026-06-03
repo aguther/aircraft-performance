@@ -571,6 +571,51 @@ input[type="range"]::-webkit-slider-thumb:hover {
   background: linear-gradient(180deg, var(--cyan-bg), rgba(0, 0, 0, 0));
 }
 
+.result-item.danger {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+}
+
+.wb-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.wb-inline-warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.wb-inline-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.48rem 0.65rem;
+  border: 1px solid var(--warn-border);
+  border-radius: 12px;
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.wb-inline-warning.danger {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.wb-inline-warning::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: currentColor;
+}
+
 .result-item-value {
   color: var(--cyan);
   font-size: clamp(2rem, 1.65vw, 2.35rem);
@@ -624,6 +669,114 @@ input[type="range"]::-webkit-slider-thumb:hover {
 .breakdown-table td {
   padding: 0.2rem 0;
   font-size: 12.5px;
+}
+
+.wb-chart-wrap {
+  width: 100%;
+  overflow: hidden;
+}
+
+.wb-chart-axis-key {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wb-chart-axis-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.1rem;
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wb-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 300px;
+}
+
+.wb-envelope {
+  fill: rgba(69, 199, 245, 0.14);
+  stroke: none;
+}
+
+.wb-envelope-line {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.wb-grid-line {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
+}
+
+.wb-current-point {
+  fill: var(--green);
+  stroke: var(--bg-card);
+  stroke-width: 3;
+}
+
+.wb-current-point.danger {
+  fill: var(--red);
+}
+
+.wb-point-label,
+.wb-axis-label {
+  fill: var(--text-sub);
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 700;
+}
+
+.wb-point-label {
+  fill: var(--text);
+  font-size: 14px;
+}
+
+.wb-axis-label {
+  font-size: 12px;
+}
+
+.wb-breakdown td:nth-child(2),
+.wb-breakdown td:nth-child(3),
+.wb-breakdown td:nth-child(4) {
+  color: var(--text);
+  font-weight: 700;
+  text-align: right;
+}
+
+.wb-breakdown th {
+  padding: 0 0 0.4rem;
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.wb-breakdown th:first-child {
+  text-align: left;
+}
+
+.wb-total-row td {
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--border);
+  color: var(--cyan) !important;
+  font-weight: 800;
 }
 
 @media (min-width: 1280px) and (min-height: 820px) {
@@ -704,7 +857,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   }
 
   .card {
-    padding: 0.92rem 0.98rem;
+    padding: 0.8rem 0.9rem;
   }
 
   .context-card-body {
@@ -718,6 +871,10 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
   .conditions-grid {
     align-items: start;
+  }
+
+  .wb-chart {
+    max-height: 250px;
   }
 }
 
@@ -748,10 +905,52 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
   .atmos-grid,
   .result-grid,
-  .speed-grid,
   .conditions-grid,
   .climb-cols {
     grid-template-columns: 1fr;
+  }
+
+  .speed-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .speed-grid .result-item {
+    padding: 0.72rem 0.75rem;
+  }
+
+  .speed-grid .result-item-value {
+    font-size: 1.5rem;
+  }
+
+  .speed-grid .result-item-sub {
+    font-size: 10.5px;
+  }
+
+  .wb-chart {
+    max-height: 220px;
+  }
+
+  .wb-chart-axis-key {
+    font-size: 9.5px;
+  }
+
+  .wb-chart-axis-footer {
+    font-size: 9.5px;
+  }
+
+  .wb-breakdown {
+    table-layout: fixed;
+  }
+
+  .wb-breakdown th,
+  .wb-breakdown td {
+    font-size: 10.5px;
+  }
+
+  .wb-breakdown th:first-child,
+  .wb-breakdown td:first-child {
+    width: 34%;
   }
 
   .climb-arrow {

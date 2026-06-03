@@ -1,9 +1,10 @@
-const CACHE_NAME = "g115b-performance-v3";
+const CACHE_NAME = "g115b-performance-v14";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./takeoff.html",
   "./landing.html",
+  "./weight_balance.html",
   "./cruise.html",
   "./climb.html",
   "./climb_rate.html",
@@ -21,6 +22,7 @@ const APP_SHELL = [
   "./js/performance-data.js",
   "./js/pages/takeoff-page.js",
   "./js/pages/landing-page.js",
+  "./js/pages/weight-balance-page.js",
   "./js/pages/cruise-page.js",
   "./js/pages/climb-page.js",
   "./js/pages/climb-rate-page.js",

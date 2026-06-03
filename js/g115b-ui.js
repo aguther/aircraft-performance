@@ -16,6 +16,10 @@
     "to-qnh-range": " hPa",
     "from-oat-range": " °C",
     "to-oat-range": " °C",
+    "pilot-mass-range": " kg",
+    "copilot-mass-range": " kg",
+    "baggage-mass-range": " kg",
+    "fuel-liters-range": " l",
   };
 
   const defaultSliderDecimals = {
@@ -31,14 +35,25 @@
     "to-qnh-range": 0,
     "from-oat-range": 0,
     "to-oat-range": 0,
+    "pilot-mass-range": 0,
+    "copilot-mass-range": 0,
+    "baggage-mass-range": 0,
+    "fuel-liters-range": 0,
   };
 
   function el(tagName, options, ...children) {
-    const element = document.createElement(tagName);
+    const svgTags = new Set(["svg", "polygon", "polyline", "line", "text", "circle"]);
+    const element = svgTags.has(tagName)
+      ? document.createElementNS("http://www.w3.org/2000/svg", tagName)
+      : document.createElement(tagName);
     const config = options || {};
 
     if (config.className) {
-      element.className = config.className;
+      if (svgTags.has(tagName)) {
+        element.setAttribute("class", config.className);
+      } else {
+        element.className = config.className;
+      }
     }
 
     if (config.text !== undefined) {

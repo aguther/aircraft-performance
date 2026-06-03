@@ -198,6 +198,109 @@
     };
   }
 
+  function isPointInPolygon(point, polygon) {
+    const epsilon = 1e-9;
+
+    function isPointOnSegment(segmentStart, segmentEnd) {
+      const cross =
+        (point.momentKgM - segmentStart.momentKgM) * (segmentEnd.massKg - segmentStart.massKg) -
+        (point.massKg - segmentStart.massKg) * (segmentEnd.momentKgM - segmentStart.momentKgM);
+      if (Math.abs(cross) > epsilon) return false;
+
+      const withinMoment =
+        point.momentKgM >= Math.min(segmentStart.momentKgM, segmentEnd.momentKgM) - epsilon &&
+        point.momentKgM <= Math.max(segmentStart.momentKgM, segmentEnd.momentKgM) + epsilon;
+      const withinMass =
+        point.massKg >= Math.min(segmentStart.massKg, segmentEnd.massKg) - epsilon &&
+        point.massKg <= Math.max(segmentStart.massKg, segmentEnd.massKg) + epsilon;
+
+      return withinMoment && withinMass;
+    }
+
+    let inside = false;
+    for (let index = 0, previousIndex = polygon.length - 1; index < polygon.length; previousIndex = index, index += 1) {
+      const current = polygon[index];
+      const previous = polygon[previousIndex];
+
+      if (isPointOnSegment(current, previous)) {
+        return true;
+      }
+
+      const intersects =
+        current.massKg > point.massKg !== previous.massKg > point.massKg &&
+        point.momentKgM <
+          ((previous.momentKgM - current.momentKgM) * (point.massKg - current.massKg)) /
+            (previous.massKg - current.massKg) +
+            current.momentKgM;
+
+      if (intersects) inside = !inside;
+    }
+
+    return inside;
+  }
+
+  function calculateWeightBalance(inputs) {
+    const pageData = data.weightBalance;
+    const emptyAircraft =
+      pageData.emptyAircraft.find((aircraft) => aircraft.name === inputs.aircraftName) ||
+      pageData.emptyAircraft[0];
+    const pilotMassKg = Math.max(0, inputs.pilotMassKg);
+    const copilotMassKg = Math.max(0, inputs.copilotMassKg);
+    const baggageMassKg = Math.max(0, inputs.baggageMassKg);
+    const fuelLiters = Math.max(0, inputs.fuelLiters);
+    const fuelMassKg = fuelLiters * pageData.fuelDensityKgPerLiter;
+    const emptyMomentKgM = emptyAircraft.massKg * emptyAircraft.armM;
+    const pilotMomentKgM = pilotMassKg * pageData.stations.pilot.armM;
+    const copilotMomentKgM = copilotMassKg * pageData.stations.copilot.armM;
+    const baggageMomentKgM = baggageMassKg * pageData.stations.baggage.armM;
+    const fuelMomentKgM = fuelMassKg * pageData.stations.fuel.armM;
+    const totalMassKg = emptyAircraft.massKg + pilotMassKg + copilotMassKg + baggageMassKg + fuelMassKg;
+    const totalMomentKgM = emptyMomentKgM + pilotMomentKgM + copilotMomentKgM + baggageMomentKgM + fuelMomentKgM;
+    const cgArmM = totalMomentKgM / totalMassKg;
+    const withinEnvelope = isPointInPolygon(
+      { massKg: totalMassKg, momentKgM: totalMomentKgM },
+      pageData.envelope
+    );
+    const warnings = [];
+
+    if (totalMassKg > 920) warnings.push({ text: "Masse ueberschreitet MTOW (920 kg).", danger: true });
+    if (!withinEnvelope) warnings.push({ text: "Schwerpunkt/Moment liegt ausserhalb des Envelope.", danger: true });
+    if (fuelLiters > pageData.maximumUsableFuelLiters) {
+      warnings.push({
+        text: `Kraftstoffmenge ueberschreitet max. ausfliegbare Menge (${pageData.maximumUsableFuelLiters} l).`,
+        danger: true,
+      });
+    }
+
+    return {
+      warnings,
+      emptyAircraft,
+      fuelMassKg,
+      totalMassKg,
+      totalMomentKgM,
+      cgArmM,
+      withinEnvelope,
+      stations: [
+        { label: `Leergewicht ${emptyAircraft.name}`, massKg: emptyAircraft.massKg, armM: emptyAircraft.armM, momentKgM: emptyMomentKgM },
+        { label: pageData.stations.pilot.label, massKg: pilotMassKg, armM: pageData.stations.pilot.armM, momentKgM: pilotMomentKgM },
+        { label: pageData.stations.copilot.label, massKg: copilotMassKg, armM: pageData.stations.copilot.armM, momentKgM: copilotMomentKgM },
+        { label: pageData.stations.baggage.label, massKg: baggageMassKg, armM: pageData.stations.baggage.armM, momentKgM: baggageMomentKgM },
+        { label: pageData.stations.fuel.label, massKg: fuelMassKg, armM: pageData.stations.fuel.armM, momentKgM: fuelMomentKgM },
+      ],
+      speeds: {
+        rotateSpeedKmh: core.interpolate1D(data.takeoff.rotateSpeedMassBreakpoints, data.takeoff.rotateSpeedKmh, totalMassKg),
+        speedAt15mKmh: core.interpolate1D(data.takeoff.rotateSpeedMassBreakpoints, data.takeoff.speedAt15mKmh, totalMassKg),
+        approachSpeedKmh: core.interpolate1D(data.landing.approachSpeedMassBreakpoints, data.landing.approachSpeedKmh, totalMassKg),
+        stallIdleFlaps40Kmh: core.interpolate1D(data.stall.massBreakpoints, data.stall.speedsKmh.idle.flaps40, totalMassKg),
+      },
+      conditions: [
+        `Kraftstoff ${pageData.fuelDensityKgPerLiter.toLocaleString("de-DE")} kg/l`,
+        "Moment = Masse x Arm",
+        "Geschwindigkeiten nach aktueller Masse interpoliert",
+      ],
+    };
+  }
+
   window.G115B = window.G115B || {};
   window.G115B.calculators = {
     calculateTakeoff,
@@ -208,5 +311,6 @@
     calculateRange,
     calculateEndurance,
     calculateStall,
+    calculateWeightBalance,
   };
 })();

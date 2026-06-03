@@ -133,6 +133,39 @@ test("stall calculator returns stable IAS values", () => {
   assert.equal(result.stallSpeedKt.toFixed(1), "47.1");
 });
 
+test("weight and balance calculator returns stable loading result", () => {
+  const result = calculators.calculateWeightBalance({
+    aircraftName: "D-EBFT",
+    pilotMassKg: 85,
+    copilotMassKg: 0,
+    baggageMassKg: 0,
+    fuelLiters: 107,
+  });
+
+  assert.equal(result.totalMassKg.toFixed(1), "830.6");
+  assert.equal(result.totalMomentKgM.toFixed(2), "234.90");
+  assert.equal(result.cgArmM.toFixed(4), "0.2828");
+  assert.equal(result.withinEnvelope, true);
+  assert.equal(result.speeds.rotateSpeedKmh.toFixed(1), "91.2");
+  assert.equal(result.speeds.speedAt15mKmh.toFixed(1), "117.6");
+  assert.equal(result.speeds.approachSpeedKmh.toFixed(1), "116.8");
+  assert.equal(result.speeds.stallIdleFlaps40Kmh.toFixed(1), "86.3");
+});
+
+test("weight and balance accepts envelope boundary points", () => {
+  const result = calculators.calculateWeightBalance({
+    aircraftName: "D-EBFT",
+    pilotMassKg: 130,
+    copilotMassKg: 80.6753125,
+    baggageMassKg: 0,
+    fuelLiters: 56.56206597222226,
+  });
+
+  assert.equal(result.totalMassKg.toFixed(1), "920.0");
+  assert.equal(result.totalMomentKgM.toFixed(2), "234.00");
+  assert.equal(result.withinEnvelope, true);
+});
+
 let failures = 0;
 
 for (const { name, fn } of tests) {

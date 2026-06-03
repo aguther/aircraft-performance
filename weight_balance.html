@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grob 115B — Stall</title>
+  <title>Grob 115B — Weight & Balance</title>
   <meta name="theme-color" content="#005f8a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -58,19 +58,19 @@
         <div class="nav-dropdown" id="navDropdown">
           <a href="takeoff.html">Takeoff · Startstrecke</a>
           <a href="landing.html">Landing · Landestrecke</a>
-          <a href="weight_balance.html">Weight & Balance</a>
+          <a href="weight_balance.html" class="current">Weight & Balance</a>
           <a href="cruise.html">Cruise · Reiseflug</a>
           <a href="climb.html">Climb · Steigflug</a>
           <a href="climb_rate.html">Climb Rate · Steiggeschwindigkeit</a>
           <a href="range.html">Range · Reichweite</a>
           <a href="endurance.html">Endurance · Flugdauer</a>
-          <a href="stall.html" class="current">Stall · Überziehgeschwindigkeit</a>
+          <a href="stall.html">Stall · Überziehgeschwindigkeit</a>
         </div>
       </div>
     </div>
     <div class="nav-center">
       <div class="nav-logo">Grob 115B</div>
-      <div class="nav-title">Stall</div>
+      <div class="nav-title">Weight & Balance</div>
     </div>
     <div class="nav-right">
       <div class="theme-toggle" onclick="toggleTheme()">
@@ -85,41 +85,46 @@
     <aside class="sidebar">
       <div class="sidebar-section">
         <div class="section-header">Flugzeug</div>
-        <div class="field">
-          <div class="field-label">Flugmasse <span>kg</span></div>
-          <div class="slider-row">
-            <input type="range" id="mass-range" min="750" max="920" step="1" value="920"
-              oninput="syncSlider('mass','mass-range')">
-            <span class="slider-val" id="mass-range-val">920 kg</span>
-          </div>
-          <div class="input-wrap" style="margin-top:6px">
-            <input type="number" id="mass" value="920" step="5" min="750" max="920" onfocus="this.select()"
-              onkeydown="if(event.key==='Enter')this.blur()" oninput="syncInput('mass','mass-range')">
-            <span class="unit">kg</span>
-          </div>
-          <div class="hint">MTOW 920 kg · Minimalgewicht ca. 750 kg</div>
+        <div class="mode-toggle" style="grid-template-columns:1fr 1fr 1fr">
+          <button class="mode-btn active" id="aircraft-D-EBFT" onclick="setAircraft('D-EBFT')">D-EBFT</button>
+          <button class="mode-btn" id="aircraft-D-ELWF" onclick="setAircraft('D-ELWF')">D-ELWF</button>
+          <button class="mode-btn" id="aircraft-D-ENZM" onclick="setAircraft('D-ENZM')">D-ENZM</button>
         </div>
       </div>
       <div class="sidebar-section">
-        <div class="section-header">Triebwerk</div>
+        <div class="section-header">Beladung</div>
         <div class="field">
-          <div class="field-label">Leistungsstellung</div>
-          <div class="mode-toggle" style="grid-template-columns:1fr 1fr">
-            <button class="mode-btn active" id="mode-leerlauf-btn" onclick="setPower('leerlauf')">Leerlauf</button>
-            <button class="mode-btn" id="mode-vollast-btn" onclick="setPower('vollast')">Vollast</button>
-          </div>
-          <div class="hint">Leerlauf = kritischer Fall für Landung<br>Vollast = Durchstartbedingung</div>
+          <div class="field-label">Pilot <span>kg</span></div>
+          <div class="slider-row"><input type="range" id="pilot-mass-range" min="0" max="130" step="1" value="85"
+              oninput="syncSlider('pilot-mass','pilot-mass-range')"><span class="slider-val" id="pilot-mass-range-val">85 kg</span></div>
+          <div class="input-wrap" style="margin-top:6px"><input type="number" id="pilot-mass" value="85" step="1" min="0"
+              max="150" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()"
+              oninput="syncInput('pilot-mass','pilot-mass-range')"><span class="unit">kg</span></div>
         </div>
-      </div>
-      <div class="sidebar-section">
-        <div class="section-header">Klappenstellung</div>
         <div class="field">
-          <div class="mode-toggle" style="grid-template-columns:1fr 1fr 1fr">
-            <button class="mode-btn" id="mode-f0-btn" onclick="setFlaps(0)">0°</button>
-            <button class="mode-btn" id="mode-f12-btn" onclick="setFlaps(12)">12°</button>
-            <button class="mode-btn active" id="mode-f40-btn" onclick="setFlaps(40)">40°</button>
-          </div>
-          <div class="hint">40° = Landung (VSO) · 0° = Reiseflug (VS1)</div>
+          <div class="field-label">Co-Pilot <span>kg</span></div>
+          <div class="slider-row"><input type="range" id="copilot-mass-range" min="0" max="130" step="1" value="0"
+              oninput="syncSlider('copilot-mass','copilot-mass-range')"><span class="slider-val" id="copilot-mass-range-val">0 kg</span></div>
+          <div class="input-wrap" style="margin-top:6px"><input type="number" id="copilot-mass" value="0" step="1" min="0"
+              max="150" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()"
+              oninput="syncInput('copilot-mass','copilot-mass-range')"><span class="unit">kg</span></div>
+        </div>
+        <div class="field">
+          <div class="field-label">Gepäck <span>kg</span></div>
+          <div class="slider-row"><input type="range" id="baggage-mass-range" min="0" max="20" step="1" value="0"
+              oninput="syncSlider('baggage-mass','baggage-mass-range')"><span class="slider-val" id="baggage-mass-range-val">0 kg</span></div>
+          <div class="input-wrap" style="margin-top:6px"><input type="number" id="baggage-mass" value="0" step="1" min="0"
+              max="20" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()"
+              oninput="syncInput('baggage-mass','baggage-mass-range')"><span class="unit">kg</span></div>
+        </div>
+        <div class="field">
+          <div class="field-label">Kraftstoff <span>l</span></div>
+          <div class="slider-row"><input type="range" id="fuel-liters-range" min="0" max="107" step="1" value="107"
+              oninput="syncSlider('fuel-liters','fuel-liters-range')"><span class="slider-val" id="fuel-liters-range-val">107 l</span></div>
+          <div class="input-wrap" style="margin-top:6px"><input type="number" id="fuel-liters" value="107" step="1" min="0"
+              max="130" onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()"
+              oninput="syncInput('fuel-liters','fuel-liters-range')"><span class="unit">l</span></div>
+          <div class="hint">Kraftstoffmasse mit 0,72 kg/l.</div>
         </div>
       </div>
     </aside>
@@ -129,9 +134,8 @@
   <script src="js/g115b-ui.js"></script>
   <script src="js/performance-data.js"></script>
   <script src="js/g115b-calculators.js"></script>
-  <script src="js/pages/stall-page.js"></script>
+  <script src="js/pages/weight-balance-page.js"></script>
   <script src="app.js"></script>
 </body>
 
 </html>
-

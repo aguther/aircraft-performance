@@ -209,6 +209,32 @@ declare namespace G115B {
     conditions: string[];
   }
 
+  interface WeightBalanceInputs {
+    aircraftName: string;
+    pilotMassKg: number;
+    copilotMassKg: number;
+    baggageMassKg: number;
+    fuelLiters: number;
+  }
+
+  interface WeightBalanceResult {
+    warnings: Warning[];
+    emptyAircraft: { name: string; massKg: number; armM: number };
+    fuelMassKg: number;
+    totalMassKg: number;
+    totalMomentKgM: number;
+    cgArmM: number;
+    withinEnvelope: boolean;
+    stations: Array<{ label: string; massKg: number; armM: number; momentKgM: number }>;
+    speeds: {
+      rotateSpeedKmh: number;
+      speedAt15mKmh: number;
+      approachSpeedKmh: number;
+      stallIdleFlaps40Kmh: number;
+    };
+    conditions: string[];
+  }
+
   interface Calculators {
     calculateTakeoff(inputs: TakeoffInputs): TakeoffResult;
     calculateLanding(inputs: LandingInputs): LandingResult;
@@ -218,6 +244,7 @@ declare namespace G115B {
     calculateRange(inputs: RangeInputs): RangeResult;
     calculateEndurance(inputs: EnduranceInputs): EnduranceResult;
     calculateStall(inputs: StallInputs): StallResult;
+    calculateWeightBalance(inputs: WeightBalanceInputs): WeightBalanceResult;
   }
 
   interface AppContext {
@@ -240,6 +267,7 @@ declare global {
     setLeg?: (whichLeg: string, mode: string) => void;
     setPower?: (powerMode: "leerlauf" | "vollast") => void;
     setFlaps?: (flapsDegrees: 0 | 12 | 40) => void;
+    setAircraft?: (aircraftName: string) => void;
     calcDA?: () => void;
     calcPAFromQNH?: () => void;
     calcLeg?: () => void;
