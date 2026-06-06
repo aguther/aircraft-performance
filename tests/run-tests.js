@@ -30,9 +30,63 @@ test("takeoff calculator returns stable reference result", () => {
 
   assert.equal(result.atmosphere.densityAltitudeFt, 3075);
   assert.equal(result.groundRollMeters, 293);
-  assert.equal(result.takeoffDistanceMeters, 537);
+  assert.equal(result.takeoffDistanceMeters, 509);
   assert.equal(result.rotateSpeedKmh.toFixed(1), "91.6");
   assert.equal(result.warnings.length, 0);
+});
+
+test("takeoff calculator reproduces the POH chart example", () => {
+  const result = calculators.calculateTakeoff({
+    pressureAltitudeFt: 2000,
+    oatC: 15,
+    massKg: 850,
+    slopePercent: -1.5,
+    windKt: 13 / core.KMH_PER_KT,
+    safetyMarginPercent: 0,
+  });
+
+  assert.equal(result.groundRollMeters, 168);
+  assert.equal(result.takeoffDistanceMeters, 320);
+});
+
+test("takeoff operational margin is added only as an absolute ground roll increment", () => {
+  const withoutMargin = calculators.calculateTakeoff({
+    pressureAltitudeFt: 2000,
+    oatC: 20,
+    massKg: 850,
+    slopePercent: 0,
+    windKt: 0,
+    safetyMarginPercent: 0,
+  });
+  const withMargin = calculators.calculateTakeoff({
+    pressureAltitudeFt: 2000,
+    oatC: 20,
+    massKg: 850,
+    slopePercent: 0,
+    windKt: 0,
+    safetyMarginPercent: 50,
+  });
+
+  assert.equal(withMargin.groundRollMarginMeters, withoutMargin.groundRollByWindMeters * 0.5);
+  assert.equal(withMargin.groundRollMeters, Math.round(withoutMargin.groundRollByWindMeters + withMargin.groundRollMarginMeters));
+  assert.equal(withMargin.takeoffDistanceMeters, Math.round(withoutMargin.takeoffDistanceWithoutMarginMeters + withMargin.groundRollMarginMeters));
+});
+
+test("takeoff calculator warns instead of silently extrapolating outside chart limits", () => {
+  const result = calculators.calculateTakeoff({
+    pressureAltitudeFt: 9000,
+    oatC: 45,
+    massKg: 750,
+    slopePercent: 3,
+    windKt: 25,
+    safetyMarginPercent: 100,
+  });
+
+  assert.ok(result.warnings.some((warning) => warning.text.includes("Druckhoehe")));
+  assert.ok(result.warnings.some((warning) => warning.text.includes("OAT")));
+  assert.ok(result.warnings.some((warning) => warning.text.includes("Masse ausserhalb")));
+  assert.ok(result.warnings.some((warning) => warning.text.includes("Wind ausserhalb")));
+  assert.ok(result.warnings.some((warning) => warning.text.includes("Neigung")));
 });
 
 test("landing calculator returns stable reference result", () => {

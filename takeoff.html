@@ -124,12 +124,12 @@
         <div class="field range-field" style="margin-top:1.25rem">
           <div class="field-label">OAT <span>°C</span></div>
           <div class="slider-row">
-            <input type="range" id="oat-range" min="-40" max="50" step="1" value="15"
+            <input type="range" id="oat-range" min="-20" max="40" step="1" value="15"
               oninput="syncSlider('oat','oat-range')">
             <span class="slider-val" id="oat-range-val">15 °C</span>
           </div>
           <div class="input-wrap" style="margin-top:6px">
-            <input type="number" id="oat" value="15" step="1" min="-40" max="50" onfocus="this.select()"
+            <input type="number" id="oat" value="15" step="1" min="-20" max="40" onfocus="this.select()"
               onkeydown="if(event.key==='Enter')this.blur()" oninput="syncInput('oat','oat-range')">
             <span class="unit">°C</span>
           </div>
@@ -140,12 +140,12 @@
         <div class="field">
           <div class="field-label">Masse <span>kg · MTOW 920</span></div>
           <div class="slider-row">
-            <input type="range" id="mass-range" min="750" max="920" step="1" value="920"
+            <input type="range" id="mass-range" min="770" max="920" step="1" value="920"
               oninput="syncSlider('mass','mass-range')">
             <span class="slider-val" id="mass-range-val">920 kg</span>
           </div>
           <div class="input-wrap" style="margin-top:6px">
-            <input type="number" id="mass" value="920" step="5" min="750" max="920" onfocus="this.select()"
+            <input type="number" id="mass" value="920" step="5" min="770" max="920" onfocus="this.select()"
               onkeydown="if(event.key==='Enter')this.blur()" oninput="syncInput('mass','mass-range')">
             <span class="unit">kg</span>
           </div>
@@ -185,7 +185,6 @@
           <div class="hint">Grasbahn trocken kurzgeschoren: +15% · Hohes Gras/Schnee: mehr · Hartbelag trocken: 0%</div>
         </div>
       </div>
-      <input type="hidden" id="obs" value="15">
     </aside>
     <div class="results" id="rp"></div>
   </div>

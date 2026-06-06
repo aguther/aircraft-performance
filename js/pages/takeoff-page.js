@@ -41,8 +41,8 @@
       { name: "Schritt 2 - Masse", detail: `${core.round(result.groundRollByAtmosphereMeters)} m · ${inputs.massKg} kg`, value: `${core.round(result.groundRollByMassMeters)} m` },
       { name: "Schritt 3 - Slope", detail: `${core.round(result.groundRollByMassMeters)} m · ${formatSlopeLabel(inputs.slopePercent)}`, value: `${core.round(result.groundRollBySlopeMeters)} m` },
       { name: "Schritt 4 - Wind", detail: `${core.round(result.groundRollBySlopeMeters)} m · ${formatWindLabel(inputs.windKt)}`, value: `${core.round(result.groundRollByWindMeters)} m` },
-      { name: `Zuschlag ${inputs.safetyMarginPercent}%`, detail: `${core.round(result.groundRollByWindMeters)} m × ${(1 + inputs.safetyMarginPercent / 100).toFixed(2)}`, value: `${result.groundRollMeters} m` },
-      { name: "Schritt 5 - Hindernis 15 m", detail: `${result.groundRollMeters} m -> ueber 15 m`, value: `${result.takeoffDistanceMeters} m` },
+      { name: "Schritt 5 - Hindernis 15 m", detail: `${core.round(result.groundRollByWindMeters)} m -> ueber 15 m`, value: `${core.round(result.takeoffDistanceWithoutMarginMeters)} m` },
+      { name: `Zuschlag ${inputs.safetyMarginPercent}% auf Rollstrecke`, detail: `+${core.round(result.groundRollMarginMeters)} m auf Roll- und Startstrecke`, value: `${result.groundRollMeters} m / ${result.takeoffDistanceMeters} m` },
     ];
   }
 
@@ -94,7 +94,7 @@
       ui.createPipelineCard(createTakeoffSteps(inputs, result)),
       ui.createGridCard("Ergebnis", "result-grid", [
         ui.createMetricItem({ label: "Ground Roll · Startrollstrecke", value: result.groundRollMeters, unit: "m" }),
-        ui.createMetricItem({ label: "Takeoff Distance · Startstrecke", value: result.takeoffDistanceMeters, unit: "m" }),
+        ui.createMetricItem({ label: "Takeoff Distance · Startstrecke über 15 m", value: result.takeoffDistanceMeters, unit: "m" }),
       ]),
       ui.createGridCard("Geschwindigkeiten", "speed-grid", [
         ui.createMetricItem({

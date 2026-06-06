@@ -14,12 +14,24 @@
     const step4GroundRollMeters = core.lookup2D(pageData.groundRollFromWind, step3GroundRollMeters, windKmh);
     const groundRollMarginMeters = step4GroundRollMeters * (inputs.safetyMarginPercent / 100);
     const groundRollWithMarginMeters = step4GroundRollMeters + groundRollMarginMeters;
-    const takeoffDistanceMeters = groundRollMarginMeters + core.lookup2D(pageData.takeoffDistanceOver15m, step4GroundRollMeters, 15);
+    const takeoffDistanceWithoutMarginMeters = core.interpolate1D(
+      pageData.takeoffDistanceOver15m.groundRollBreakpoints,
+      pageData.takeoffDistanceOver15m.takeoffDistanceMeters,
+      step4GroundRollMeters
+    );
+    const takeoffDistanceMeters = takeoffDistanceWithoutMarginMeters + groundRollMarginMeters;
 
     const warnings = [];
     if (inputs.massKg > 920) warnings.push({ text: "Masse ueberschreitet MTOW (920 kg).", danger: true });
+    if (inputs.massKg < 770) warnings.push({ text: "Masse ausserhalb Diagrammbereich (770-920 kg).", danger: false });
+    if (inputs.pressureAltitudeFt < -1000 || inputs.pressureAltitudeFt > 8000) warnings.push({ text: "Druckhoehe ausserhalb Diagrammbereich (-1000 bis 8000 ft).", danger: false });
+    if (inputs.oatC < -20 || inputs.oatC > 40) warnings.push({ text: "OAT ausserhalb Diagrammbereich (-20 bis +40 °C).", danger: false });
     if (inputs.windKt < -5) warnings.push({ text: `Rueckenwind ${Math.abs(inputs.windKt)} kt ueberschreitet AFM-Grenzwert.`, danger: false });
-    if (inputs.slopePercent < -2 || inputs.slopePercent > 2) warnings.push({ text: "Neigung ausserhalb Tabellenbereich (+/-2%).", danger: false });
+    if (windKmh < -20 || windKmh > 40) warnings.push({ text: "Wind ausserhalb Diagrammbereich (20 km/h Rueckenwind bis 40 km/h Gegenwind).", danger: false });
+    if (inputs.slopePercent < -2 || inputs.slopePercent > 2) warnings.push({ text: "Neigung ausserhalb Diagrammbereich (+/-2%).", danger: false });
+    const obstacleChartBreakpoints = pageData.takeoffDistanceOver15m.groundRollBreakpoints;
+    const obstacleChartMaximumRollMeters = obstacleChartBreakpoints[obstacleChartBreakpoints.length - 1];
+    if (step4GroundRollMeters > obstacleChartMaximumRollMeters) warnings.push({ text: "Startrollstrecke ausserhalb Hindernis-Diagrammbereich.", danger: true });
     if (atmosphere.densityAltitudeFt > 8000) warnings.push({ text: `DA ${atmosphere.densityAltitudeFt.toLocaleString("de-DE")} ft ausserhalb nominalem Bereich.`, danger: true });
     else if (atmosphere.densityAltitudeFt > 5000) warnings.push({ text: `DA ${atmosphere.densityAltitudeFt.toLocaleString("de-DE")} ft: Gemisch verarmen (POH 4.11).`, danger: false });
 
@@ -30,7 +42,9 @@
       groundRollByMassMeters: step2GroundRollMeters,
       groundRollBySlopeMeters: step3GroundRollMeters,
       groundRollByWindMeters: step4GroundRollMeters,
+      groundRollMarginMeters,
       groundRollMeters: core.round(groundRollWithMarginMeters),
+      takeoffDistanceWithoutMarginMeters,
       takeoffDistanceMeters: core.round(takeoffDistanceMeters),
       rotateSpeedKmh,
       speedAt15mKmh,

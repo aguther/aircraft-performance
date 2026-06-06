@@ -91,7 +91,9 @@ declare namespace G115B {
     groundRollByMassMeters: number;
     groundRollBySlopeMeters: number;
     groundRollByWindMeters: number;
+    groundRollMarginMeters: number;
     groundRollMeters: number;
+    takeoffDistanceWithoutMarginMeters: number;
     takeoffDistanceMeters: number;
     rotateSpeedKmh: number;
     speedAt15mKmh: number;
