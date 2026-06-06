@@ -35,6 +35,7 @@
 
 .results > .takeoff-chart-card {
   max-width: 1400px;
+  overflow: hidden;
 }
 
 .takeoff-chart-header {
@@ -46,6 +47,12 @@
 
 .takeoff-chart-header .card-title {
   margin-bottom: 0;
+}
+
+.takeoff-chart-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
 }
 
 .takeoff-chart-toggle {
@@ -62,7 +69,26 @@
   accent-color: #e5007d;
 }
 
+.takeoff-chart-download {
+  padding: 0.48rem 0.72rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--cyan-bg);
+  color: var(--cyan);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.takeoff-chart-download:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .takeoff-chart-scroll {
+  width: 100%;
+  min-width: 0;
   overflow-x: auto;
   margin-top: 0.85rem;
   border: 1px solid var(--border);
@@ -110,6 +136,13 @@
   vector-effect: non-scaling-stroke;
 }
 
+.takeoff-chart-final-point {
+  fill: #009e73;
+  stroke: #fff;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
 .takeoff-chart-stage.overlay-hidden .takeoff-chart-overlay {
   display: none;
 }
@@ -133,6 +166,18 @@
   vertical-align: middle;
   border-radius: 999px;
   background: #e5007d;
+}
+
+.takeoff-chart-margin-key::before {
+  content: "";
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #009e73;
 }
 
 .context-card-body {
@@ -1067,6 +1112,23 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
   .context-warning-slot .warnings {
     grid-template-columns: 1fr;
+  }
+
+  .takeoff-chart-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .takeoff-chart-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .takeoff-chart-download {
+    width: auto;
+    align-self: flex-start;
+    padding: 0.65rem 0.75rem;
   }
 
   .speed-grid .result-item-sub {
