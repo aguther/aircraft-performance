@@ -23,7 +23,7 @@
 
     const warnings = [];
     if (inputs.massKg > 920) warnings.push({ text: "Masse ueberschreitet MTOW (920 kg).", danger: true });
-    if (inputs.massKg < 770) warnings.push({ text: "Masse ausserhalb Diagrammbereich (770-920 kg).", danger: false });
+    if (inputs.massKg < 750) warnings.push({ text: "Masse ausserhalb Diagrammbereich (750-920 kg).", danger: false });
     if (inputs.pressureAltitudeFt < -1000 || inputs.pressureAltitudeFt > 8000) warnings.push({ text: "Druckhoehe ausserhalb Diagrammbereich (-1000 bis 8000 ft).", danger: false });
     if (inputs.oatC < -20 || inputs.oatC > 40) warnings.push({ text: "OAT ausserhalb Diagrammbereich (-20 bis +40 °C).", danger: false });
     if (inputs.windKt < -5) warnings.push({ text: `Rueckenwind ${Math.abs(inputs.windKt)} kt ueberschreitet AFM-Grenzwert.`, danger: false });

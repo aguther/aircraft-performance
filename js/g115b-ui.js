@@ -408,6 +408,19 @@
       );
     }
 
+    if (config.warnings !== undefined) {
+      sections.push(
+        el("div", { className: "context-card-block context-warning-block" }, [
+          el("div", { className: "context-divider", text: "Warnungen" }),
+          el(
+            "div",
+            { className: "context-warning-slot" },
+            createWarnings(config.warnings) || el("div", { className: "context-warning-empty", text: "Keine Warnungen" })
+          ),
+        ])
+      );
+    }
+
     return createCard(config.title || "Rahmenbedingungen", el("div", { className: "context-card-body" }, sections));
   }
 

@@ -76,7 +76,7 @@ test("takeoff calculator warns instead of silently extrapolating outside chart l
   const result = calculators.calculateTakeoff({
     pressureAltitudeFt: 9000,
     oatC: 45,
-    massKg: 750,
+    massKg: 740,
     slopePercent: 3,
     windKt: 25,
     safetyMarginPercent: 100,

@@ -69,7 +69,7 @@ declare namespace G115B {
     createMetricItem(config: MetricItemConfig): HTMLElement;
     createGridCard(title: string, gridClassName: string, items: Array<Node | string>): HTMLElement;
     createConditionsCard(conditions: string[]): HTMLElement;
-    createContextCard(config: { title?: string; atmosphere?: AtmosphereCardConfig; conditions?: string[] }): HTMLElement;
+    createContextCard(config: { title?: string; atmosphere?: AtmosphereCardConfig; conditions?: string[]; warnings?: Warning[] }): HTMLElement;
     createPipelineCard(steps: PipelineStep[]): HTMLElement;
     replaceContent(target: Element, nodes: Array<Node | null | undefined | false>): void;
     resolveTheme(themePreference: string): "dark" | "light";
