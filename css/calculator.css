@@ -66,7 +66,7 @@
 }
 
 .takeoff-chart-toggle input {
-  accent-color: #e5007d;
+  accent-color: #e90000;
 }
 
 .takeoff-chart-download {
@@ -121,7 +121,7 @@
 
 .takeoff-chart-path {
   fill: none;
-  stroke: #e5007d;
+  stroke: #e90000;
   stroke-width: 4;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -130,15 +130,15 @@
 }
 
 .takeoff-chart-point {
-  fill: #e5007d;
-  stroke: #e5007d;
-  stroke-width: 1.5;
+  fill: #e90000;
+  stroke: #e90000;
+  stroke-width: 1.25;
   vector-effect: non-scaling-stroke;
 }
 
 .takeoff-chart-final-point {
-  fill: #009e73;
-  stroke: #111;
+  fill: #00b3ff;
+  stroke: #303030;
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
 }
@@ -165,7 +165,7 @@
   margin-right: 0.4rem;
   vertical-align: middle;
   border-radius: 999px;
-  background: #e5007d;
+  background: #e90000;
 }
 
 .takeoff-chart-key {
@@ -180,7 +180,7 @@
   width: 0.45rem;
   height: 0.45rem;
   border-radius: 50%;
-  background: #e5007d;
+  background: #e90000;
   transform: translateY(-50%);
 }
 
@@ -193,7 +193,7 @@
   vertical-align: middle;
   border: 2px solid #111;
   border-radius: 50%;
-  background: #009e73;
+  background: #00b3ff;
 }
 
 .context-card-body {

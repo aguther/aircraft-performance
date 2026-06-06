@@ -128,20 +128,20 @@
   }
 
   function drawExportLegend(context, x, y) {
-    context.strokeStyle = "#e5007d";
+    context.strokeStyle = "#e90000";
     context.lineWidth = 5;
     context.beginPath();
     context.moveTo(x, y);
     context.lineTo(x + 42, y);
     context.stroke();
     context.beginPath();
-    context.fillStyle = "#e5007d";
+    context.fillStyle = "#e90000";
     context.arc(x + 21, y, 6, 0, Math.PI * 2);
     context.fill();
     drawExportText(context, "Rechenweg ohne Zuschlag", x + 56, y + 7, { size: 17, weight: 600 });
 
     context.beginPath();
-    context.fillStyle = "#009e73";
+    context.fillStyle = "#00b3ff";
     context.strokeStyle = "#111111";
     context.lineWidth = 3;
     context.arc(x + 650, y, 7, 0, Math.PI * 2);
@@ -204,7 +204,7 @@
       context.drawImage(image, 0, headerHeight, 1516, 1038);
       context.save();
       context.translate(0, headerHeight);
-      context.strokeStyle = "#e5007d";
+      context.strokeStyle = "#e90000";
       context.lineWidth = 5;
       context.lineCap = "round";
       context.lineJoin = "round";
@@ -213,15 +213,15 @@
       context.stroke();
       points.slice(1).forEach(([x, y]) => {
         context.beginPath();
-        context.fillStyle = "#e5007d";
-        context.strokeStyle = "#e5007d";
+        context.fillStyle = "#e90000";
+        context.strokeStyle = "#e90000";
         context.lineWidth = 2;
         context.arc(x, y, 6, 0, Math.PI * 2);
         context.fill();
         context.stroke();
       });
       context.beginPath();
-      context.fillStyle = "#009e73";
+      context.fillStyle = "#00b3ff";
       context.strokeStyle = "#111111";
       context.lineWidth = 3;
       context.arc(finalDistancePoint[0], finalDistancePoint[1], 6, 0, Math.PI * 2);
