@@ -130,16 +130,16 @@
 }
 
 .takeoff-chart-point {
-  fill: #fff;
+  fill: #e5007d;
   stroke: #e5007d;
-  stroke-width: 3;
+  stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
 }
 
 .takeoff-chart-final-point {
   fill: #009e73;
   stroke: #111;
-  stroke-width: 2;
+  stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
 }
 
@@ -166,6 +166,22 @@
   vertical-align: middle;
   border-radius: 999px;
   background: #e5007d;
+}
+
+.takeoff-chart-key {
+  position: relative;
+}
+
+.takeoff-chart-key::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0.58rem;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #e5007d;
+  transform: translateY(-50%);
 }
 
 .takeoff-chart-margin-key::before {

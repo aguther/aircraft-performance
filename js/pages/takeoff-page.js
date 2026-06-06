@@ -104,20 +104,23 @@
     context.fillText(text, x, y);
   }
 
-  function drawExportField(context, label, value, x, y, width) {
-    context.fillStyle = "#f4f8fb";
-    context.strokeStyle = "#d8e3eb";
+  function drawExportField(context, label, value, x, y, width, options = {}) {
+    const disabled = options.disabled === true;
+    context.fillStyle = disabled ? "#edf0f2" : "#f4f8fb";
+    context.strokeStyle = disabled ? "#c6cdd3" : "#d8e3eb";
     context.lineWidth = 1;
+    context.setLineDash(disabled ? [6, 4] : []);
     context.beginPath();
     context.roundRect(x, y, width, 68, 10);
     context.fill();
     context.stroke();
-    drawExportText(context, label.toUpperCase(), x + 14, y + 23, { size: 13, weight: 700, color: "#607487" });
-    drawExportText(context, value, x + 14, y + 52, { size: 20, weight: 700 });
+    context.setLineDash([]);
+    drawExportText(context, label.toUpperCase(), x + 14, y + 23, { size: 13, weight: 700, color: disabled ? "#7d878f" : "#607487" });
+    drawExportText(context, value, x + 14, y + 52, { size: disabled ? 17 : 20, weight: 700, color: disabled ? "#7d878f" : "#152235" });
   }
 
   function utcTimestamp(date) {
-    return date.toISOString().replace("T", "_").replace(/:/g, "-").slice(0, 19);
+    return date.toISOString().replace("T", " ").replace(/:/g, "-").slice(0, 19);
   }
 
   function utcFileTimestamp(date) {
@@ -131,7 +134,11 @@
     context.moveTo(x, y);
     context.lineTo(x + 42, y);
     context.stroke();
-    drawExportText(context, "Magenta: Rechenweg und Startstrecke ohne Zuschlag", x + 56, y + 7, { size: 17, weight: 600 });
+    context.beginPath();
+    context.fillStyle = "#e5007d";
+    context.arc(x + 21, y, 6, 0, Math.PI * 2);
+    context.fill();
+    drawExportText(context, "Rechenweg ohne Zuschlag", x + 56, y + 7, { size: 17, weight: 600 });
 
     context.beginPath();
     context.fillStyle = "#009e73";
@@ -140,7 +147,7 @@
     context.arc(x + 650, y, 7, 0, Math.PI * 2);
     context.fill();
     context.stroke();
-    drawExportText(context, "Grün, ausgefüllt: finale Startstrecke inklusive Zuschlag", x + 670, y + 7, { size: 17, weight: 600 });
+    drawExportText(context, "Startstrecke über 15 m inkl. Zuschlag", x + 670, y + 7, { size: 17, weight: 600 });
   }
 
   async function exportChartImage(inputs, result, exportContext, button) {
@@ -161,14 +168,16 @@
 
       context.fillStyle = "#ffffff";
       context.fillRect(0, 0, canvas.width, canvas.height);
-      drawExportText(context, `${timestamp} UTC – Grob G115B – Startstreckenberechnung`, 48, 54, { size: 30, weight: 700 });
+      drawExportText(context, `${timestamp}Z – Grob G115B Startstreckenberechnung`, 48, 54, { size: 30, weight: 700 });
       drawExportText(context, "Eingangswerte", 48, 96, { size: 19, weight: 700, color: "#006f9f" });
       if (exportContext.pressureAltitudeMode === "qnh") {
         drawExportField(context, "Elevation", `${exportContext.elevationFt} ft`, 48, 112, 338);
         drawExportField(context, "QNH", `${exportContext.qnhHpa} hPa`, 402, 112, 338);
         drawExportField(context, "Druckhöhe", `${inputs.pressureAltitudeFt} ft`, 756, 112, 338);
       } else {
-        drawExportField(context, "Druckhöhe direkt", `${inputs.pressureAltitudeFt} ft`, 756, 112, 338);
+        drawExportField(context, "Elevation", "Nicht bereitgestellt", 48, 112, 338, { disabled: true });
+        drawExportField(context, "QNH", "Nicht bereitgestellt", 402, 112, 338, { disabled: true });
+        drawExportField(context, "Druckhöhe", `${inputs.pressureAltitudeFt} ft`, 756, 112, 338);
       }
       drawExportField(context, "OAT", `${inputs.oatC} °C`, 1110, 112, 302);
       drawExportField(context, "Masse", `${inputs.massKg} kg`, 48, 192, 338);
@@ -204,9 +213,9 @@
       context.stroke();
       points.slice(1).forEach(([x, y]) => {
         context.beginPath();
-        context.fillStyle = "#ffffff";
+        context.fillStyle = "#e5007d";
         context.strokeStyle = "#e5007d";
-        context.lineWidth = 4;
+        context.lineWidth = 2;
         context.arc(x, y, 6, 0, Math.PI * 2);
         context.fill();
         context.stroke();
@@ -253,13 +262,13 @@
       points: points.map((point) => point.join(",")).join(" "),
     }));
     points.slice(1).forEach(([x, y], index) => {
-      svg.append(svgElement("circle", { class: "takeoff-chart-point", cx: x, cy: y, r: index === points.length - 2 ? 7 : 5 }));
+      svg.append(svgElement("circle", { class: "takeoff-chart-point", cx: x, cy: y, r: index === points.length - 2 ? 5 : 5 }));
     });
     svg.append(svgElement("circle", {
       class: "takeoff-chart-final-point",
       cx: finalDistancePoint[0],
       cy: finalDistancePoint[1],
-      r: 7,
+      r: 5,
     }));
 
     const chartStage = ui.el(
@@ -309,14 +318,17 @@
       ui.el(
         "div",
         { className: "takeoff-chart-legend" },
-        ui.el("span", { className: "takeoff-chart-key", text: "Farbige Linie: unbezuschlagter Weg im Originaldiagramm" }),
+        ui.el("span", { className: "takeoff-chart-key", text: "Unbezuschlagter Weg im Originaldiagramm" }),
         ui.el("span", {
-          text: `Diagramm: ${core.round(result.groundRollByWindMeters)} m Rollstrecke -> ${core.round(result.takeoffDistanceWithoutMarginMeters)} m über 15 m`,
+          text: `Rollstrecke: ${core.round(result.groundRollByWindMeters)} m`,
         }),
         ui.el("span", {
-          text: `Zuschlag außerhalb des Diagramms: +${core.round(result.groundRollMarginMeters)} m`,
+          text: `Startstrecke über 15 m: ${core.round(result.takeoffDistanceWithoutMarginMeters)} m`,
         }),
-        ui.el("span", { className: "takeoff-chart-margin-key", text: `Grün, ausgefüllt: final ${result.takeoffDistanceMeters} m inkl. Zuschlag` })
+        ui.el("span", {
+          text: `Zuschlag: +${core.round(result.groundRollMarginMeters)} m`,
+        }),
+        ui.el("span", { className: "takeoff-chart-margin-key", text: `Startstrecke über 15 m inkl. Zuschlag: ${result.takeoffDistanceMeters} m` })
       )
     );
   }
