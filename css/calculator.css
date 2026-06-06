@@ -138,7 +138,7 @@
 
 .takeoff-chart-final-point {
   fill: #009e73;
-  stroke: #fff;
+  stroke: #111;
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
 }
@@ -175,7 +175,7 @@
   height: 0.7rem;
   margin-right: 0.4rem;
   vertical-align: middle;
-  border: 2px solid #fff;
+  border: 2px solid #111;
   border-radius: 50%;
   background: #009e73;
 }

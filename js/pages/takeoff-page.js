@@ -135,7 +135,7 @@
 
     context.beginPath();
     context.fillStyle = "#009e73";
-    context.strokeStyle = "#ffffff";
+    context.strokeStyle = "#111111";
     context.lineWidth = 3;
     context.arc(x + 650, y, 7, 0, Math.PI * 2);
     context.fill();
@@ -150,7 +150,7 @@
     try {
       const exportDate = new Date();
       const timestamp = utcTimestamp(exportDate);
-      const headerHeight = 660;
+      const headerHeight = 745;
       const canvas = document.createElement("canvas");
       canvas.width = 1516;
       canvas.height = headerHeight + 1038;
@@ -164,32 +164,33 @@
       drawExportText(context, `${timestamp} UTC – Grob G115B – Startstreckenberechnung`, 48, 54, { size: 30, weight: 700 });
       drawExportText(context, "Eingangswerte", 48, 96, { size: 19, weight: 700, color: "#006f9f" });
       if (exportContext.pressureAltitudeMode === "qnh") {
-        drawExportField(context, "Elevation", `${exportContext.elevationFt} ft`, 48, 112, 260);
-        drawExportField(context, "QNH", `${exportContext.qnhHpa} hPa`, 324, 112, 260);
-        drawExportField(context, "Druckhöhe", `${inputs.pressureAltitudeFt} ft`, 600, 112, 260);
+        drawExportField(context, "Elevation", `${exportContext.elevationFt} ft`, 48, 112, 338);
+        drawExportField(context, "QNH", `${exportContext.qnhHpa} hPa`, 402, 112, 338);
+        drawExportField(context, "Druckhöhe", `${inputs.pressureAltitudeFt} ft`, 756, 112, 338);
       } else {
-        drawExportField(context, "Druckhöhe direkt", `${inputs.pressureAltitudeFt} ft`, 48, 112, 260);
+        drawExportField(context, "Druckhöhe direkt", `${inputs.pressureAltitudeFt} ft`, 756, 112, 338);
       }
-      drawExportField(context, "OAT", `${inputs.oatC} °C`, 876, 112, 260);
-      drawExportField(context, "Masse", `${inputs.massKg} kg`, 1152, 112, 260);
-      drawExportField(context, "Slope", formatSlopeLabel(inputs.slopePercent), 48, 192, 260);
-      drawExportField(context, "Wind", formatWindLabel(inputs.windKt), 324, 192, 260);
-      drawExportField(context, "Zuschlag", `${inputs.safetyMarginPercent}%`, 600, 192, 260);
+      drawExportField(context, "OAT", `${inputs.oatC} °C`, 1110, 112, 302);
+      drawExportField(context, "Masse", `${inputs.massKg} kg`, 48, 192, 338);
+      drawExportField(context, "Slope", formatSlopeLabel(inputs.slopePercent), 402, 192, 338);
+      drawExportField(context, "Wind", formatWindLabel(inputs.windKt), 756, 192, 338);
+      drawExportField(context, "Zuschlag", `${inputs.safetyMarginPercent}%`, 1110, 192, 302);
       drawExportText(context, "Berechnete Atmosphärenwerte", 48, 300, { size: 19, weight: 700, color: "#006f9f" });
       drawExportField(context, "Density Altitude", `${result.atmosphere.densityAltitudeFt} ft`, 48, 316, 410);
       drawExportField(context, "ISA-Abweichung", `${core.formatSigned(result.atmosphere.isaDeviationC, 1)} °C`, 474, 316, 410);
       drawExportText(context, "Ergebnis", 48, 424, { size: 19, weight: 700, color: "#006f9f" });
-      drawExportField(context, "Rollstrecke inkl. Zuschlag", `${result.groundRollMeters} m`, 48, 440, 410);
-      drawExportField(context, "Startstrecke über 15 m inkl. Zuschlag", `${result.takeoffDistanceMeters} m`, 474, 440, 470);
-      drawExportField(context, "Absoluter Zuschlag", `${core.round(result.groundRollMarginMeters)} m`, 960, 440, 452);
+      drawExportField(context, "Rollstrecke ohne Zuschlag", `${core.round(result.groundRollByWindMeters)} m`, 48, 440, 664);
+      drawExportField(context, "Zuschlag", `${core.round(result.groundRollMarginMeters)} m`, 728, 440, 684);
+      drawExportField(context, "Rollstrecke inkl. Zuschlag", `${result.groundRollMeters} m`, 48, 520, 664);
+      drawExportField(context, "Startstrecke über 15 m inkl. Zuschlag", `${result.takeoffDistanceMeters} m`, 728, 520, 684);
       drawExportText(
         context,
         result.warnings.length > 0 ? `Warnungen: ${result.warnings.map((warning) => warning.text).join(" · ")}` : "Warnungen: keine",
         48,
-        554,
+        638,
         { size: 18, weight: 600, color: result.warnings.length > 0 ? "#9a5200" : "#526274" }
       );
-      drawExportLegend(context, 48, 600);
+      drawExportLegend(context, 48, 685);
 
       context.drawImage(image, 0, headerHeight, 1516, 1038);
       context.save();
@@ -212,7 +213,7 @@
       });
       context.beginPath();
       context.fillStyle = "#009e73";
-      context.strokeStyle = "#ffffff";
+      context.strokeStyle = "#111111";
       context.lineWidth = 3;
       context.arc(finalDistancePoint[0], finalDistancePoint[1], 6, 0, Math.PI * 2);
       context.fill();

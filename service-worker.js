@@ -1,4 +1,4 @@
-const CACHE_NAME = "g115b-performance-v24";
+const CACHE_NAME = "g115b-performance-v25";
 const APP_SHELL = [
   "./",
   "./index.html",
