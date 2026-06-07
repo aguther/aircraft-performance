@@ -22,18 +22,18 @@
     const takeoffDistanceMeters = takeoffDistanceWithoutMarginMeters + groundRollMarginMeters;
 
     const warnings = [];
-    if (inputs.massKg > 920) warnings.push({ text: "Masse überschreitet MTOW (920 kg).", danger: true });
-    if (inputs.massKg < 750) warnings.push({ text: "Masse ausserhalb Diagrammbereich (750-920 kg).", danger: false });
-    if (inputs.pressureAltitudeFt < -1000 || inputs.pressureAltitudeFt > 8000) warnings.push({ text: "Druckhöhe ausserhalb Diagrammbereich (-1000 bis 8000 ft).", danger: false });
-    if (inputs.oatC < -20 || inputs.oatC > 40) warnings.push({ text: "OAT ausserhalb Diagrammbereich (-20 bis +40 °C).", danger: false });
-    if (inputs.windKt < -5) warnings.push({ text: `Rückenwind ${Math.abs(inputs.windKt)} kt überschreitet AFM-Grenzwert.`, danger: false });
-    if (windKmh < -20 || windKmh > 40) warnings.push({ text: "Wind ausserhalb Diagrammbereich (20 km/h Rückenwind bis 40 km/h Gegenwind).", danger: false });
-    if (inputs.slopePercent < -2 || inputs.slopePercent > 2) warnings.push({ text: "Neigung ausserhalb Diagrammbereich (+/-2%).", danger: false });
+    if (inputs.massKg > 920) warnings.push({ text: "Masse überschreitet MTOW", danger: true });
+    if (inputs.massKg < 750) warnings.push({ text: "Masse ausserhalb Diagrammbereich", danger: false });
+    if (inputs.pressureAltitudeFt < -1000 || inputs.pressureAltitudeFt > 8000) warnings.push({ text: "Druckhöhe ausserhalb Diagrammbereich", danger: false });
+    if (inputs.oatC < -20 || inputs.oatC > 40) warnings.push({ text: "OAT ausserhalb Diagrammbereich", danger: false });
+    if (inputs.windKt < -5) warnings.push({ text: `Rückenwind ${Math.abs(inputs.windKt)} kt überschreitet AFM-Grenzwert`, danger: false });
+    if (windKmh < -20 || windKmh > 40) warnings.push({ text: "Wind ausserhalb Diagrammbereich", danger: false });
+    if (inputs.slopePercent < -2 || inputs.slopePercent > 2) warnings.push({ text: "Neigung ausserhalb Diagrammbereich", danger: false });
     const obstacleChartBreakpoints = pageData.takeoffDistanceOver15m.groundRollBreakpoints;
     const obstacleChartMaximumRollMeters = obstacleChartBreakpoints[obstacleChartBreakpoints.length - 1];
-    if (step4GroundRollMeters > obstacleChartMaximumRollMeters) warnings.push({ text: "Startrollstrecke ausserhalb Hindernis-Diagrammbereich.", danger: true });
-    if (atmosphere.densityAltitudeFt > 8000) warnings.push({ text: `DA ${atmosphere.densityAltitudeFt.toLocaleString("de-DE")} ft ausserhalb nominalem Bereich.`, danger: true });
-    else if (atmosphere.densityAltitudeFt > 5000) warnings.push({ text: `DA ${atmosphere.densityAltitudeFt.toLocaleString("de-DE")} ft: Gemisch verarmen (POH 4.11).`, danger: false });
+    if (step4GroundRollMeters > obstacleChartMaximumRollMeters) warnings.push({ text: "Startrollstrecke ausserhalb Hindernis-Diagrammbereich", danger: true });
+    if (atmosphere.densityAltitudeFt > 8000) warnings.push({ text: `Dichtehöhe ausserhalb nominalem Bereich`, danger: true });
+    else if (atmosphere.densityAltitudeFt > 5000) warnings.push({ text: `Dichtehöhe ${atmosphere.densityAltitudeFt.toLocaleString("de-DE")} ft: Gemisch verarmen (POH 4.11).`, danger: false });
 
     return {
       warnings,
@@ -59,16 +59,28 @@
     const approachSpeedKmh = core.interpolate1D(pageData.approachSpeedMassBreakpoints, pageData.approachSpeedKmh, inputs.massKg);
     const step1LandingRollMeters = core.lookup2D(pageData.landingRollFromAtmosphere, inputs.pressureAltitudeFt, inputs.oatC);
     const step2LandingRollMeters = core.lookup2D(pageData.landingRollFromMass, step1LandingRollMeters, inputs.massKg);
-    const slopeCorrectionFactor = inputs.slopePercent >= 0 ? 1 - 0.04 * inputs.slopePercent : 1 + 0.03 * Math.abs(inputs.slopePercent);
-    const step3LandingRollMeters = step2LandingRollMeters * slopeCorrectionFactor;
-    const step4LandingRollMeters = core.lookup2D(pageData.landingRollFromWind, step3LandingRollMeters, windKmh);
-    const landingRollMarginMeters = step4LandingRollMeters * (inputs.safetyMarginPercent / 100);
-    const landingRollWithMarginMeters = step4LandingRollMeters + landingRollMarginMeters;
-    const landingDistanceMeters = landingRollMarginMeters + core.lookup2D(pageData.landingDistanceOver15m, step4LandingRollMeters, 15);
+    const windCorrection = windKmh < 0
+      ? pageData.landingRollFromTailwind
+      : pageData.landingRollFromHeadwind;
+    const step3LandingRollMeters = Math.max(0, core.lookup2D(windCorrection, step2LandingRollMeters, windKmh));
+    const landingRollMarginMeters = step3LandingRollMeters * (inputs.safetyMarginPercent / 100);
+    const landingRollWithMarginMeters = step3LandingRollMeters + landingRollMarginMeters;
+    const landingDistanceWithoutMarginMeters = core.interpolate1D(
+      pageData.landingDistanceOver15m.landingRollBreakpoints,
+      pageData.landingDistanceOver15m.landingDistanceMeters,
+      step3LandingRollMeters
+    );
+    const landingDistanceMeters = landingDistanceWithoutMarginMeters + landingRollMarginMeters;
 
     const warnings = [];
     if (inputs.massKg > 920) warnings.push({ text: "Masse überschreitet MTOW (920 kg).", danger: true });
+    if (inputs.massKg < 700) warnings.push({ text: "Masse ausserhalb Diagrammbereich (700-920 kg).", danger: false });
+    if (inputs.pressureAltitudeFt < 0 || inputs.pressureAltitudeFt > 8000) warnings.push({ text: "Druckhöhe ausserhalb Diagrammbereich (SL bis 8000 ft).", danger: false });
+    if (inputs.oatC < -20 || inputs.oatC > 40) warnings.push({ text: "OAT ausserhalb Diagrammbereich (-20 bis +40 °C).", danger: false });
     if (inputs.windKt < -5) warnings.push({ text: "Rückenwind überschreitet AFM-Grenzwert.", danger: false });
+    if (windKmh < -20 || windKmh > 40) warnings.push({ text: "Wind ausserhalb Diagrammbereich (20 km/h Rückenwind bis 40 km/h Gegenwind).", danger: false });
+    const obstacleChartMaximumRollMeters = pageData.landingDistanceOver15m.maximumDigitizedLandingRollMeters;
+    if (step3LandingRollMeters > obstacleChartMaximumRollMeters) warnings.push({ text: "Landerollstrecke ausserhalb Hindernis-Diagrammbereich.", danger: true });
     if (atmosphere.densityAltitudeFt > 8000) warnings.push({ text: `DA ${atmosphere.densityAltitudeFt.toLocaleString("de-DE")} ft ausserhalb nominalem Bereich.`, danger: true });
     else if (atmosphere.densityAltitudeFt > 5000) warnings.push({ text: `DA ${atmosphere.densityAltitudeFt.toLocaleString("de-DE")} ft: Gemisch verarmen (POH 4.11).`, danger: false });
 
@@ -77,12 +89,13 @@
       atmosphere,
       landingRollByAtmosphereMeters: step1LandingRollMeters,
       landingRollByMassMeters: step2LandingRollMeters,
-      landingRollBySlopeMeters: step3LandingRollMeters,
-      landingRollByWindMeters: step4LandingRollMeters,
+      landingRollByWindMeters: step3LandingRollMeters,
+      landingRollMarginMeters,
       landingRollMeters: core.round(landingRollWithMarginMeters),
+      landingDistanceWithoutMarginMeters,
       landingDistanceMeters: core.round(landingDistanceMeters),
       approachSpeedKmh,
-      conditions: ["Befestigte, trockene Bahn", "Leerlauf", "Klappen 40°", "Max. vordere Schwerpunktlage"],
+      conditions: ["Befestigte, ebene, trockene Landebahn", "Leerlauf", "Klappen 40°", "Max. vordere Schwerpunktlage"],
     };
   }
 

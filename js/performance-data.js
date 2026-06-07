@@ -92,76 +92,71 @@
 
     landing: {
       source: "POH 5.3.15",
+      digitization: "Bild 5.3.15 Landestrecke, Ausgabe 1, August 1992",
 
       landingRollFromAtmosphere: {
         rowBreakpoints: [
-          -1000, 0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000,
+          0, 2000, 4000, 6000, 8000,
         ], // pressure altitude ft
-        columnBreakpoints: [-20, 40], // OAT C
+        columnBreakpoints: [-20, -10, 0, 10, 20, 30, 40], // OAT C
         values: [
-          // OAT C:       -20   40
-          /* -1000 ft */ [115, 158],
-          /*     0 ft */ [123, 169],
-          /*  1000 ft */ [131, 180],
-          /*  2000 ft */ [140, 192],
-          /*  3000 ft */ [150, 206],
-          /*  4000 ft */ [161, 221],
-          /*  5000 ft */ [173, 237],
-          /*  6000 ft */ [185, 255],
-          /*  7000 ft */ [199, 273],
-          /*  8000 ft */ [213, 293],
+          // OAT C:       -20  -10    0   10   20   30   40
+          /*     0 ft */ [176, 181, 186, 192, 198, 205, 212],
+          /*  2000 ft */ [187, 192, 198, 204, 212, 220, 228],
+          /*  4000 ft */ [201, 208, 215, 222, 230, 239, 247],
+          /*  6000 ft */ [214, 222, 230, 241, 250, 262, 273],
+          /*  8000 ft */ [233, 242, 251, 261, 273, 287, 303],
         ], // landing roll m
       },
 
       landingRollFromMass: {
-        rowBreakpoints: [115, 140, 165, 190, 215, 240, 265, 290], // prior landing roll m
-        columnBreakpoints: [700, 750, 820, 870, 920], // mass kg
+        rowBreakpoints: [0, 190, 257, 310, 400], // prior landing roll m at 920 kg
+        columnBreakpoints: [700, 920], // mass kg; diagram correction lines are straight
         values: [
-          // mass kg:  700  750  820  870  920
-          /* 115 m */ [88, 93, 103, 113, 123],
-          /* 140 m */ [108, 114, 127, 140, 153],
-          /* 165 m */ [128, 135, 151, 166, 181],
-          /* 190 m */ [148, 156, 175, 192, 210],
-          /* 215 m */ [168, 177, 198, 218, 238],
-          /* 240 m */ [188, 198, 222, 245, 267],
-          /* 265 m */ [208, 219, 246, 271, 296],
-          /* 290 m */ [228, 241, 270, 298, 325],
+          // mass kg: 700  920
+          /*   0 m */ [0, 0],
+          /* 190 m */ [94, 190],
+          /* 257 m */ [131, 257],
+          /* 310 m */ [163, 310],
+          /* 400 m */ [220, 400],
         ], // corrected landing roll m
       },
 
-      landingRollFromWind: {
-        rowBreakpoints: [130, 162, 196, 231, 268, 304, 339, 374], // prior landing roll m
-        columnBreakpoints: [-20, -10, 0, 10, 20, 30, 40], // wind km/h (negative = tailwind)
+      landingRollFromTailwind: {
+        rowBreakpoints: [0, 92, 129, 161, 220, 254, 307, 400], // prior landing roll m
+        columnBreakpoints: [-20, 0], // tailwind km/h
         values: [
-          // Hinweis: Der Datenbestand enthält hier aktuell 6 Werte pro Zeile bei 7 definierten Spalten.
-          // wind km/h:  -20  -10    0   10   20   30   40
-          /* 130 m */ [168, 148, 130, 113, 97, 83],
-          /* 162 m */ [210, 185, 162, 141, 121, 103],
-          /* 196 m */ [255, 224, 196, 171, 147, 125],
-          /* 231 m */ [300, 264, 231, 201, 173, 148],
-          /* 268 m */ [348, 306, 268, 234, 201, 172],
-          /* 304 m */ [395, 347, 304, 265, 228, 195],
-          /* 339 m */ [440, 387, 339, 296, 255, 218],
-          /* 374 m */ [485, 427, 374, 326, 281, 240],
+          // wind km/h: -20    0
+          /*   0 m */ [0, 0],
+          /*  92 m */ [164, 92],
+          /* 129 m */ [209, 129],
+          /* 161 m */ [255, 161],
+          /* 220 m */ [323, 220],
+          /* 254 m */ [362, 254],
+          /* 307 m */ [431, 307],
+          /* 400 m */ [550, 400],
+        ], // corrected landing roll m
+      },
+
+      landingRollFromHeadwind: {
+        rowBreakpoints: [0, 130, 174, 220, 266, 307, 400], // prior landing roll m
+        columnBreakpoints: [0, 40], // headwind km/h
+        values: [
+          // wind km/h:   0   40
+          /*   0 m */ [0, -48],
+          /* 130 m */ [130, 17],
+          /* 174 m */ [174, 39],
+          /* 220 m */ [220, 58],
+          /* 266 m */ [266, 85],
+          /* 307 m */ [307, 114],
+          /* 400 m */ [400, 190],
         ], // corrected landing roll m
       },
 
       landingDistanceOver15m: {
-        rowBreakpoints: [88, 113, 140, 172, 210, 250, 295, 340, 390, 440], // landing roll incl. margin m
-        columnBreakpoints: [0, 15], // obstacle height m
-        values: [
-          // obstacle m:  0   15
-          /*  88 m */ [88, 160],
-          /* 113 m */ [113, 206],
-          /* 140 m */ [140, 255],
-          /* 172 m */ [172, 313],
-          /* 210 m */ [210, 382],
-          /* 250 m */ [250, 455],
-          /* 295 m */ [295, 537],
-          /* 340 m */ [340, 619],
-          /* 390 m */ [390, 710],
-          /* 440 m */ [440, 801],
-        ], // landing distance m
+        landingRollBreakpoints: [-32, 85, 172, 256, 330, 400], // landing roll m; lowest line enters through bottom edge
+        landingDistanceMeters: [192, 346, 500, 654, 788, 915], // fixed 15 m obstacle; 400 m endpoint extrapolates the printed family
+        maximumDigitizedLandingRollMeters: 330,
       },
 
       approachSpeedMassBreakpoints: [700, 750, 800, 850, 920], // mass kg

@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 
 const { createG115BContext } = require("./helpers/load-g115b");
 
-const { calculators, core } = createG115BContext();
+const { calculators, core, data } = createG115BContext();
 
 const tests = [];
 
@@ -100,9 +100,195 @@ test("landing calculator returns stable reference result", () => {
   });
 
   assert.equal(result.atmosphere.densityAltitudeFt, 3075);
-  assert.equal(result.landingRollMeters, 238);
-  assert.equal(result.landingDistanceMeters, 432);
+  assert.equal(result.landingRollMeters, 250);
+  assert.equal(result.landingDistanceMeters, 583);
   assert.equal(Math.round(result.approachSpeedKmh), 118);
+});
+
+test("landing mass correction leaves the chart reference mass unchanged", () => {
+  const result = calculators.calculateLanding({
+    pressureAltitudeFt: 7,
+    oatC: 15,
+    massKg: 920,
+    windKt: 0,
+    safetyMarginPercent: 0,
+  });
+
+  assert.equal(result.landingRollByMassMeters, result.landingRollByAtmosphereMeters);
+});
+
+test("landing mass and wind corrections interpolate along straight diagram lines", () => {
+  const massAt700 = core.lookup2D(data.landing.landingRollFromMass, 210, 700);
+  const massAt920 = core.lookup2D(data.landing.landingRollFromMass, 210, 920);
+  const massAt810 = core.lookup2D(data.landing.landingRollFromMass, 210, 810);
+  const windAt0 = core.lookup2D(data.landing.landingRollFromHeadwind, 196, 0);
+  const windAt40 = core.lookup2D(data.landing.landingRollFromHeadwind, 196, 40);
+  const windAt20 = core.lookup2D(data.landing.landingRollFromHeadwind, 196, 20);
+
+  assert.equal(massAt810, (massAt700 + massAt920) / 2);
+  assert.equal(windAt20, (windAt0 + windAt40) / 2);
+});
+
+test("landing wind correction never changes the mass result at zero wind", () => {
+  [0, 50, 100, 200, 300, 400].forEach((landingRollMeters) => {
+    assert.equal(
+      core.lookup2D(data.landing.landingRollFromHeadwind, landingRollMeters, 0),
+      landingRollMeters
+    );
+    assert.equal(
+      core.lookup2D(data.landing.landingRollFromTailwind, landingRollMeters, 0),
+      landingRollMeters
+    );
+  });
+});
+
+test("landing headwind and tailwind slopes vary with the incoming landing roll", () => {
+  const lowHeadwindReduction = 130 - core.lookup2D(data.landing.landingRollFromHeadwind, 130, 40);
+  const highHeadwindReduction = 307 - core.lookup2D(data.landing.landingRollFromHeadwind, 307, 40);
+  const lowTailwindIncrease = core.lookup2D(data.landing.landingRollFromTailwind, 129, -20) - 129;
+  const highTailwindIncrease = core.lookup2D(data.landing.landingRollFromTailwind, 307, -20) - 307;
+
+  assert.ok(highHeadwindReduction > lowHeadwindReduction);
+  assert.ok(highTailwindIncrease > lowTailwindIncrease);
+});
+
+test("landing wind corrections follow the digitized diagram lines", () => {
+  [
+    [92, 164],
+    [129, 209],
+    [161, 255],
+    [220, 323],
+    [254, 362],
+    [307, 431],
+  ].forEach(([incomingRollMeters, correctedRollMeters]) => {
+    assert.equal(
+      core.lookup2D(data.landing.landingRollFromTailwind, incomingRollMeters, -20),
+      correctedRollMeters
+    );
+  });
+
+  [
+    [130, 17],
+    [174, 39],
+    [220, 58],
+    [266, 85],
+    [307, 114],
+  ].forEach(([incomingRollMeters, correctedRollMeters]) => {
+    assert.equal(
+      core.lookup2D(data.landing.landingRollFromHeadwind, incomingRollMeters, 40),
+      correctedRollMeters
+    );
+  });
+});
+
+test("landing headwind correction stops at zero before the chart maximum when required", () => {
+  const result = calculators.calculateLanding({
+    pressureAltitudeFt: 0,
+    oatC: -20,
+    massKg: 700,
+    windKt: 40 / core.KMH_PER_KT,
+    safetyMarginPercent: 0,
+  });
+
+  assert.equal(result.landingRollByWindMeters, 0);
+  assert.ok(core.lookup2D(data.landing.landingRollFromHeadwind, result.landingRollByMassMeters, 40) < 0);
+});
+
+test("landing atmosphere calibration follows sea level at 40 degrees Celsius", () => {
+  const result = calculators.calculateLanding({
+    pressureAltitudeFt: 0,
+    oatC: 40,
+    massKg: 920,
+    windKt: 0,
+    safetyMarginPercent: 0,
+  });
+
+  assert.equal(result.landingRollByAtmosphereMeters, 212);
+  assert.equal(result.landingRollByMassMeters, 212);
+});
+
+test("landing atmosphere calibration follows all pressure-altitude lines at minus 20 degrees Celsius", () => {
+  [
+    [0, 176],
+    [2000, 187],
+    [4000, 201],
+    [6000, 214],
+    [8000, 233],
+  ].forEach(([pressureAltitudeFt, expectedLandingRollMeters]) => {
+    const result = calculators.calculateLanding({
+      pressureAltitudeFt,
+      oatC: -20,
+      massKg: 920,
+      windKt: 0,
+      safetyMarginPercent: 0,
+    });
+
+    assert.equal(result.landingRollByAtmosphereMeters, expectedLandingRollMeters);
+  });
+});
+
+test("landing atmosphere interpolation follows the digitized curved temperature lines", () => {
+  assert.equal(core.lookup2D(data.landing.landingRollFromAtmosphere, 0, 20), 198);
+  assert.equal(core.lookup2D(data.landing.landingRollFromAtmosphere, 2000, 20), 212);
+  assert.equal(core.lookup2D(data.landing.landingRollFromAtmosphere, 2000, 30), 220);
+  assert.equal(core.lookup2D(data.landing.landingRollFromAtmosphere, 2000, 40), 228);
+  assert.equal(core.lookup2D(data.landing.landingRollFromAtmosphere, 4000, 20), 230);
+  assert.equal(core.lookup2D(data.landing.landingRollFromAtmosphere, 8000, 0), 251);
+  assert.equal(core.lookup2D(data.landing.landingRollFromAtmosphere, 8000, 20), 273);
+});
+
+test("landing calculator returns stable digitized-path reference values", () => {
+  const result = calculators.calculateLanding({
+    pressureAltitudeFt: 2500,
+    oatC: 27,
+    massKg: 816,
+    windKt: 13 / core.KMH_PER_KT,
+    safetyMarginPercent: 0,
+  });
+
+  assert.equal(result.landingRollMeters, 127);
+  assert.equal(result.landingDistanceMeters, 420);
+  assert.equal(Math.round(result.approachSpeedKmh), 116);
+});
+
+test("landing distance over 15 meters follows every digitized diagram line", () => {
+  [
+    [-32, 192],
+    [85, 346],
+    [172, 500],
+    [256, 654],
+    [330, 788],
+  ].forEach(([landingRollMeters, landingDistanceMeters]) => {
+    assert.equal(
+      core.interpolate1D(
+        data.landing.landingDistanceOver15m.landingRollBreakpoints,
+        data.landing.landingDistanceOver15m.landingDistanceMeters,
+        landingRollMeters
+      ),
+      landingDistanceMeters
+    );
+  });
+});
+
+test("landing operational margin is added only as an absolute landing roll increment", () => {
+  const withoutMargin = calculators.calculateLanding({
+    pressureAltitudeFt: 2000,
+    oatC: 20,
+    massKg: 850,
+    windKt: 0,
+    safetyMarginPercent: 0,
+  });
+  const withMargin = calculators.calculateLanding({
+    pressureAltitudeFt: 2000,
+    oatC: 20,
+    massKg: 850,
+    windKt: 0,
+    safetyMarginPercent: 40,
+  });
+
+  assert.equal(withMargin.landingRollMarginMeters, withoutMargin.landingRollByWindMeters * 0.4);
+  assert.equal(withMargin.landingRollMeters, Math.round(withoutMargin.landingRollByWindMeters + withMargin.landingRollMarginMeters));
+  assert.equal(withMargin.landingDistanceMeters, Math.round(withoutMargin.landingDistanceWithoutMarginMeters + withMargin.landingRollMarginMeters));
 });
 
 test("cruise calculator returns stable RPM, fuel flow and TAS values", () => {

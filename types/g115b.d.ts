@@ -104,7 +104,6 @@ declare namespace G115B {
     pressureAltitudeFt: number;
     oatC: number;
     massKg: number;
-    slopePercent: number;
     windKt: number;
     safetyMarginPercent: number;
   }
@@ -114,9 +113,10 @@ declare namespace G115B {
     atmosphere: Atmosphere;
     landingRollByAtmosphereMeters: number;
     landingRollByMassMeters: number;
-    landingRollBySlopeMeters: number;
     landingRollByWindMeters: number;
+    landingRollMarginMeters: number;
     landingRollMeters: number;
+    landingDistanceWithoutMarginMeters: number;
     landingDistanceMeters: number;
     approachSpeedKmh: number;
     conditions: string[];
