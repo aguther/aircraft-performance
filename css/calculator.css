@@ -1108,56 +1108,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
   .runway-calculator .field.range-field,
   .runway-calculator .field:has(> .slider-row) {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.45rem;
-  }
-
-  .runway-calculator .field.range-field > .slider-row,
-  .runway-calculator .field.range-field > .input-wrap,
-  .runway-calculator .field:has(> .slider-row) > .slider-row,
-  .runway-calculator .field:has(> .slider-row) > .input-wrap {
-    grid-column: 1 / -1;
-    width: 100%;
-  }
-
-  .runway-calculator .slider-row {
-    min-height: 48px;
-  }
-
-  .runway-calculator input[type="range"] {
-    height: 8px;
-  }
-
-  .runway-calculator input[type="range"]::-webkit-slider-thumb {
-    width: 32px;
-    height: 32px;
-    border-width: 3px;
-  }
-
-  .runway-calculator input[type="range"]::-moz-range-thumb {
-    width: 26px;
-    height: 26px;
-    border: 3px solid var(--bg-card);
-    border-radius: 50%;
-    background: var(--cyan);
-    box-shadow: 0 4px 12px rgba(0, 95, 138, 0.28);
-  }
-
-  .runway-calculator .input-wrap input[type="number"],
-  .runway-calculator .input-wrap input[type="text"] {
-    min-height: 54px;
-    padding: 0.85rem 3.2rem 0.85rem 1rem;
-    font-size: 18px;
-  }
-
-  .runway-calculator .unit {
-    right: 1rem;
-    font-size: 14px;
-  }
-
-  .runway-calculator .mode-btn {
-    min-height: 50px;
-    font-size: 11.5px;
+    grid-template-columns: minmax(0, 1fr) clamp(98px, 30vw, 112px);
   }
 
   .atmos-grid,
@@ -1199,6 +1150,15 @@ input[type="range"]::-webkit-slider-thumb:hover {
     width: auto;
     align-self: flex-start;
     padding: 0.65rem 0.75rem;
+  }
+
+  .takeoff-chart-scroll {
+    overflow-x: hidden;
+  }
+
+  .takeoff-chart-stage {
+    min-width: 0;
+    width: 100%;
   }
 
   .speed-grid .result-item-sub {
