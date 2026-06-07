@@ -1,7 +1,7 @@
 {
   "name": "Grob G115B Performance",
   "short_name": "G115B Perf",
-  "description": "Installierbare Performance-Rechner fuer die Grob G115B.",
+  "description": "Installierbare Performance-Rechner für die Grob G115B.",
   "lang": "de",
   "start_url": "./index.html",
   "scope": "./",

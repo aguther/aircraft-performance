@@ -82,7 +82,7 @@ test("takeoff calculator warns instead of silently extrapolating outside chart l
     safetyMarginPercent: 100,
   });
 
-  assert.ok(result.warnings.some((warning) => warning.text.includes("Druckhoehe")));
+  assert.ok(result.warnings.some((warning) => warning.text.includes("Druckhöhe")));
   assert.ok(result.warnings.some((warning) => warning.text.includes("OAT")));
   assert.ok(result.warnings.some((warning) => warning.text.includes("Masse ausserhalb")));
   assert.ok(result.warnings.some((warning) => warning.text.includes("Wind ausserhalb")));
@@ -136,7 +136,7 @@ test("climb calculator rejects inverted altitude ranges", () => {
     destinationDensityAltitudeFt: 3000,
   });
 
-  assert.equal(result.error.text, "Ziel-Dichtehoehe muss groesser als Start-Dichtehoehe sein.");
+  assert.equal(result.error.text, "Ziel-Dichtehöhe muss größer als Start-Dichtehöhe sein.");
   assert.equal(result.error.danger, true);
 });
 

@@ -37,12 +37,12 @@
 
   function createLandingSteps(inputs, result) {
     return [
-      { name: "Schritt 1 - Atmosphaere", detail: `PA ${inputs.pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT ${inputs.oatC} °C`, value: `${core.round(result.landingRollByAtmosphereMeters)} m` },
+      { name: "Schritt 1 - Atmosphäre", detail: `PA ${inputs.pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT ${inputs.oatC} °C`, value: `${core.round(result.landingRollByAtmosphereMeters)} m` },
       { name: "Schritt 2 - Masse", detail: `${core.round(result.landingRollByAtmosphereMeters)} m · ${inputs.massKg} kg`, value: `${core.round(result.landingRollByMassMeters)} m` },
       { name: "Schritt 3 - Slope", detail: `${core.round(result.landingRollByMassMeters)} m · ${formatSlopeLabel(inputs.slopePercent)}`, value: `${core.round(result.landingRollBySlopeMeters)} m` },
       { name: "Schritt 4 - Wind", detail: `${core.round(result.landingRollBySlopeMeters)} m · ${formatWindLabel(inputs.windKt)}`, value: `${core.round(result.landingRollByWindMeters)} m` },
       { name: `Zuschlag ${inputs.safetyMarginPercent}%`, detail: `${core.round(result.landingRollByWindMeters)} m × ${(1 + inputs.safetyMarginPercent / 100).toFixed(2)}`, value: `${result.landingRollMeters} m` },
-      { name: "Schritt 5 - Hindernis 15 m", detail: `${result.landingRollMeters} m -> ueber 15 m`, value: `${result.landingDistanceMeters} m` },
+      { name: "Schritt 5 - Hindernis 15 m", detail: `${result.landingRollMeters} m -> über 15 m`, value: `${result.landingDistanceMeters} m` },
     ];
   }
 

@@ -22,9 +22,9 @@ No warranty is given regarding the accuracy, completeness, or currency of the da
 
 ## PWA / Homescreen Installation
 
-Die Seiten sind als Progressive Web App (PWA) vorbereitet und koennen auf iOS und Android zum Homescreen hinzugefuegt werden.
+Die Seiten sind als Progressive Web App (PWA) vorbereitet und können auf iOS und Android zum Homescreen hinzugefügt werden.
 
-Wichtig: Die Installation funktioniert nur ueber `http://localhost` oder ueber HTTPS, nicht beim direkten Oeffnen der HTML-Dateien via `file://`.
+Wichtig: Die Installation funktioniert nur über `http://localhost` oder über HTTPS, nicht beim direkten Öffnen der HTML-Dateien via `file://`.
 
 Zum lokalen Testen reicht ein einfacher statischer Webserver im Repository-Ordner, zum Beispiel:
 
@@ -32,18 +32,18 @@ Zum lokalen Testen reicht ein einfacher statischer Webserver im Repository-Ordne
 python -m http.server 8080
 ```
 
-Danach die App unter `http://localhost:8080` im Browser oeffnen und von dort installieren.
+Danach die App unter `http://localhost:8080` im Browser öffnen und von dort installieren.
 
 ---
 
 ## Code-Struktur
 
-Die Rechenlogik ist jetzt bewusst von der HTML-Oberflaeche getrennt:
+Die Rechenlogik ist jetzt bewusst von der HTML-Oberfläche getrennt:
 
 - `js/g115b-core.js`
   Enthält die gemeinsamen Rechenhilfen wie Interpolation, Pressure Altitude, Density Altitude und Einheitenumrechnungen.
 - `js/performance-data.js`
-  Enthält die Tabellen und Datensaetze der einzelnen Rechner in lesbarer Form.
+  Enthält die Tabellen und Datensätze der einzelnen Rechner in lesbarer Form.
 - `js/g115b-calculators.js`
   Enthält die eigentlichen fachlichen Berechnungen als pure Funktionen ohne DOM-Zugriffe.
 - `js/pages/*.js`
@@ -51,19 +51,19 @@ Die Rechenlogik ist jetzt bewusst von der HTML-Oberflaeche getrennt:
 - `css/theme.css`
   Enthält die zentralen Theme-Variablen sowie die gemeinsamen App-/Navigations-Styles.
 - `css/calculator.css`
-  Enthält die gemeinsame Oberflaeche aller Rechnerseiten.
+  Enthält die gemeinsame Oberfläche aller Rechnerseiten.
 - `css/index.css`
-  Enthält die spezifischen Styles der Uebersichtsseite.
+  Enthält die spezifischen Styles der Übersichtsseite.
 
 Damit sind die fachlichen Daten und die eigentliche Berechnung deutlich einfacher zu prüfen als in den vorherigen großen Inline-Skripten der HTML-Dateien.
-Die DOM-Zugriffe sind auf die Page-Controller beschraenkt, waehrend die Berechnungen selbst browserunabhaengig bleiben.
+Die DOM-Zugriffe sind auf die Page-Controller beschränkt, während die Berechnungen selbst browserunabhängig bleiben.
 
 ## Tests
 
-Die Rechenlogik kann automatisiert mit Node.js geprueft werden:
+Die Rechenlogik kann automatisiert mit Node.js geprüft werden:
 
 ```powershell
 npm test
 ```
 
-Die Tests verwenden feste Referenzfaelle gegen die pure Calculator-Logik in `js/g115b-calculators.js`.
+Die Tests verwenden feste Referenzfälle gegen die pure Calculator-Logik in `js/g115b-calculators.js`.

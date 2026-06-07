@@ -37,11 +37,11 @@
 
   function createTakeoffSteps(inputs, result) {
     return [
-      { name: "Schritt 1 - Atmosphaere", detail: `PA ${inputs.pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT ${inputs.oatC} °C`, value: `${core.round(result.groundRollByAtmosphereMeters)} m` },
+      { name: "Schritt 1 - Atmosphäre", detail: `PA ${inputs.pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT ${inputs.oatC} °C`, value: `${core.round(result.groundRollByAtmosphereMeters)} m` },
       { name: "Schritt 2 - Masse", detail: `${core.round(result.groundRollByAtmosphereMeters)} m · ${inputs.massKg} kg`, value: `${core.round(result.groundRollByMassMeters)} m` },
       { name: "Schritt 3 - Slope", detail: `${core.round(result.groundRollByMassMeters)} m · ${formatSlopeLabel(inputs.slopePercent)}`, value: `${core.round(result.groundRollBySlopeMeters)} m` },
       { name: "Schritt 4 - Wind", detail: `${core.round(result.groundRollBySlopeMeters)} m · ${formatWindLabel(inputs.windKt)}`, value: `${core.round(result.groundRollByWindMeters)} m` },
-      { name: "Schritt 5 - Hindernis 15 m", detail: `${core.round(result.groundRollByWindMeters)} m -> ueber 15 m`, value: `${core.round(result.takeoffDistanceWithoutMarginMeters)} m` },
+      { name: "Schritt 5 - Hindernis 15 m", detail: `${core.round(result.groundRollByWindMeters)} m -> über 15 m`, value: `${core.round(result.takeoffDistanceWithoutMarginMeters)} m` },
       { name: `Zuschlag ${inputs.safetyMarginPercent}% auf Rollstrecke`, detail: `+${core.round(result.groundRollMarginMeters)} m auf Roll- und Startstrecke`, value: `${result.groundRollMeters} m / ${result.takeoffDistanceMeters} m` },
     ];
   }
@@ -408,7 +408,7 @@
           labelClassName: "speed-item-label",
           valueClassName: "speed-item-value",
           subtextClassName: "speed-item-sub",
-          label: "Geschw. 15 m Hoehe",
+          label: "Geschw. 15 m Höhe",
           value: core.kilometersPerHourToKnots(result.speedAt15mKmh).toFixed(1),
           unit: "kt",
           subtext: `${result.speedAt15mKmh.toFixed(0)} km/h IAS`,

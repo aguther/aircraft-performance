@@ -29,7 +29,7 @@
           "div",
           { className: "result-grid", style: { gridTemplateColumns: "1fr" } },
           ui.createMetricItem({
-            label: `Ueberziehgeschwindigkeit · ${result.stallLabel}`,
+            label: `Überziehgeschwindigkeit · ${result.stallLabel}`,
             value: result.stallSpeedKt.toFixed(1),
             unit: "kt",
             subtext: `${result.stallSpeedKmh.toFixed(0)} km/h IAS`,

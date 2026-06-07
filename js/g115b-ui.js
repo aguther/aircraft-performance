@@ -151,7 +151,7 @@
       toggle.setAttribute(
         "title",
         themePreference === THEME_AUTO
-          ? `Theme folgt dem Geraet: ${isDarkTheme ? "Dark" : "Light"}`
+          ? `Theme folgt dem Gerät: ${isDarkTheme ? "Dark" : "Light"}`
           : `Theme manuell gesetzt: ${isDarkTheme ? "Dark" : "Light"}`
       );
     }
@@ -307,8 +307,8 @@
       el("div", { className: "disclaimer-tag", text: "⚠ Wichtiger Hinweis" }),
       el("div", {
         className: "disclaimer-text",
-        text: "Diese Anwendung ersetzt nicht das originale, zugelassene AFM/POH der jeweiligen Maschine. Die Verantwortung fuer alle Flugentscheidungen liegt ausschliesslich beim Piloten.",
-      })
+        text: "Diese Anwendung ersetzt nicht das originale, zugelassene AFM/POH der jeweiligen Maschine. Die Verantwortung für alle Flugentscheidungen liegt ausschliesslich beim Piloten.",
+      }),
     );
   }
 
@@ -357,7 +357,7 @@
   }
 
   function createAtmosphereCard(config) {
-    return createCard("Atmosphaere", createAtmosphereContent(config));
+    return createCard("Atmosphäre", createAtmosphereContent(config));
   }
 
   function createMetricItem(config) {

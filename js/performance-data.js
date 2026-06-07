@@ -2,8 +2,8 @@
   // Tabellenkonvention:
   // - rowBreakpoints definieren die Zeilenachse.
   // - columnBreakpoints definieren die Spaltenachse.
-  // - values[rowIndex][columnIndex] gehoert immer zur jeweiligen Zeile/Spalte.
-  // - Kommentare ueber values zeigen die Spaltenreihenfolge, Kommentare vor jeder Zeile den Zeilenkopf.
+  // - values[rowIndex][columnIndex] gehört immer zur jeweiligen Zeile/Spalte.
+  // - Kommentare über values zeigen die Spaltenreihenfolge, Kommentare vor jeder Zeile den Zeilenkopf.
   const data = {
     takeoff: {
       source: "POH 5.3.7",
@@ -133,7 +133,7 @@
         rowBreakpoints: [130, 162, 196, 231, 268, 304, 339, 374], // prior landing roll m
         columnBreakpoints: [-20, -10, 0, 10, 20, 30, 40], // wind km/h (negative = tailwind)
         values: [
-          // Hinweis: Der Datenbestand enthaelt hier aktuell 6 Werte pro Zeile bei 7 definierten Spalten.
+          // Hinweis: Der Datenbestand enthält hier aktuell 6 Werte pro Zeile bei 7 definierten Spalten.
           // wind km/h:  -20  -10    0   10   20   30   40
           /* 130 m */ [168, 148, 130, 113, 97, 83],
           /* 162 m */ [210, 185, 162, 141, 121, 103],
@@ -332,7 +332,7 @@
       stations: {
         pilot: { label: "Pilot", armM: 0.25 },
         copilot: { label: "Co-Pilot", armM: 0.25 },
-        baggage: { label: "Gepaeck", armM: 0.9 },
+        baggage: { label: "Gepäck", armM: 0.9 },
         fuel: { label: "Kraftstoff", armM: 0.89 },
       },
       emptyAircraft: [

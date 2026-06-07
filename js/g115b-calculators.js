@@ -22,12 +22,12 @@
     const takeoffDistanceMeters = takeoffDistanceWithoutMarginMeters + groundRollMarginMeters;
 
     const warnings = [];
-    if (inputs.massKg > 920) warnings.push({ text: "Masse ueberschreitet MTOW (920 kg).", danger: true });
+    if (inputs.massKg > 920) warnings.push({ text: "Masse überschreitet MTOW (920 kg).", danger: true });
     if (inputs.massKg < 750) warnings.push({ text: "Masse ausserhalb Diagrammbereich (750-920 kg).", danger: false });
-    if (inputs.pressureAltitudeFt < -1000 || inputs.pressureAltitudeFt > 8000) warnings.push({ text: "Druckhoehe ausserhalb Diagrammbereich (-1000 bis 8000 ft).", danger: false });
+    if (inputs.pressureAltitudeFt < -1000 || inputs.pressureAltitudeFt > 8000) warnings.push({ text: "Druckhöhe ausserhalb Diagrammbereich (-1000 bis 8000 ft).", danger: false });
     if (inputs.oatC < -20 || inputs.oatC > 40) warnings.push({ text: "OAT ausserhalb Diagrammbereich (-20 bis +40 °C).", danger: false });
-    if (inputs.windKt < -5) warnings.push({ text: `Rueckenwind ${Math.abs(inputs.windKt)} kt ueberschreitet AFM-Grenzwert.`, danger: false });
-    if (windKmh < -20 || windKmh > 40) warnings.push({ text: "Wind ausserhalb Diagrammbereich (20 km/h Rueckenwind bis 40 km/h Gegenwind).", danger: false });
+    if (inputs.windKt < -5) warnings.push({ text: `Rückenwind ${Math.abs(inputs.windKt)} kt überschreitet AFM-Grenzwert.`, danger: false });
+    if (windKmh < -20 || windKmh > 40) warnings.push({ text: "Wind ausserhalb Diagrammbereich (20 km/h Rückenwind bis 40 km/h Gegenwind).", danger: false });
     if (inputs.slopePercent < -2 || inputs.slopePercent > 2) warnings.push({ text: "Neigung ausserhalb Diagrammbereich (+/-2%).", danger: false });
     const obstacleChartBreakpoints = pageData.takeoffDistanceOver15m.groundRollBreakpoints;
     const obstacleChartMaximumRollMeters = obstacleChartBreakpoints[obstacleChartBreakpoints.length - 1];
@@ -48,7 +48,7 @@
       takeoffDistanceMeters: core.round(takeoffDistanceMeters),
       rotateSpeedKmh,
       speedAt15mKmh,
-      conditions: ["Vorderste Schwerpunktlage", "Vollgas", "Gemisch fuer groesste Leistung", "Klappen 12°", "Befestigte, trockene Startbahn"],
+      conditions: ["Vorderste Schwerpunktlage", "Vollgas", "Gemisch für größte Leistung", "Klappen 12°", "Befestigte, trockene Startbahn"],
     };
   }
 
@@ -67,8 +67,8 @@
     const landingDistanceMeters = landingRollMarginMeters + core.lookup2D(pageData.landingDistanceOver15m, step4LandingRollMeters, 15);
 
     const warnings = [];
-    if (inputs.massKg > 920) warnings.push({ text: "Masse ueberschreitet MTOW (920 kg).", danger: true });
-    if (inputs.windKt < -5) warnings.push({ text: "Rueckenwind ueberschreitet AFM-Grenzwert.", danger: false });
+    if (inputs.massKg > 920) warnings.push({ text: "Masse überschreitet MTOW (920 kg).", danger: true });
+    if (inputs.windKt < -5) warnings.push({ text: "Rückenwind überschreitet AFM-Grenzwert.", danger: false });
     if (atmosphere.densityAltitudeFt > 8000) warnings.push({ text: `DA ${atmosphere.densityAltitudeFt.toLocaleString("de-DE")} ft ausserhalb nominalem Bereich.`, danger: true });
     else if (atmosphere.densityAltitudeFt > 5000) warnings.push({ text: `DA ${atmosphere.densityAltitudeFt.toLocaleString("de-DE")} ft: Gemisch verarmen (POH 4.11).`, danger: false });
 
@@ -112,7 +112,7 @@
       climbSpeedKmh,
       climbRateFpm,
       climbRateMs: climbRateFpm * 0.00508,
-      conditions: ["Vollgas", "Gemisch fuer groesste Leistung", "Klappen 0°", "V = VY", "Mittlere Schwerpunktlage"],
+      conditions: ["Vollgas", "Gemisch für größte Leistung", "Klappen 0°", "V = VY", "Mittlere Schwerpunktlage"],
     };
   }
 
@@ -139,7 +139,7 @@
 
   function calculateClimb(inputs) {
     if (inputs.destinationDensityAltitudeFt <= inputs.departureDensityAltitudeFt) {
-      return { error: { text: "Ziel-Dichtehoehe muss groesser als Start-Dichtehoehe sein.", danger: true } };
+      return { error: { text: "Ziel-Dichtehöhe muss größer als Start-Dichtehöhe sein.", danger: true } };
     }
 
     const departureCumulative = calculateClimbProfilePoint(inputs.departureDensityAltitudeFt);
@@ -153,20 +153,20 @@
       climbFuelLiters: destinationCumulative.fuelLiters - departureCumulative.fuelLiters,
       climbDistanceKm,
       climbDistanceNm: climbDistanceKm / core.KMH_PER_KT,
-      conditions: ["Vollgas", "Gemisch fuer groesste Leistung", "Klappen 0°", "V = VY", "Standardatmosphaere", "Max. Abfluggewicht · vorderste SL"],
+      conditions: ["Vollgas", "Gemisch für größte Leistung", "Klappen 0°", "V = VY", "Standardatmosphäre", "Max. Abfluggewicht · vorderste SL"],
     };
   }
 
   function calculateRange(inputs) {
     const rangeKm = core.lookup2D(data.range.rangeTable, inputs.powerPercent, inputs.densityAltitudeFt);
     const warnings = [];
-    if (inputs.densityAltitudeFt > 20000) warnings.push({ text: "DA ueber 20.000 ft - ausserhalb Diagrammbereich.", danger: true });
+    if (inputs.densityAltitudeFt > 20000) warnings.push({ text: "DA über 20.000 ft - außerhalb Diagrammbereich.", danger: true });
     if (inputs.powerPercent >= 75 && inputs.densityAltitudeFt > 10000) warnings.push({ text: "75% Leistung: Diagrammlinie endet bei DA 10.000 ft.", danger: false });
     return {
       warnings,
       rangeKm,
       rangeNm: rangeKm / core.KMH_PER_KT,
-      note: "Die Reichweite beinhaltet die Kraftstoffmenge fuer Warmlaufen, Takeoff, Steigflug und die 45 min. Reserve fuer maximale Reichweite.",
+      note: "Die Reichweite beinhaltet die Kraftstoffmenge für Warmlaufen, Takeoff, Steigflug und die 45 min. Reserve für maximale Reichweite.",
     };
   }
 
@@ -178,8 +178,8 @@
     const enduranceHoursWithReserve = Math.max(0, enduranceHoursTotal - pageData.reserveHours);
     const usableFuelLiters = Math.max(0, inputs.fuelLiters - reserveFuelLiters);
     const warnings = [];
-    if (inputs.fuelLiters > pageData.maximumUsableFuelLiters) warnings.push({ text: `Kraftstoffmenge ueberschreitet max. ausfliegbare Menge (${pageData.maximumUsableFuelLiters} l).`, danger: true });
-    if (inputs.fuelLiters < reserveFuelLiters) warnings.push({ text: `Kraftstoff reicht nicht fuer 45 min Reserve (${reserveFuelLiters.toFixed(1)} l benoetigt).`, danger: true });
+    if (inputs.fuelLiters > pageData.maximumUsableFuelLiters) warnings.push({ text: `Kraftstoffmenge überschreitet max. ausfliegbare Menge (${pageData.maximumUsableFuelLiters} l).`, danger: true });
+    if (inputs.fuelLiters < reserveFuelLiters) warnings.push({ text: `Kraftstoff reicht nicht für 45 min Reserve (${reserveFuelLiters.toFixed(1)} l benötigt).`, danger: true });
     return {
       warnings,
       fuelFlowLitersPerHour,
@@ -277,11 +277,11 @@
     );
     const warnings = [];
 
-    if (totalMassKg > 920) warnings.push({ text: "Masse ueberschreitet MTOW (920 kg).", danger: true });
-    if (!withinEnvelope) warnings.push({ text: "Schwerpunkt/Moment liegt ausserhalb des Envelope.", danger: true });
+    if (totalMassKg > 920) warnings.push({ text: "Masse überschreitet MTOW (920 kg).", danger: true });
+    if (!withinEnvelope) warnings.push({ text: "Schwerpunkt/Moment liegt außerhalb des Envelope.", danger: true });
     if (fuelLiters > pageData.maximumUsableFuelLiters) {
       warnings.push({
-        text: `Kraftstoffmenge ueberschreitet max. ausfliegbare Menge (${pageData.maximumUsableFuelLiters} l).`,
+        text: `Kraftstoffmenge überschreitet max. ausfliegbare Menge (${pageData.maximumUsableFuelLiters} l).`,
         danger: true,
       });
     }
