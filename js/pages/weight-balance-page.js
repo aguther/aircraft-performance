@@ -211,6 +211,7 @@
         createSpeedMetric("VR Rotate IAS", result.speeds.rotateSpeedKmh),
         createSpeedMetric("Geschw. 15 m Höhe", result.speeds.speedAt15mKmh),
         createSpeedMetric("VAPP IAS", result.speeds.approachSpeedKmh),
+        createSpeedMetric("VREF · 1,3 × VS0", result.speeds.referenceSpeedKmh),
         createSpeedMetric("VS0 Leerlauf 40°", result.speeds.stallIdleFlaps40Kmh),
       ]),
       ui.createCard("Beladung", createBreakdownTable(result)),

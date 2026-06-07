@@ -122,6 +122,7 @@ declare namespace G115B {
     landingDistanceWithoutMarginMeters: number;
     landingDistanceMeters: number;
     approachSpeedKmh: number;
+    referenceSpeedKmh: number;
     conditions: string[];
   }
 
@@ -235,6 +236,7 @@ declare namespace G115B {
       rotateSpeedKmh: number;
       speedAt15mKmh: number;
       approachSpeedKmh: number;
+      referenceSpeedKmh: number;
       stallIdleFlaps40Kmh: number;
     };
     conditions: string[];

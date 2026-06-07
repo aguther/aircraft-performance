@@ -1,5 +1,14 @@
 (function () {
   const { core, data } = window.G115B;
+  const VREF_STALL_FACTOR = 1.3;
+
+  function stallIdleFlaps40Kmh(massKg) {
+    return core.interpolate1D(data.stall.massBreakpoints, data.stall.speedsKmh.idle.flaps40, massKg);
+  }
+
+  function vrefKmh(massKg) {
+    return stallIdleFlaps40Kmh(massKg) * VREF_STALL_FACTOR;
+  }
 
   function calculateTakeoff(inputs) {
     const pageData = data.takeoff;
@@ -57,6 +66,7 @@
     const windKmh = core.knotsToKilometersPerHour(inputs.windKt);
     const atmosphere = core.densityAltitude(inputs.pressureAltitudeFt, inputs.oatC);
     const approachSpeedKmh = core.interpolate1D(pageData.approachSpeedMassBreakpoints, pageData.approachSpeedKmh, inputs.massKg);
+    const referenceSpeedKmh = vrefKmh(inputs.massKg);
     const publishedLandingRoll = (chartRollMeters) => core.interpolate1D(
       pageData.publishedLandingRoll.chartRollBreakpoints,
       pageData.publishedLandingRoll.landingRollMeters,
@@ -106,6 +116,7 @@
       landingDistanceWithoutMarginMeters,
       landingDistanceMeters: core.round(landingDistanceMeters),
       approachSpeedKmh,
+      referenceSpeedKmh,
       conditions: ["Befestigte, ebene, trockene Landebahn", "Leerlauf", "Klappen 40°", "Max. vordere Schwerpunktlage"],
     };
   }
@@ -329,7 +340,8 @@
         rotateSpeedKmh: core.interpolate1D(data.takeoff.rotateSpeedMassBreakpoints, data.takeoff.rotateSpeedKmh, totalMassKg),
         speedAt15mKmh: core.interpolate1D(data.takeoff.rotateSpeedMassBreakpoints, data.takeoff.speedAt15mKmh, totalMassKg),
         approachSpeedKmh: core.interpolate1D(data.landing.approachSpeedMassBreakpoints, data.landing.approachSpeedKmh, totalMassKg),
-        stallIdleFlaps40Kmh: core.interpolate1D(data.stall.massBreakpoints, data.stall.speedsKmh.idle.flaps40, totalMassKg),
+        stallIdleFlaps40Kmh: stallIdleFlaps40Kmh(totalMassKg),
+        referenceSpeedKmh: vrefKmh(totalMassKg),
       },
       conditions: [
         `Kraftstoff ${pageData.fuelDensityKgPerLiter.toLocaleString("de-DE")} kg/l`,

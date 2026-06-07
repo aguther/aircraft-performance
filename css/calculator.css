@@ -231,6 +231,41 @@
   .results {
     min-height: auto;
   }
+
+  .takeoff-chart-scroll {
+    overflow-x: hidden;
+  }
+
+  .takeoff-chart-stage {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 1100px) {
+  .runway-calculator .page-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .runway-calculator .sidebar {
+    position: static;
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .runway-calculator .results {
+    min-height: auto;
+  }
+
+  .runway-calculator .takeoff-chart-scroll {
+    overflow-x: hidden;
+  }
+
+  .runway-calculator .takeoff-chart-stage {
+    min-width: 0;
+    width: 100%;
+  }
 }
 
 /* SIDEBAR */
@@ -1150,15 +1185,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
     width: auto;
     align-self: flex-start;
     padding: 0.65rem 0.75rem;
-  }
-
-  .takeoff-chart-scroll {
-    overflow-x: hidden;
-  }
-
-  .takeoff-chart-stage {
-    min-width: 0;
-    width: 100%;
   }
 
   .speed-grid .result-item-sub {

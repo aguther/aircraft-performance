@@ -103,6 +103,7 @@ test("landing calculator returns stable reference result", () => {
   assert.equal(result.landingRollMeters, 324);
   assert.equal(result.landingDistanceMeters, 604);
   assert.equal(Math.round(result.approachSpeedKmh), 118);
+  assert.equal(result.referenceSpeedKmh.toFixed(1), "113.5");
 });
 
 test("landing mass correction leaves the chart reference mass unchanged", () => {
@@ -431,6 +432,8 @@ test("weight and balance calculator returns stable loading result", () => {
   assert.equal(result.speeds.speedAt15mKmh.toFixed(1), "117.6");
   assert.equal(result.speeds.approachSpeedKmh.toFixed(1), "116.8");
   assert.equal(result.speeds.stallIdleFlaps40Kmh.toFixed(1), "86.3");
+  assert.equal(result.speeds.referenceSpeedKmh.toFixed(1), "112.2");
+  assert.equal(result.speeds.referenceSpeedKmh, result.speeds.stallIdleFlaps40Kmh * 1.3);
 });
 
 test("weight and balance accepts envelope boundary points", () => {

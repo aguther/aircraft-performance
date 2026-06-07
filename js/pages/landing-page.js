@@ -429,7 +429,7 @@
         ui.createMetricItem({ label: "Landing Roll · Landerollstrecke", value: result.landingRollMeters, unit: "m" }),
         ui.createMetricItem({ label: "Landing Distance · Landestrecke über 15 m", value: result.landingDistanceMeters, unit: "m" }),
       ]),
-      ui.createGridCard("Anfluggeschwindigkeit VAPP", "speed-grid", [
+      ui.createGridCard("Anfluggeschwindigkeiten", "speed-grid", [
         ui.createMetricItem({
           className: "speed-item",
           labelClassName: "speed-item-label",
@@ -439,6 +439,16 @@
           value: core.kilometersPerHourToKnots(result.approachSpeedKmh).toFixed(1),
           unit: "kt",
           subtext: `${result.approachSpeedKmh.toFixed(0)} km/h IAS`,
+        }),
+        ui.createMetricItem({
+          className: "speed-item",
+          labelClassName: "speed-item-label",
+          valueClassName: "speed-item-value",
+          subtextClassName: "speed-item-sub",
+          label: "VREF · 1,3 × VS0",
+          value: core.kilometersPerHourToKnots(result.referenceSpeedKmh).toFixed(1),
+          unit: "kt",
+          subtext: `${result.referenceSpeedKmh.toFixed(0)} km/h IAS`,
         }),
       ]),
       createChartVisualization(inputs, result, readExportContext(elements)),
