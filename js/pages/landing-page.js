@@ -103,16 +103,16 @@
 
   function createChartPoints(inputs, result) {
     const windKmh = core.knotsToKilometersPerHour(inputs.windKt);
-    const windPoint = chartWindPoint(windKmh, result.landingRollByMassMeters, result.landingRollByWindMeters);
-    const obstaclePoints = chartObstaclePoint(result.landingRollByWindMeters, result.landingDistanceWithoutMarginMeters);
+    const windPoint = chartWindPoint(windKmh, result.landingRollByMassChartMeters, result.landingRollByWindChartMeters);
+    const obstaclePoints = chartObstaclePoint(result.landingRollByWindChartMeters, result.landingDistanceWithoutMarginMeters);
     return [
       [chartTemperatureX(inputs.oatC), 849],
-      [chartTemperatureX(inputs.oatC), chartRollY(result.landingRollByAtmosphereMeters)],
-      [528, chartRollY(result.landingRollByAtmosphereMeters)],
-      [chartMassX(inputs.massKg), chartRollY(result.landingRollByMassMeters)],
-      [776, chartRollY(result.landingRollByMassMeters)],
+      [chartTemperatureX(inputs.oatC), chartRollY(result.landingRollByAtmosphereChartMeters)],
+      [528, chartRollY(result.landingRollByAtmosphereChartMeters)],
+      [chartMassX(inputs.massKg), chartRollY(result.landingRollByMassChartMeters)],
+      [776, chartRollY(result.landingRollByMassChartMeters)],
       windPoint,
-      [1000, chartRollY(result.landingRollByWindMeters)],
+      [1000, chartRollY(result.landingRollByWindChartMeters)],
       ...obstaclePoints,
     ];
   }

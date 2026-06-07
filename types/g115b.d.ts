@@ -111,8 +111,11 @@ declare namespace G115B {
   interface LandingResult {
     warnings: Warning[];
     atmosphere: Atmosphere;
+    landingRollByAtmosphereChartMeters: number;
     landingRollByAtmosphereMeters: number;
+    landingRollByMassChartMeters: number;
     landingRollByMassMeters: number;
+    landingRollByWindChartMeters: number;
     landingRollByWindMeters: number;
     landingRollMarginMeters: number;
     landingRollMeters: number;

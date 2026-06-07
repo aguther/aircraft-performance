@@ -57,18 +57,26 @@
     const windKmh = core.knotsToKilometersPerHour(inputs.windKt);
     const atmosphere = core.densityAltitude(inputs.pressureAltitudeFt, inputs.oatC);
     const approachSpeedKmh = core.interpolate1D(pageData.approachSpeedMassBreakpoints, pageData.approachSpeedKmh, inputs.massKg);
-    const step1LandingRollMeters = core.lookup2D(pageData.landingRollFromAtmosphere, inputs.pressureAltitudeFt, inputs.oatC);
-    const step2LandingRollMeters = core.lookup2D(pageData.landingRollFromMass, step1LandingRollMeters, inputs.massKg);
+    const publishedLandingRoll = (chartRollMeters) => core.interpolate1D(
+      pageData.publishedLandingRoll.chartRollBreakpoints,
+      pageData.publishedLandingRoll.landingRollMeters,
+      chartRollMeters
+    );
+    const step1LandingRollChartMeters = core.lookup2D(pageData.landingRollFromAtmosphere, inputs.pressureAltitudeFt, inputs.oatC);
+    const step2LandingRollChartMeters = core.lookup2D(pageData.landingRollFromMass, step1LandingRollChartMeters, inputs.massKg);
     const windCorrection = windKmh < 0
       ? pageData.landingRollFromTailwind
       : pageData.landingRollFromHeadwind;
-    const step3LandingRollMeters = Math.max(0, core.lookup2D(windCorrection, step2LandingRollMeters, windKmh));
+    const step3LandingRollChartMeters = Math.max(0, core.lookup2D(windCorrection, step2LandingRollChartMeters, windKmh));
+    const step1LandingRollMeters = publishedLandingRoll(step1LandingRollChartMeters);
+    const step2LandingRollMeters = publishedLandingRoll(step2LandingRollChartMeters);
+    const step3LandingRollMeters = publishedLandingRoll(step3LandingRollChartMeters);
     const landingRollMarginMeters = step3LandingRollMeters * (inputs.safetyMarginPercent / 100);
     const landingRollWithMarginMeters = step3LandingRollMeters + landingRollMarginMeters;
     const landingDistanceWithoutMarginMeters = core.interpolate1D(
       pageData.landingDistanceOver15m.landingRollBreakpoints,
       pageData.landingDistanceOver15m.landingDistanceMeters,
-      step3LandingRollMeters
+      step3LandingRollChartMeters
     );
     const landingDistanceMeters = landingDistanceWithoutMarginMeters + landingRollMarginMeters;
 
@@ -80,15 +88,18 @@
     if (inputs.windKt < -5) warnings.push({ text: "Rückenwind überschreitet AFM-Grenzwert.", danger: false });
     if (windKmh < -20 || windKmh > 40) warnings.push({ text: "Wind ausserhalb Diagrammbereich (20 km/h Rückenwind bis 40 km/h Gegenwind).", danger: false });
     const obstacleChartMaximumRollMeters = pageData.landingDistanceOver15m.maximumDigitizedLandingRollMeters;
-    if (step3LandingRollMeters > obstacleChartMaximumRollMeters) warnings.push({ text: "Landerollstrecke ausserhalb Hindernis-Diagrammbereich.", danger: true });
+    if (step3LandingRollChartMeters > obstacleChartMaximumRollMeters) warnings.push({ text: "Landerollstrecke ausserhalb Hindernis-Diagrammbereich.", danger: true });
     if (atmosphere.densityAltitudeFt > 8000) warnings.push({ text: `DA ${atmosphere.densityAltitudeFt.toLocaleString("de-DE")} ft ausserhalb nominalem Bereich.`, danger: true });
     else if (atmosphere.densityAltitudeFt > 5000) warnings.push({ text: `DA ${atmosphere.densityAltitudeFt.toLocaleString("de-DE")} ft: Gemisch verarmen (POH 4.11).`, danger: false });
 
     return {
       warnings,
       atmosphere,
+      landingRollByAtmosphereChartMeters: step1LandingRollChartMeters,
       landingRollByAtmosphereMeters: step1LandingRollMeters,
+      landingRollByMassChartMeters: step2LandingRollChartMeters,
       landingRollByMassMeters: step2LandingRollMeters,
+      landingRollByWindChartMeters: step3LandingRollChartMeters,
       landingRollByWindMeters: step3LandingRollMeters,
       landingRollMarginMeters,
       landingRollMeters: core.round(landingRollWithMarginMeters),

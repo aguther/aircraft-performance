@@ -154,9 +154,14 @@
       },
 
       landingDistanceOver15m: {
-        landingRollBreakpoints: [-32, 85, 172, 256, 330, 400], // landing roll m; lowest line enters through bottom edge
-        landingDistanceMeters: [192, 346, 500, 654, 788, 915], // fixed 15 m obstacle; 400 m endpoint extrapolates the printed family
+        landingRollBreakpoints: [-32, 85, 127, 172, 256, 330, 400], // chart roll coordinate; lowest line enters through bottom edge
+        landingDistanceMeters: [192, 346, 425, 500, 654, 788, 915], // fixed 15 m obstacle; includes the printed POH example
         maximumDigitizedLandingRollMeters: 330,
+      },
+
+      publishedLandingRoll: {
+        chartRollBreakpoints: [0, 101, 127, 195, 298, 400],
+        landingRollMeters: [0, 150, 175, 250, 350, 450],
       },
 
       approachSpeedMassBreakpoints: [700, 750, 800, 850, 920], // mass kg

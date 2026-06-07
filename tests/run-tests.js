@@ -100,8 +100,8 @@ test("landing calculator returns stable reference result", () => {
   });
 
   assert.equal(result.atmosphere.densityAltitudeFt, 3075);
-  assert.equal(result.landingRollMeters, 250);
-  assert.equal(result.landingDistanceMeters, 583);
+  assert.equal(result.landingRollMeters, 324);
+  assert.equal(result.landingDistanceMeters, 604);
   assert.equal(Math.round(result.approachSpeedKmh), 118);
 });
 
@@ -115,6 +115,46 @@ test("landing mass correction leaves the chart reference mass unchanged", () => 
   });
 
   assert.equal(result.landingRollByMassMeters, result.landingRollByAtmosphereMeters);
+});
+
+test("landing standard-day reference follows the published rollout scale", () => {
+  const result = calculators.calculateLanding({
+    pressureAltitudeFt: 7,
+    oatC: 15,
+    massKg: 920,
+    windKt: 0,
+    safetyMarginPercent: 0,
+  });
+
+  assert.equal(result.landingRollMeters, 250);
+  assert.equal(result.landingDistanceMeters, 542);
+});
+
+test("landing published rollout scale follows the lower chart region", () => {
+  assert.equal(
+    core.interpolate1D(
+      data.landing.publishedLandingRoll.chartRollBreakpoints,
+      data.landing.publishedLandingRoll.landingRollMeters,
+      101
+    ),
+    150
+  );
+});
+
+test("landing published rollout scale follows the upper chart region", () => {
+  [
+    [298, 350],
+    [400, 450],
+  ].forEach(([chartRollMeters, publishedRollMeters]) => {
+    assert.equal(
+      core.interpolate1D(
+        data.landing.publishedLandingRoll.chartRollBreakpoints,
+        data.landing.publishedLandingRoll.landingRollMeters,
+        chartRollMeters
+      ),
+      publishedRollMeters
+    );
+  });
 });
 
 test("landing mass and wind corrections interpolate along straight diagram lines", () => {
@@ -191,7 +231,7 @@ test("landing headwind correction stops at zero before the chart maximum when re
   });
 
   assert.equal(result.landingRollByWindMeters, 0);
-  assert.ok(core.lookup2D(data.landing.landingRollFromHeadwind, result.landingRollByMassMeters, 40) < 0);
+  assert.ok(core.lookup2D(data.landing.landingRollFromHeadwind, result.landingRollByMassChartMeters, 40) < 0);
 });
 
 test("landing atmosphere calibration follows sea level at 40 degrees Celsius", () => {
@@ -203,8 +243,8 @@ test("landing atmosphere calibration follows sea level at 40 degrees Celsius", (
     safetyMarginPercent: 0,
   });
 
-  assert.equal(result.landingRollByAtmosphereMeters, 212);
-  assert.equal(result.landingRollByMassMeters, 212);
+  assert.equal(Math.round(result.landingRollByAtmosphereMeters), 267);
+  assert.equal(result.landingRollByMassMeters, result.landingRollByAtmosphereMeters);
 });
 
 test("landing atmosphere calibration follows all pressure-altitude lines at minus 20 degrees Celsius", () => {
@@ -223,7 +263,7 @@ test("landing atmosphere calibration follows all pressure-altitude lines at minu
       safetyMarginPercent: 0,
     });
 
-    assert.equal(result.landingRollByAtmosphereMeters, expectedLandingRollMeters);
+    assert.equal(Math.round(result.landingRollByAtmosphereChartMeters), expectedLandingRollMeters);
   });
 });
 
@@ -246,8 +286,8 @@ test("landing calculator returns stable digitized-path reference values", () => 
     safetyMarginPercent: 0,
   });
 
-  assert.equal(result.landingRollMeters, 127);
-  assert.equal(result.landingDistanceMeters, 420);
+  assert.equal(result.landingRollMeters, 175);
+  assert.equal(result.landingDistanceMeters, 425);
   assert.equal(Math.round(result.approachSpeedKmh), 116);
 });
 
@@ -255,6 +295,7 @@ test("landing distance over 15 meters follows every digitized diagram line", () 
   [
     [-32, 192],
     [85, 346],
+    [127, 425],
     [172, 500],
     [256, 654],
     [330, 788],
