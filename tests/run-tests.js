@@ -339,11 +339,20 @@ test("cruise calculator returns stable RPM, fuel flow and TAS values", () => {
     densityAltitudeFt: 6000,
   });
 
-  assert.equal(Math.round(result.rpm), 2490);
+  assert.equal(Math.round(result.rpm), 2539);
   assert.equal(result.fuelFlowLitersPerHour, 28.8);
-  assert.equal(Math.round(result.tasKmh), 218);
-  assert.equal(result.tasKt.toFixed(1), "117.7");
+  assert.equal(Math.round(result.tasKmh), 212);
+  assert.equal(result.tasKt.toFixed(1), "114.5");
   assert.equal(result.powerLabel, "65%");
+});
+
+test("cruise RPM reproduces the POH chart example density altitude", () => {
+  const result = calculators.calculateCruise({
+    powerPercent: 65,
+    densityAltitudeFt: 5240,
+  });
+
+  assert.ok(Math.abs(result.rpm - 2520) <= 2);
 });
 
 test("climb rate calculator returns stable VY and ROC values", () => {

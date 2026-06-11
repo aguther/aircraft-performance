@@ -1,4 +1,4 @@
-const CACHE_NAME = "g115b-performance-v35";
+const CACHE_NAME = "g115b-performance-v41";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -31,6 +31,8 @@ const APP_SHELL = [
   "./js/pages/stall-page.js",
   "./assets/grob115b-takeoff-chart.png",
   "./assets/grob115b-landing-chart.png",
+  "./assets/grob115b-cruise-rpm-chart.png",
+  "./assets/grob115b-cruise-speed-chart.png",
   "./icons/icon-192-v2.png",
   "./icons/icon-512-v2.png",
   "./icons/apple-touch-icon-v2.png",
