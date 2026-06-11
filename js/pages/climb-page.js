@@ -71,7 +71,7 @@
   }
 
   function addAxisMarker(svg, x, y, color) {
-    svg.append(svgElement("circle", { class: "climb-chart-point", cx: x, cy: y, r: 5, fill: color, stroke: "#ffffff", "stroke-width": 2 }));
+    svg.append(svgElement("circle", { class: "climb-chart-point", cx: x, cy: y, r: 5, fill: color, stroke: "#ffffff", "stroke-width": 0 }));
   }
 
   function createClimbOverlay(inputs, result) {
