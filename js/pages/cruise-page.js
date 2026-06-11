@@ -55,9 +55,16 @@
     const pressureAltitudeFt = resolvePressureAltitudeFt(elements);
     const oatC = readNumberValue(elements.oat, DEFAULT_OAT_C);
     const atmosphere = core.densityAltitude(pressureAltitudeFt, oatC);
+    const altitudeInputs = currentMode === "alt"
+      ? {
+          altitudeFt: readNumberValue(elements.altitude, DEFAULT_ALTITUDE_FT),
+          qnhHpa: readNumberValue(elements.qnh, DEFAULT_QNH_HPA),
+        }
+      : { flightLevel: readNumberValue(elements.flightLevel, DEFAULT_FLIGHT_LEVEL) };
 
     return {
       mode: currentMode,
+      ...altitudeInputs,
       pressureAltitudeFt,
       oatC,
       densityAltitudeFt: atmosphere.densityAltitudeFt,
@@ -128,16 +135,121 @@
     });
   }
 
-  async function downloadChart(chart, trace, fileName, button) {
+  function canvasToBlob(canvas) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("PNG konnte nicht erzeugt werden.")), "image/png");
+    });
+  }
+
+  function drawExportText(context, text, x, y, options = {}) {
+    context.fillStyle = options.color || "#152235";
+    context.font = `${options.weight || 400} ${options.size || 28}px Arial, sans-serif`;
+    context.fillText(text, x, y);
+  }
+
+  function drawExportField(context, label, value, x, y, width, options = {}) {
+    const disabled = options.disabled === true;
+    context.fillStyle = disabled ? "#f1f3f5" : "#f7fafc";
+    context.strokeStyle = disabled ? "#aeb6bd" : "#9aafc0";
+    context.lineWidth = 2;
+    context.setLineDash(disabled ? [10, 7] : []);
+    context.beginPath();
+    context.roundRect(x, y, width, 116, 18);
+    context.fill();
+    context.stroke();
+    context.setLineDash([]);
+    drawExportText(context, label.toUpperCase(), x + 24, y + 39, { size: 21, weight: 700, color: disabled ? "#7d878f" : "#607487" });
+    drawExportText(context, value, x + 24, y + 87, { size: disabled ? 28 : 34, weight: 700, color: disabled ? "#7d878f" : "#152235" });
+  }
+
+  function utcTimestamp(date) {
+    return date.toISOString().replace("T", " ").replace(/:/g, "-").slice(0, 19);
+  }
+
+  function inputAltitudeFields(inputs) {
+    if (inputs.mode === "alt") {
+      return [
+        ["Höhenmodus", "Altitude"],
+        ["Flughöhe", `${inputs.altitudeFt.toLocaleString("de-DE")} ft`],
+        ["QNH", `${inputs.qnhHpa.toLocaleString("de-DE")} hPa`],
+        ["Druckhöhe", `${inputs.pressureAltitudeFt.toLocaleString("de-DE")} ft`],
+      ];
+    }
+    if (inputs.mode === "fl") {
+      return [
+        ["Höhenmodus", "Flight Level"],
+        ["Flight Level", `FL ${inputs.flightLevel}`],
+        ["Druckhöhe", `${inputs.pressureAltitudeFt.toLocaleString("de-DE")} ft`],
+        ["QNH", "Nicht anwendbar", true],
+      ];
+    }
+    return [
+      ["Höhenmodus", "Density Altitude"],
+      ["Density Altitude", `${inputs.densityAltitudeFt.toLocaleString("de-DE")} ft`],
+      ["Druckhöhe", "Nicht bereitgestellt", true],
+      ["QNH", "Nicht bereitgestellt", true],
+    ];
+  }
+
+  function drawCruiseExportHeader(context, inputs, chart, timestamp) {
+    const margin = 96;
+    const gap = 32;
+    const fieldWidth = (chart.width - margin * 2 - gap * 3) / 4;
+    const altitudeFields = inputAltitudeFields(inputs);
+
+    drawExportText(context, `${timestamp}Z – Grob G115B Reiseflugberechnung`, margin, 76, { size: 46, weight: 700 });
+    drawExportText(context, chart.title, margin, 126, { size: 28, weight: 600, color: "#526274" });
+    drawExportText(context, "Eingangswerte", margin, 188, { size: 30, weight: 700, color: "#006f9f" });
+    altitudeFields.forEach(([label, value, disabled], index) => {
+      drawExportField(context, label, value, margin + index * (fieldWidth + gap), 212, fieldWidth, { disabled });
+    });
+
+    drawExportField(
+      context,
+      "OAT",
+      inputs.mode === "da" ? "Nicht bereitgestellt" : `${inputs.oatC.toLocaleString("de-DE")} °C`,
+      margin,
+      352,
+      fieldWidth,
+      { disabled: inputs.mode === "da" }
+    );
+    drawExportField(context, "Leistung", inputs.powerPercent >= 100 ? "Vollgas" : `${inputs.powerPercent}%`, margin + fieldWidth + gap, 352, fieldWidth);
+    drawExportField(context, "Density Altitude", `${inputs.densityAltitudeFt.toLocaleString("de-DE")} ft`, margin + 2 * (fieldWidth + gap), 352, fieldWidth);
+    drawExportField(
+      context,
+      "ISA-Abweichung",
+      inputs.mode === "da" ? "Nicht berechnet" : `${core.formatSigned(inputs.isaDeviationC, 1)} °C`,
+      margin + 3 * (fieldWidth + gap),
+      352,
+      fieldWidth,
+      { disabled: inputs.mode === "da" }
+    );
+
+    drawExportText(context, "Ergebnis", margin, 528, { size: 30, weight: 700, color: "#006f9f" });
+    drawExportField(context, chart.exportResultLabel, chart.exportResultValue, margin, 552, fieldWidth * 2 + gap);
+    if (chart.exportSecondaryLabel) {
+      drawExportField(context, chart.exportSecondaryLabel, chart.exportSecondaryValue, margin + 2 * (fieldWidth + gap), 552, fieldWidth * 2 + gap);
+    }
+  }
+
+  async function downloadChart(inputs, chart, trace, button) {
     button.disabled = true;
     button.textContent = "Erzeuge PNG…";
     try {
+      const exportDate = new Date();
+      const timestamp = utcTimestamp(exportDate);
+      const headerHeight = 720;
       const image = await loadImage(chart.source);
       const canvas = document.createElement("canvas");
       canvas.width = chart.width;
-      canvas.height = chart.height;
+      canvas.height = headerHeight + chart.height;
       const context = canvas.getContext("2d");
-      context.drawImage(image, 0, 0);
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      drawCruiseExportHeader(context, inputs, chart, timestamp);
+      context.drawImage(image, 0, headerHeight);
+      context.save();
+      context.translate(0, headerHeight);
       context.strokeStyle = "#e90000";
       context.fillStyle = "#e90000";
       context.lineWidth = Math.max(4, chart.width / 700);
@@ -151,19 +263,19 @@
         context.arc(x, y, markerRadius(chart), 0, Math.PI * 2);
         context.fill();
       });
-      canvas.toBlob((pngBlob) => {
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(pngBlob);
-        link.download = fileName;
-        link.click();
-        window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-        button.disabled = false;
-        button.textContent = "Als Bild speichern";
-      }, "image/png");
-    } catch (error) {
+      context.restore();
+
+      const pngBlob = await canvasToBlob(canvas);
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(pngBlob);
+      link.download = `${timestamp}Z Grob G115B ${chart.fileName}.png`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    } finally {
       button.disabled = false;
       button.textContent = "Als Bild speichern";
-      throw error;
     }
   }
 
@@ -199,7 +311,7 @@
       attrs: { type: "button" },
     });
     downloadButton.addEventListener("click", () => {
-      downloadChart(chart, trace, `Grob G115B ${chart.fileName}.png`, downloadButton).catch(console.error);
+      downloadChart(inputs, chart, trace, downloadButton).catch(console.error);
     });
 
     return ui.el(
@@ -276,14 +388,26 @@
         temperaturePixels: [675, 843, 1011, 1179, 1347, 1515, 1682, 1849],
         temperatureBottomPixel: 2253,
         resultBottomPixel: 2253,
-        altitudeValues: [0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000],
-        altitudePixels: [2253, 2083, 1916, 1746, 1579, 1409, 1236, 1068, 899, 731, 563],
-        densityAxisPixels: [675, 675, 675, 675, 675, 675, 675, 675, 675, 675, 675],
-        resultEntryPixels: [1798, 1798, 1798, 1798, 1798, 1798, 1798, 1798, 1798, 1798, 1798],
+        altitudeValues: [
+          0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000,
+        ],
+        altitudePixels: [
+          2253, 2083, 1916, 1746, 1579, 1409, 1236, 1068, 899, 731, 563,
+        ],
+        densityAxisPixels: [
+          675, 675, 675, 675, 675, 675, 675, 675, 675, 675, 675,
+        ],
+        resultEntryPixels: [
+          1798, 1798, 1798, 1798, 1798, 1798, 1798, 1798, 1798, 1798, 1798,
+        ],
         resultValues: [170, 180, 190, 200, 210, 220, 230, 240, 250, 260],
-        resultPixels: [1948, 2112, 2276, 2440, 2604, 2768, 2932, 3096, 3260, 3423],
+        resultPixels: [
+          1948, 2112, 2276, 2440, 2604, 2768, 2932, 3096, 3260, 3423,
+        ],
         value: result.tasKmh,
         resultText: `${Math.round(result.tasKmh)} km/h · ${result.tasKt.toFixed(1)} kt TAS`,
+        exportResultLabel: "Wahre Fluggeschwindigkeit · TAS",
+        exportResultValue: `${result.tasKt.toFixed(1)} kt  /  ${Math.round(result.tasKmh)} km/h`,
       }),
       createCruiseChart(inputs, {
         kind: "rpm",
@@ -297,15 +421,29 @@
         temperaturePixels: [696, 863, 1032, 1197, 1365, 1534, 1703, 1879],
         temperatureBottomPixel: 2185,
         resultBottomPixel: 2191,
-        altitudeValues: [0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000],
-        altitudePixels: [2181, 2012, 1843, 1673, 1507, 1340, 1166, 997, 830, 662, 494],
-        densityAxisPixels: [696, 696, 696, 696, 696, 696, 696, 696, 696, 696, 696],
-        resultEntryPixels: [1852, 1852, 1852, 1852, 1852, 1852, 1852, 1852, 1852, 1852, 1852],
-        resultValues: [2000, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000],
-        resultPixels: [2010, 2152, 2292, 2436, 2580, 2724, 2867, 3012, 3152, 3296, 3440],
+        altitudeValues: [
+          0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000,
+        ],
+        altitudePixels: [
+          2181, 2012, 1843, 1673, 1507, 1340, 1166, 997, 830, 662, 494,
+        ],
+        densityAxisPixels: [
+          696, 696, 696, 696, 696, 696, 696, 696, 696, 696, 696,
+        ],
+        resultEntryPixels: [
+          1852, 1852, 1852, 1852, 1852, 1852, 1852, 1852, 1852, 1852, 1852,
+        ],
+        resultValues: [
+          2000, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000,
+        ],
+        resultPixels: [
+          2010, 2152, 2292, 2436, 2580, 2724, 2867, 3012, 3152, 3296, 3440,
+        ],
         value: result.rpm,
         resultText: `${Math.round(result.rpm)} rpm`,
-      })
+        exportResultLabel: "Drehzahl",
+        exportResultValue: `${Math.round(result.rpm)} rpm`,
+      }),
     );
 
     ui.replaceContent(elements.resultRoot, nodes);
