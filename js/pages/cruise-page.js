@@ -266,13 +266,19 @@
       context.restore();
 
       const pngBlob = await canvasToBlob(canvas);
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(pngBlob);
-      link.download = `${timestamp}Z Grob G115B ${chart.fileName}.png`;
-      document.body.append(link);
-      link.click();
-      link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      const fileName = `${timestamp}Z Grob G115B ${chart.fileName}.png`;
+      const file = new File([pngBlob], fileName, { type: "image/png" });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: `Grob G115B ${chart.fileName}` });
+      } else {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(pngBlob);
+        link.download = fileName;
+        document.body.append(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      }
     } finally {
       button.disabled = false;
       button.textContent = "Als Bild speichern";
