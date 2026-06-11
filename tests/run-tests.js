@@ -375,6 +375,11 @@ test("climb calculator rejects inverted altitude ranges", () => {
 
   assert.equal(result.error.text, "Ziel-Dichtehöhe muss größer als Start-Dichtehöhe sein.");
   assert.equal(result.error.danger, true);
+  assert.equal(result.climbTimeMinutes, null);
+  assert.equal(result.climbFuelLiters, null);
+  assert.equal(result.climbDistanceKm, null);
+  assert.equal(result.departureCumulative.timeMinutes.toFixed(1), "3.9");
+  assert.equal(result.destinationCumulative.timeMinutes.toFixed(1), "3.0");
 });
 
 test("climb calculator returns stable delta values", () => {
@@ -385,8 +390,30 @@ test("climb calculator returns stable delta values", () => {
 
   assert.equal(result.climbTimeMinutes.toFixed(1), "7.0");
   assert.equal(result.climbFuelLiters.toFixed(1), "5.1");
-  assert.equal(result.climbDistanceKm.toFixed(1), "16.7");
-  assert.equal(result.climbDistanceNm.toFixed(1), "9.0");
+  assert.equal(result.climbDistanceKm.toFixed(1), "17.2");
+  assert.equal(result.climbDistanceNm.toFixed(1), "9.3");
+});
+
+test("climb calculator reproduces the POH chart example", () => {
+  const result = calculators.calculateClimb({
+    departureDensityAltitudeFt: 3000,
+    destinationDensityAltitudeFt: 8000,
+  });
+
+  assert.equal(result.climbTimeMinutes.toFixed(1), "6.0");
+  assert.equal(result.climbFuelLiters.toFixed(1), "4.4");
+  assert.equal(result.climbDistanceKm.toFixed(1), "14.8");
+});
+
+test("climb calculator follows the separately calibrated chart axes", () => {
+  const result = calculators.calculateClimb({
+    departureDensityAltitudeFt: 0,
+    destinationDensityAltitudeFt: 18300,
+  });
+
+  assert.equal(result.climbTimeMinutes.toFixed(1), "40.0");
+  assert.equal(result.climbFuelLiters.toFixed(1), "22.0");
+  assert.equal(result.climbDistanceKm.toFixed(1), "100.0");
 });
 
 test("range calculator returns stable range values", () => {

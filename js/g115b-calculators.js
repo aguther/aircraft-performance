@@ -152,42 +152,44 @@
   }
 
   function calculateClimbProfilePoint(densityAltitudeFt) {
-    const climbProfile = data.climb.cumulativeClimbPerformance;
-    if (densityAltitudeFt <= 0) return { timeMinutes: 0, fuelLiters: 0, distanceKm: 0 };
-    const lastEntry = climbProfile[climbProfile.length - 1];
-    if (densityAltitudeFt >= lastEntry[0]) return { timeMinutes: lastEntry[1], fuelLiters: lastEntry[2], distanceKm: lastEntry[3] };
-
-    for (let index = 0; index < climbProfile.length - 1; index += 1) {
-      const [leftDa, leftTime, leftFuel, leftDistance] = climbProfile[index];
-      const [rightDa, rightTime, rightFuel, rightDistance] = climbProfile[index + 1];
-      if (densityAltitudeFt >= leftDa && densityAltitudeFt <= rightDa) {
-        const ratio = (densityAltitudeFt - leftDa) / (rightDa - leftDa);
-        return {
-          timeMinutes: leftTime + ratio * (rightTime - leftTime),
-          fuelLiters: leftFuel + ratio * (rightFuel - leftFuel),
-          distanceKm: leftDistance + ratio * (rightDistance - leftDistance),
-        };
-      }
-    }
-    return { timeMinutes: 0, fuelLiters: 0, distanceKm: 0 };
+    const axes = data.climb.chartAxes;
+    const curve = data.climb.chartCurve;
+    const valuesAtPixel = (pixelX) => {
+      return {
+        chartPixelX: pixelX,
+        timeMinutes: core.interpolate1D(axes.timeMinutes.pixels, axes.timeMinutes.values, pixelX),
+        fuelLiters: core.interpolate1D(axes.fuelLiters.pixels, axes.fuelLiters.values, pixelX),
+        distanceKm: core.interpolate1D(axes.distanceKm.pixels, axes.distanceKm.values, pixelX),
+      };
+    };
+    const boundedDensityAltitudeFt = Math.min(
+      curve.densityAltitudeFt[curve.densityAltitudeFt.length - 1],
+      Math.max(curve.densityAltitudeFt[0], densityAltitudeFt)
+    );
+    return valuesAtPixel(core.interpolate1D(curve.densityAltitudeFt, curve.pixels, boundedDensityAltitudeFt));
   }
 
   function calculateClimb(inputs) {
-    if (inputs.destinationDensityAltitudeFt <= inputs.departureDensityAltitudeFt) {
-      return { error: { text: "Ziel-Dichtehöhe muss größer als Start-Dichtehöhe sein.", danger: true } };
-    }
-
+    const chartCurve = data.climb.chartCurve;
+    const chartMaximumDensityAltitudeFt = chartCurve.densityAltitudeFt[chartCurve.densityAltitudeFt.length - 1];
     const departureCumulative = calculateClimbProfilePoint(inputs.departureDensityAltitudeFt);
     const destinationCumulative = calculateClimbProfilePoint(inputs.destinationDensityAltitudeFt);
-    const climbDistanceKm = destinationCumulative.distanceKm - departureCumulative.distanceKm;
+    const validAltitudeRange = inputs.destinationDensityAltitudeFt > inputs.departureDensityAltitudeFt;
+    const climbDistanceKm = validAltitudeRange ? destinationCumulative.distanceKm - departureCumulative.distanceKm : null;
+    const warnings = [];
+    if (inputs.departureDensityAltitudeFt < 0) warnings.push({ text: "Start-DA liegt unterhalb des Diagrammbereichs und wird bei 0 ft begrenzt.", danger: false });
+    if (inputs.destinationDensityAltitudeFt > chartMaximumDensityAltitudeFt) warnings.push({ text: `Ziel-DA liegt oberhalb des Diagrammbereichs und wird bei ${chartMaximumDensityAltitudeFt.toLocaleString("de-DE")} ft begrenzt.`, danger: true });
 
     return {
+      error: validAltitudeRange ? null : { text: "Ziel-Dichtehöhe muss größer als Start-Dichtehöhe sein.", danger: true },
       departureCumulative,
       destinationCumulative,
-      climbTimeMinutes: destinationCumulative.timeMinutes - departureCumulative.timeMinutes,
-      climbFuelLiters: destinationCumulative.fuelLiters - departureCumulative.fuelLiters,
+      climbTimeMinutes: validAltitudeRange ? destinationCumulative.timeMinutes - departureCumulative.timeMinutes : null,
+      climbFuelLiters: validAltitudeRange ? destinationCumulative.fuelLiters - departureCumulative.fuelLiters : null,
       climbDistanceKm,
-      climbDistanceNm: climbDistanceKm / core.KMH_PER_KT,
+      climbDistanceNm: validAltitudeRange ? climbDistanceKm / core.KMH_PER_KT : null,
+      chartMaximumDensityAltitudeFt,
+      warnings,
       conditions: ["Vollgas", "Gemisch für größte Leistung", "Klappen 0°", "V = VY", "Standardatmosphäre", "Max. Abfluggewicht · vorderste SL"],
     };
   }
