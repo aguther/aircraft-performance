@@ -99,6 +99,14 @@
     return Math.max(9, chart.width / 350);
   }
 
+  function exportLineWidth(chart) {
+    return chart.width * (5 / 1516);
+  }
+
+  function exportMarkerRadius(chart) {
+    return chart.width * (6 / 1516);
+  }
+
   function createTracePoints(inputs, outputValue, chart) {
     const resultX = axisPosition(outputValue, chart.resultValues, chart.resultPixels);
     const y = axisPosition(inputs.densityAltitudeFt, chart.altitudeValues, chart.altitudePixels);
@@ -252,15 +260,15 @@
       context.translate(0, headerHeight);
       context.strokeStyle = "#e90000";
       context.fillStyle = "#e90000";
-      context.lineWidth = Math.max(4, chart.width / 700);
-      context.lineCap = "butt";
+      context.lineWidth = exportLineWidth(chart);
+      context.lineCap = "round";
       context.lineJoin = "round";
       context.beginPath();
       trace.linePoints.forEach(([x, y], index) => index === 0 ? context.moveTo(x, y) : context.lineTo(x, y));
       context.stroke();
       trace.markerPoints.forEach(([x, y]) => {
         context.beginPath();
-        context.arc(x, y, markerRadius(chart), 0, Math.PI * 2);
+        context.arc(x, y, exportMarkerRadius(chart), 0, Math.PI * 2);
         context.fill();
       });
       context.restore();
