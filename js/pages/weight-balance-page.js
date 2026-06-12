@@ -209,9 +209,9 @@
       ui.createCard("Envelope", createEnvelopeChart(result)),
       ui.createGridCard("Geschwindigkeiten", "speed-grid", [
         createSpeedMetric("VR · Rotate", result.speeds.rotateSpeedKmh),
-        createSpeedMetric("Geschw. 15 m Höhe", result.speeds.speedAt15mKmh),
+        createSpeedMetric("in 15 m Höhe", result.speeds.speedAt15mKmh),
         createSpeedMetric("VAPP · Approach", result.speeds.approachSpeedKmh),
-        createSpeedMetric("VREF · 1,3 × VS0", result.speeds.referenceSpeedKmh),
+        createSpeedMetric("VREF · 1.3 × VS0", result.speeds.referenceSpeedKmh),
         createSpeedMetric("VS0 Leerlauf 40°", result.speeds.stallIdleFlaps40Kmh),
       ]),
       ui.createCard("Beladung", createBreakdownTable(result)),

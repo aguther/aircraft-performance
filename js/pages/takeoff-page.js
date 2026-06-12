@@ -408,7 +408,7 @@
           labelClassName: "speed-item-label",
           valueClassName: "speed-item-value",
           subtextClassName: "speed-item-sub",
-          label: "Geschw. 15 m Höhe",
+          label: "in 15 m Höhe",
           value: core.kilometersPerHourToKnots(result.speedAt15mKmh).toFixed(1),
           unit: "kt",
           speedType: "IAS",

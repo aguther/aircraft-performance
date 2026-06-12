@@ -445,7 +445,7 @@
           labelClassName: "speed-item-label",
           valueClassName: "speed-item-value",
           subtextClassName: "speed-item-sub",
-          label: "VREF · 1,3 × VS0",
+          label: "VREF · 1.3 × VS0",
           value: core.kilometersPerHourToKnots(result.referenceSpeedKmh).toFixed(1),
           unit: "kt",
           speedType: "IAS",
