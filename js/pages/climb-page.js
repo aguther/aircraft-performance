@@ -226,28 +226,56 @@
     return ui.el(
       "div",
       { className: "card takeoff-chart-card climb-chart-card" },
-      ui.el("div", { className: "takeoff-chart-header" },
-        ui.el("div", { className: "card-title", text: "Grafische Nachvollziehbarkeit" }),
-        ui.el("div", { className: "takeoff-chart-actions" },
-          ui.el("label", { className: "takeoff-chart-toggle" }, toggle, ui.el("span", { text: "Rechenweg" })),
-          downloadButton
-        )
+      ui.el(
+        "div",
+        { className: "takeoff-chart-header" },
+        ui.el("div", {
+          className: "card-title",
+          text: "Grafische Nachvollziehbarkeit",
+        }),
+        ui.el(
+          "div",
+          { className: "takeoff-chart-actions" },
+          ui.el(
+            "label",
+            { className: "takeoff-chart-toggle" },
+            toggle,
+            ui.el("span", { text: "Rechenweg" }),
+          ),
+          downloadButton,
+        ),
       ),
       ui.el("div", { className: "climb-chart-scroll" }, chartStage),
-      ui.el("div", { className: "climb-chart-results" },
-        ui.el("div", { className: "climb-chart-result start" },
+      ui.el(
+        "div",
+        { className: "climb-chart-results" },
+        ui.el(
+          "div",
+          { className: "climb-chart-result start" },
           ui.el("strong", { text: "Start · kumulativ" }),
-          ui.el("span", { text: `${result.departureCumulative.timeMinutes.toFixed(1)} min · ${result.departureCumulative.fuelLiters.toFixed(1)} l · ${result.departureCumulative.distanceKm.toFixed(1)} km` })
+          ui.el("span", {
+            text: `${result.departureCumulative.timeMinutes.toFixed(1)} min · ${result.departureCumulative.fuelLiters.toFixed(1)} l · ${result.departureCumulative.distanceKm.toFixed(1)} km`,
+          }),
         ),
-        ui.el("div", { className: "climb-chart-result delta" },
+        ui.el(
+          "div",
+          { className: "climb-chart-result delta" },
           ui.el("strong", { text: "Steigflug · Differenz" }),
-          ui.el("span", { text: hasResult ? `${result.climbTimeMinutes.toFixed(1)} min · ${result.climbFuelLiters.toFixed(1)} l · ${result.climbDistanceKm.toFixed(1)} km` : "—" })
+          ui.el("span", {
+            text: hasResult
+              ? `${result.climbTimeMinutes.toFixed(1)} min · ${result.climbFuelLiters.toFixed(1)} l · ${result.climbDistanceKm.toFixed(1)} km · ${result.climbDistanceNm.toFixed(1)} nm`
+              : "—",
+          }),
         ),
-        ui.el("div", { className: "climb-chart-result destination" },
+        ui.el(
+          "div",
+          { className: "climb-chart-result destination" },
           ui.el("strong", { text: "Ziel · kumulativ" }),
-          ui.el("span", { text: `${result.destinationCumulative.timeMinutes.toFixed(1)} min · ${result.destinationCumulative.fuelLiters.toFixed(1)} l · ${result.destinationCumulative.distanceKm.toFixed(1)} km` })
-        )
-      )
+          ui.el("span", {
+            text: `${result.destinationCumulative.timeMinutes.toFixed(1)} min · ${result.destinationCumulative.fuelLiters.toFixed(1)} l · ${result.destinationCumulative.distanceKm.toFixed(1)} km`,
+          }),
+        ),
+      ),
     );
   }
 

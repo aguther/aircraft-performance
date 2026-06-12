@@ -274,32 +274,6 @@
       },
     },
 
-    range: {
-      source: "POH 5.3.13",
-
-      rangeTable: {
-        rowBreakpoints: [45, 55, 65, 75], // power percent
-        columnBreakpoints: [
-          0, 2000, 4000, 6000, 8000, 10000, 12000, 16000, 20000,
-        ], // density altitude ft
-        values: [
-          // DA ft:    0  2000  4000  6000  8000 10000 12000 16000 20000
-          /* 45% */ [785, 793, 800, 808, 816, 824, 831, 843, 853],
-          /* 55% */ [710, 718, 727, 736, 745, 754, 762, 774, 783],
-          /* 65% */ [635, 643, 652, 660, 669, 677, 684, 694, 702],
-          /* 75% */ [575, 583, 591, 599, 608, 616, 616, 616, 616],
-        ], // km
-      },
-    },
-
-    endurance: {
-      source: "POH 5.3.14",
-      fuelFlowPowerBreakpoints: [45, 55, 65, 75], // power percent
-      fuelFlowLitersPerHour: [20.4, 24.2, 28.8, 33.3], // l/h
-      reserveHours: 0.75,
-      maximumUsableFuelLiters: 107,
-    },
-
     stall: {
       source: "POH 5.3.4",
       massBreakpoints: [750, 800, 850, 900, 920], // mass kg

@@ -176,32 +176,6 @@ declare namespace G115B {
     conditions: string[];
   }
 
-  interface RangeInputs {
-    powerPercent: number;
-    densityAltitudeFt: number;
-  }
-
-  interface RangeResult {
-    warnings: Warning[];
-    rangeKm: number;
-    rangeNm: number;
-    note: string;
-  }
-
-  interface EnduranceInputs {
-    fuelLiters: number;
-    powerPercent: number;
-  }
-
-  interface EnduranceResult {
-    warnings: Warning[];
-    fuelFlowLitersPerHour: number;
-    reserveFuelLiters: number;
-    enduranceHoursTotal: number;
-    enduranceHoursWithReserve: number;
-    usableFuelLiters: number;
-  }
-
   interface StallInputs {
     massKg: number;
     powerMode: "leerlauf" | "vollast";
@@ -248,8 +222,6 @@ declare namespace G115B {
     calculateCruise(inputs: CruiseInputs): CruiseResult;
     calculateClimbRate(inputs: ClimbRateInputs): ClimbRateResult;
     calculateClimb(inputs: ClimbInputs): ClimbResult;
-    calculateRange(inputs: RangeInputs): RangeResult;
-    calculateEndurance(inputs: EnduranceInputs): EnduranceResult;
     calculateStall(inputs: StallInputs): StallResult;
     calculateWeightBalance(inputs: WeightBalanceInputs): WeightBalanceResult;
   }

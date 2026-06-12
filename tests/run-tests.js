@@ -488,29 +488,6 @@ test("climb calculator follows the separately calibrated chart axes", () => {
   assert.equal(result.climbDistanceKm.toFixed(1), "100.0");
 });
 
-test("range calculator returns stable range values", () => {
-  const result = calculators.calculateRange({
-    powerPercent: 55,
-    densityAltitudeFt: 8000,
-  });
-
-  assert.equal(Math.round(result.rangeKm), 745);
-  assert.equal(Math.round(result.rangeNm), 402);
-  assert.equal(result.warnings.length, 0);
-});
-
-test("endurance calculator returns stable endurance and reserve values", () => {
-  const result = calculators.calculateEndurance({
-    fuelLiters: 70,
-    powerPercent: 55,
-  });
-
-  assert.equal(result.fuelFlowLitersPerHour, 24.2);
-  assert.equal(result.reserveFuelLiters.toFixed(2), "18.15");
-  assert.equal(result.enduranceHoursTotal.toFixed(2), "2.89");
-  assert.equal(result.enduranceHoursWithReserve.toFixed(2), "2.14");
-});
-
 test("stall calculator returns stable IAS values", () => {
   const result = calculators.calculateStall({
     massKg: 850,

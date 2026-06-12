@@ -206,39 +206,6 @@
     };
   }
 
-  function calculateRange(inputs) {
-    const rangeKm = core.lookup2D(data.range.rangeTable, inputs.powerPercent, inputs.densityAltitudeFt);
-    const warnings = [];
-    if (inputs.densityAltitudeFt > 20000) warnings.push({ text: "DA über 20.000 ft - außerhalb Diagrammbereich.", danger: true });
-    if (inputs.powerPercent >= 75 && inputs.densityAltitudeFt > 10000) warnings.push({ text: "75% Leistung: Diagrammlinie endet bei DA 10.000 ft.", danger: false });
-    return {
-      warnings,
-      rangeKm,
-      rangeNm: rangeKm / core.KMH_PER_KT,
-      note: "Die Reichweite beinhaltet die Kraftstoffmenge für Warmlaufen, Takeoff, Steigflug und die 45 min. Reserve für maximale Reichweite.",
-    };
-  }
-
-  function calculateEndurance(inputs) {
-    const pageData = data.endurance;
-    const fuelFlowLitersPerHour = core.interpolate1D(pageData.fuelFlowPowerBreakpoints, pageData.fuelFlowLitersPerHour, inputs.powerPercent);
-    const reserveFuelLiters = fuelFlowLitersPerHour * pageData.reserveHours;
-    const enduranceHoursTotal = inputs.fuelLiters / fuelFlowLitersPerHour;
-    const enduranceHoursWithReserve = Math.max(0, enduranceHoursTotal - pageData.reserveHours);
-    const usableFuelLiters = Math.max(0, inputs.fuelLiters - reserveFuelLiters);
-    const warnings = [];
-    if (inputs.fuelLiters > pageData.maximumUsableFuelLiters) warnings.push({ text: `Kraftstoffmenge überschreitet max. ausfliegbare Menge (${pageData.maximumUsableFuelLiters} l).`, danger: true });
-    if (inputs.fuelLiters < reserveFuelLiters) warnings.push({ text: `Kraftstoff reicht nicht für 45 min Reserve (${reserveFuelLiters.toFixed(1)} l benötigt).`, danger: true });
-    return {
-      warnings,
-      fuelFlowLitersPerHour,
-      reserveFuelLiters,
-      enduranceHoursTotal,
-      enduranceHoursWithReserve,
-      usableFuelLiters,
-    };
-  }
-
   function calculateStall(inputs) {
     const speedSeries = (() => {
       const speeds = data.stall.speedsKmh;
@@ -372,8 +339,6 @@
     calculateCruise,
     calculateClimbRate,
     calculateClimb,
-    calculateRange,
-    calculateEndurance,
     calculateStall,
     calculateWeightBalance,
   };
