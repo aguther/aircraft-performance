@@ -296,19 +296,44 @@
 
     stall: {
       source: "POH 5.3.4",
-      massBreakpoints: [750, 920], // mass kg
-      speedsKmh: {
+      massBreakpoints: [750, 800, 850, 900, 920], // mass kg
+      chart: {
+        width: 937,
+        height: 1367,
+        massValues: [750, 800, 850, 900, 950],
         fullPower: {
-          // mass kg: 750  920
-          flaps0: [79, 87], // km/h
-          flaps12: [74, 81], // km/h
-          flaps40: [73, 79], // km/h
+          massPixels: [199, 330, 460, 591, 721],
+          speedValues: [70, 75, 80, 85, 90],
+          speedPixels: [644, 547, 450, 354, 258],
+          linePixels: {
+            flaps0: [482, 434, 386, 337, 318],
+            flaps12: [578, 535, 491, 448, 431],
+            flaps40: [597, 559, 522, 485, 469],
+          },
         },
         idle: {
-          // mass kg: 750  920
-          flaps0: [89, 97], // km/h
-          flaps12: [86, 94], // km/h
-          flaps40: [82, 91], // km/h
+          massPixels: [211, 339, 466, 594, 722],
+          speedValues: [80, 85, 90, 95, 100],
+          speedPixels: [1117, 1019, 921, 824, 726],
+          linePixels: {
+            flaps0: [935, 892, 849, 806, 789],
+            flaps12: [1003, 957, 912, 866, 847],
+            flaps40: [1085, 1036, 986, 937, 918],
+          },
+        },
+      },
+      speedsKmh: {
+        fullPower: {
+          // mass kg: 750  800  850  900  920
+          flaps0: [78.4, 80.8, 83.4, 85.9, 86.9], // km/h
+          flaps12: [73.4, 75.6, 77.9, 80.1, 81.0], // km/h
+          flaps40: [72.4, 74.4, 76.3, 78.2, 79.0], // km/h
+        },
+        idle: {
+          // mass kg: 750  800  850  900  920
+          flaps0: [89.3, 91.4, 93.7, 96.0, 96.8], // km/h
+          flaps12: [85.8, 88.1, 90.4, 92.8, 93.8], // km/h
+          flaps40: [81.6, 84.3, 87.0, 89.3, 90.2], // km/h
         },
       },
     },

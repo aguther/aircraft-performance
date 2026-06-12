@@ -103,7 +103,7 @@ test("landing calculator returns stable reference result", () => {
   assert.equal(result.landingRollMeters, 324);
   assert.equal(result.landingDistanceMeters, 604);
   assert.equal(Math.round(result.approachSpeedKmh), 118);
-  assert.equal(result.referenceSpeedKmh.toFixed(1), "113.5");
+  assert.equal(result.referenceSpeedKmh.toFixed(1), "113.1");
 });
 
 test("landing mass correction leaves the chart reference mass unchanged", () => {
@@ -457,8 +457,31 @@ test("stall calculator returns stable IAS values", () => {
   });
 
   assert.equal(result.stallLabel, "VSO");
-  assert.equal(result.stallSpeedKmh.toFixed(1), "87.3");
-  assert.equal(result.stallSpeedKt.toFixed(1), "47.1");
+  assert.equal(result.stallSpeedKmh.toFixed(1), "87.0");
+  assert.equal(result.stallSpeedKt.toFixed(1), "47.0");
+  assert.equal(data.stall.chart.idle.linePixels.flaps40[2], 986);
+});
+
+test("stall calculator follows all calibrated POH chart lines", () => {
+  const cases = [
+    ["vollast", 0, 750, 78.4],
+    ["vollast", 0, 920, 86.9],
+    ["vollast", 12, 750, 73.4],
+    ["vollast", 12, 920, 81.0],
+    ["vollast", 40, 750, 72.4],
+    ["vollast", 40, 920, 79.0],
+    ["leerlauf", 0, 750, 89.3],
+    ["leerlauf", 0, 920, 96.8],
+    ["leerlauf", 12, 750, 85.8],
+    ["leerlauf", 12, 920, 93.8],
+    ["leerlauf", 40, 750, 81.6],
+    ["leerlauf", 40, 920, 90.2],
+  ];
+
+  cases.forEach(([powerMode, flapsDegrees, massKg, expectedKmh]) => {
+    const result = calculators.calculateStall({ massKg, powerMode, flapsDegrees });
+    assert.equal(result.stallSpeedKmh.toFixed(1), expectedKmh.toFixed(1));
+  });
 });
 
 test("weight and balance calculator returns stable loading result", () => {
@@ -477,8 +500,8 @@ test("weight and balance calculator returns stable loading result", () => {
   assert.equal(result.speeds.rotateSpeedKmh.toFixed(1), "91.2");
   assert.equal(result.speeds.speedAt15mKmh.toFixed(1), "117.6");
   assert.equal(result.speeds.approachSpeedKmh.toFixed(1), "116.8");
-  assert.equal(result.speeds.stallIdleFlaps40Kmh.toFixed(1), "86.3");
-  assert.equal(result.speeds.referenceSpeedKmh.toFixed(1), "112.2");
+  assert.equal(result.speeds.stallIdleFlaps40Kmh.toFixed(1), "86.0");
+  assert.equal(result.speeds.referenceSpeedKmh.toFixed(1), "111.7");
   assert.equal(result.speeds.referenceSpeedKmh, result.speeds.stallIdleFlaps40Kmh * 1.3);
 });
 
