@@ -1,4 +1,5 @@
 (function () {
+  const APP_RELEASE = "78";
   const THEME_STORAGE_KEY = "g115b-theme";
   const USAGE_NOTICE_STORAGE_KEY = "g115b-usage-notice-accepted";
   const THEME_AUTO = "auto";
@@ -226,6 +227,7 @@
             text: "Die Rechner unterstützen die Flugplanung. Maßgeblich bleiben das zugelassene AFM/POH und die Entscheidung des Piloten.",
             attrs: { id: "usageNoticeText" },
           }),
+          el("div", { className: "usage-notice-version", text: `App-Version ${APP_RELEASE}` }),
           el("button", {
             className: "usage-notice-confirm",
             text: "Verstanden",

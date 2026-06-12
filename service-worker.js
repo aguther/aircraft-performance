@@ -1,4 +1,7 @@
-const CACHE_NAME = "g115b-performance-v76";
+const RELEASE = "78";
+const CACHE_PREFIX = "g115b-performance-v";
+const CACHE_NAME = `${CACHE_PREFIX}${RELEASE}`;
+const versioned = (path) => `${path}?v=${RELEASE}`;
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -9,28 +12,22 @@ const APP_SHELL = [
   "./climb.html",
   "./climb_rate.html",
   "./stall.html",
-  "./manifest.webmanifest",
-  "./app.js",
-  "./css/theme.css",
-  "./css/index.css",
-  "./css/calculator.css",
-  "./js/g115b-core.js",
-  "./js/g115b-ui.js",
-  "./js/g115b-calculators.js",
-  "./js/performance-data.js",
-  "./js/pages/takeoff-page.js",
-  "./js/pages/landing-page.js",
-  "./js/pages/weight-balance-page.js",
-  "./js/pages/cruise-page.js",
-  "./js/pages/climb-page.js",
-  "./js/pages/climb-rate-page.js",
-  "./js/pages/stall-page.js",
-  "./assets/grob115b-takeoff-chart.png",
-  "./assets/grob115b-landing-chart.png",
-  "./assets/grob115b-cruise-rpm-chart.png",
-  "./assets/grob115b-climb-chart.png",
-  "./assets/grob115b-stall-chart.png",
-  "./assets/grob115b-cruise-speed-chart.png",
+  versioned("./manifest.webmanifest"),
+  versioned("./app.js"),
+  versioned("./css/theme.css"),
+  versioned("./css/index.css"),
+  versioned("./css/calculator.css"),
+  versioned("./js/g115b-core.js"),
+  versioned("./js/g115b-ui.js"),
+  versioned("./js/g115b-calculators.js"),
+  versioned("./js/performance-data.js"),
+  versioned("./js/pages/takeoff-page.js"),
+  versioned("./js/pages/landing-page.js"),
+  versioned("./js/pages/weight-balance-page.js"),
+  versioned("./js/pages/cruise-page.js"),
+  versioned("./js/pages/climb-page.js"),
+  versioned("./js/pages/climb-rate-page.js"),
+  versioned("./js/pages/stall-page.js"),
   "./icons/icon-192-v2.png",
   "./icons/icon-512-v2.png",
   "./icons/apple-touch-icon-v2.png",
@@ -39,7 +36,9 @@ const APP_SHELL = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.addAll(APP_SHELL.map((path) => new Request(path, { cache: "reload" })))
+    )
   );
   self.skipWaiting();
 });
@@ -49,7 +48,7 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => key !== CACHE_NAME)
+          .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
           .map((key) => caches.delete(key))
       )
     )
@@ -71,7 +70,7 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
+      fetch(new Request(request, { cache: "no-store" }))
         .then((response) => {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
@@ -86,7 +85,7 @@ self.addEventListener("fetch", (event) => {
 
   if (request.destination === "style" || request.destination === "script") {
     event.respondWith(
-      fetch(request)
+      fetch(new Request(request, { cache: "no-store" }))
         .then((response) => {
           if (!response || response.status !== 200 || response.type === "opaque") {
             return response;
