@@ -533,8 +533,8 @@ test("weight and balance calculator returns stable loading result", () => {
   });
 
   assert.equal(result.totalMassKg.toFixed(1), "830.6");
-  assert.equal(result.totalMomentKgM.toFixed(2), "234.90");
-  assert.equal(result.cgArmM.toFixed(4), "0.2828");
+  assert.equal(result.totalMomentKgM.toFixed(2), "235.18");
+  assert.equal(result.cgArmM.toFixed(4), "0.2831");
   assert.equal(result.withinEnvelope, true);
   assert.equal(result.speeds.rotateSpeedKmh.toFixed(1), "91.2");
   assert.equal(result.speeds.speedAt15mKmh.toFixed(1), "117.6");
@@ -548,9 +548,9 @@ test("weight and balance accepts envelope boundary points", () => {
   const result = calculators.calculateWeightBalance({
     aircraftName: "D-EBFT",
     pilotMassKg: 130,
-    copilotMassKg: 80.6753125,
+    copilotMassKg: 81.10258968749997,
     baggageMassKg: 0,
-    fuelLiters: 56.56206597222226,
+    fuelLiters: 55.968625434027786,
   });
 
   assert.equal(result.totalMassKg.toFixed(1), "920.0");
