@@ -1,4 +1,4 @@
-const RELEASE = "78";
+const RELEASE = "79";
 const CACHE_PREFIX = "g115b-performance-v";
 const CACHE_NAME = `${CACHE_PREFIX}${RELEASE}`;
 const versioned = (path) => `${path}?v=${RELEASE}`;

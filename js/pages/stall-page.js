@@ -199,7 +199,7 @@
         `Ergebnis - ${inputs.massKg} kg · ${inputs.powerMode === "leerlauf" ? "Leerlauf" : "Vollast"} · Klappen ${inputs.flapsDegrees}°`,
         ui.el("div", { className: "result-grid", style: { gridTemplateColumns: "1fr" } },
           ui.createMetricItem({
-            label: `Überziehgeschwindigkeit · ${result.stallLabel}`,
+            label: ui.el("span", {}, "Überziehgeschwindigkeit · ", ui.speedSymbol(result.stallLabel.slice(1))),
             value: result.stallSpeedKt.toFixed(1),
             unit: "kt",
             speedType: "IAS",

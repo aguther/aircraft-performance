@@ -1,5 +1,5 @@
 (function () {
-  const APP_RELEASE = "78";
+  const APP_RELEASE = "79";
   const THEME_STORAGE_KEY = "g115b-theme";
   const USAGE_NOTICE_STORAGE_KEY = "g115b-usage-notice-accepted";
   const THEME_AUTO = "auto";
@@ -446,12 +446,16 @@
     return createCard("Atmosphäre", createAtmosphereContent(config));
   }
 
+  function speedSymbol(index) {
+    return el("span", { className: "speed-symbol" }, "V", el("sub", { text: index }));
+  }
+
   function createMetricItem(config) {
     const labelClassName = config.labelClassName || "result-item-label";
     const valueClassName = config.valueClassName || "result-item-value";
     const subtextClassName = config.subtextClassName || "result-item-sub";
     const children = [
-      el("div", { className: labelClassName, text: config.label }),
+      el("div", { className: labelClassName }, config.label),
       metricValue(config.value, config.unit, `${valueClassName}${config.valueClassName ? ` ${config.valueClassName}` : ""}`, config.valueStyle, config.speedType),
     ];
 
@@ -564,6 +568,7 @@
     createCard,
     createWarnings,
     createAtmosphereCard,
+    speedSymbol,
     createMetricItem,
     createGridCard,
     createConditionsCard,

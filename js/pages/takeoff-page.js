@@ -397,7 +397,7 @@
           labelClassName: "speed-item-label",
           valueClassName: "speed-item-value",
           subtextClassName: "speed-item-sub",
-          label: "VR · Rotate",
+          label: ui.el("span", {}, ui.speedSymbol("R"), " · Rotate"),
           value: core.kilometersPerHourToKnots(result.rotateSpeedKmh).toFixed(1),
           unit: "kt",
           speedType: "IAS",

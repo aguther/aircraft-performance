@@ -96,7 +96,7 @@
           subtext: `${result.climbRateMs.toFixed(1)} m/s`,
         }),
         ui.createMetricItem({
-          label: "VY · Climb Speed",
+          label: ui.el("span", {}, ui.speedSymbol("Y"), " · Climb Speed"),
           labelClassName: "result-item-label",
           value: core.kilometersPerHourToKnots(result.climbSpeedKmh).toFixed(1),
           unit: "kt",

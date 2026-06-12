@@ -39,7 +39,7 @@ declare namespace G115B {
     labelClassName?: string;
     valueClassName?: string;
     subtextClassName?: string;
-    label: string;
+    label: string | Node;
     value: string | number;
     unit?: string;
     speedType?: "IAS" | "TAS";
@@ -66,6 +66,7 @@ declare namespace G115B {
     createCard(title: string, content: Node | string): HTMLElement;
     createWarnings(warnings?: Warning[]): HTMLElement | null;
     createAtmosphereCard(config: AtmosphereCardConfig): HTMLElement;
+    speedSymbol(index: string): HTMLElement;
     createMetricItem(config: MetricItemConfig): HTMLElement;
     createGridCard(title: string, gridClassName: string, items: Array<Node | string>): HTMLElement;
     createConditionsCard(conditions: string[]): HTMLElement;

@@ -768,6 +768,14 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   text-transform: uppercase;
 }
 
+.speed-symbol sub {
+  position: relative;
+  bottom: -0.1em;
+  font-size: 0.68em;
+  line-height: 0;
+  letter-spacing: 0.04em;
+}
+
 .atmos-item-value,
 .speed-item-value {
   color: var(--text);
