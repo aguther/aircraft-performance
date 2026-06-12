@@ -142,8 +142,20 @@
     const pageData = data.climbRate;
     const climbSpeedKmh = core.lookup2D(pageData.climbSpeedTable, inputs.massKg, inputs.referencePressureAltitudeFt);
     const climbRateFpm = Math.max(0, core.lookup2D(pageData.rateOfClimbTable, inputs.massKg, inputs.densityAltitudeFt));
+    const warnings = [];
+    const maximumDensityAltitudeFt =
+      pageData.rateOfClimbTable.columnBreakpoints[pageData.rateOfClimbTable.columnBreakpoints.length - 1];
+    if (inputs.densityAltitudeFt > maximumDensityAltitudeFt) {
+      warnings.push({
+        text: `Dichtehöhe über ${maximumDensityAltitudeFt.toLocaleString("de-DE")} ft - außerhalb Diagrammbereich.`,
+        danger: true,
+      });
+    }
+    if (climbRateFpm < 50) {
+      warnings.push({ text: "Steigrate sehr gering - Diagrammgrenze erreicht.", danger: false });
+    }
     return {
-      warnings: climbRateFpm < 50 ? [{ text: "Steigrate sehr gering - Diagrammgrenze erreicht.", danger: false }] : [],
+      warnings,
       climbSpeedKmh,
       climbRateFpm,
       climbRateMs: climbRateFpm * 0.00508,

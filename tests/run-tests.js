@@ -363,8 +363,70 @@ test("climb rate calculator returns stable VY and ROC values", () => {
   });
 
   assert.equal(result.climbSpeedKmh.toFixed(1), "140.5");
-  assert.equal(Math.round(result.climbRateFpm), 820);
+  assert.equal(Math.round(result.climbRateFpm), 825);
   assert.equal(result.warnings.length, 0);
+});
+
+test("climb rate calculator reproduces the POH example", () => {
+  const result = calculators.calculateClimbRate({
+    massKg: 850,
+    referencePressureAltitudeFt: 4000,
+    densityAltitudeFt: 3600,
+  });
+
+  assert.equal(Math.round(result.climbSpeedKmh), 135);
+  assert.equal(Math.round(result.climbRateFpm / 100) * 100, 1100);
+});
+
+test("climb rate calculator follows the digitized POH curves", () => {
+  const references = [
+    [750, 0, 1700],
+    [750, 9000, 945],
+    [750, 18000, 345],
+    [835, 5000, 1060],
+    [835, 13000, 515],
+    [920, 6000, 825],
+    [920, 17000, 170],
+  ];
+
+  for (const [massKg, densityAltitudeFt, expectedClimbRateFpm] of references) {
+    const result = calculators.calculateClimbRate({
+      massKg,
+      referencePressureAltitudeFt: 0,
+      densityAltitudeFt,
+    });
+    assert.equal(result.climbRateFpm, expectedClimbRateFpm);
+  }
+});
+
+test("climb rate calculator warns above the chart limit", () => {
+  const result = calculators.calculateClimbRate({
+    massKg: 920,
+    referencePressureAltitudeFt: 19000,
+    densityAltitudeFt: 19000,
+  });
+
+  assert.equal(result.climbRateFpm, 110);
+  assert.equal(result.warnings[0].danger, true);
+});
+
+test("climb rate VY table follows the published reference values", () => {
+  const referenceRows = [
+    [750, [135, 119, 107]],
+    [835, [143, 124, 115]],
+    [920, [150, 131, 120]],
+  ];
+
+  for (const [massKg, expectedSpeeds] of referenceRows) {
+    [0, 8000, 16000].forEach((referencePressureAltitudeFt, index) => {
+      const result = calculators.calculateClimbRate({
+        massKg,
+        referencePressureAltitudeFt,
+        densityAltitudeFt: 0,
+      });
+      assert.equal(result.climbSpeedKmh, expectedSpeeds[index]);
+    });
+  }
 });
 
 test("climb calculator rejects inverted altitude ranges", () => {
