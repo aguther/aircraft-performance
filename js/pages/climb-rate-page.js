@@ -100,7 +100,8 @@
           labelClassName: "result-item-label",
           value: core.kilometersPerHourToKnots(result.climbSpeedKmh).toFixed(1),
           unit: "kt",
-          subtext: `${Math.round(result.climbSpeedKmh)} km/h IAS`,
+          speedType: "IAS",
+          subtext: `${Math.round(result.climbSpeedKmh)} km/h`,
         }),
       ])
     );

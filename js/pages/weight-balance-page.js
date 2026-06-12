@@ -155,7 +155,8 @@
       label,
       value: core.kilometersPerHourToKnots(speedKmh).toFixed(1),
       unit: "kt",
-      subtext: `${Math.round(speedKmh)} km/h IAS`,
+      speedType: "IAS",
+      subtext: `${Math.round(speedKmh)} km/h`,
     });
   }
 
@@ -207,9 +208,9 @@
       createWeightBalanceCard(result),
       ui.createCard("Envelope", createEnvelopeChart(result)),
       ui.createGridCard("Geschwindigkeiten", "speed-grid", [
-        createSpeedMetric("VR Rotate IAS", result.speeds.rotateSpeedKmh),
+        createSpeedMetric("VR · Rotate", result.speeds.rotateSpeedKmh),
         createSpeedMetric("Geschw. 15 m Höhe", result.speeds.speedAt15mKmh),
-        createSpeedMetric("VAPP IAS", result.speeds.approachSpeedKmh),
+        createSpeedMetric("VAPP · Approach", result.speeds.approachSpeedKmh),
         createSpeedMetric("VREF · 1,3 × VS0", result.speeds.referenceSpeedKmh),
         createSpeedMetric("VS0 Leerlauf 40°", result.speeds.stallIdleFlaps40Kmh),
       ]),

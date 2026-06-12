@@ -380,9 +380,10 @@
             subtext: `${result.nauticalMilesPerLiter.toFixed(2)} nm/l`,
           }),
           ui.createMetricItem({
-            label: "TAS · POH 5.3.12",
+            label: "Wahre Fluggeschwindigkeit · POH 5.3.12",
             value: result.tasKt.toFixed(1),
             unit: "kt",
+            speedType: "TAS",
             subtext: `${Math.round(result.tasKmh)} km/h`,
           }),
         ]
@@ -419,7 +420,7 @@
           1948, 2112, 2276, 2440, 2604, 2768, 2932, 3096, 3260, 3423,
         ],
         value: result.tasKmh,
-        resultText: `${Math.round(result.tasKmh)} km/h · ${result.tasKt.toFixed(1)} kt TAS`,
+        resultText: `TAS · ${result.tasKt.toFixed(1)} kt · ${Math.round(result.tasKmh)} km/h`,
         exportResultLabel: "Wahre Fluggeschwindigkeit · TAS",
         exportResultValue: `${result.tasKt.toFixed(1)} kt  /  ${Math.round(result.tasKmh)} km/h`,
       }),

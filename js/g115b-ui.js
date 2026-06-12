@@ -89,10 +89,16 @@
     return element;
   }
 
-  function metricValue(value, unit, className, style) {
+  function metricValue(value, unit, className, style, speedType) {
     const children = [String(value)];
     if (unit) {
       children.push(" ", el("span", { text: unit }));
+    }
+    if (speedType) {
+      children.push(el("span", {
+        className: `speed-type-badge speed-type-${String(speedType).toLowerCase()}`,
+        text: speedType,
+      }));
     }
 
     return el("div", { className, style }, children);
@@ -444,7 +450,7 @@
     const subtextClassName = config.subtextClassName || "result-item-sub";
     const children = [
       el("div", { className: labelClassName, text: config.label }),
-      metricValue(config.value, config.unit, `${valueClassName}${config.valueClassName ? ` ${config.valueClassName}` : ""}`, config.valueStyle),
+      metricValue(config.value, config.unit, `${valueClassName}${config.valueClassName ? ` ${config.valueClassName}` : ""}`, config.valueStyle, config.speedType),
     ];
 
     if (config.subtext) {

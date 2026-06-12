@@ -120,7 +120,7 @@
       drawExportField(context, "Leistungsstellung", inputs.powerMode === "leerlauf" ? "Leerlauf" : "Vollast", 410, 114, 350);
       drawExportField(context, "Klappenstellung", `${inputs.flapsDegrees}°`, 780, 114, 380);
       drawExportText(context, "Ergebnis", 40, 226, { size: 18, weight: 700, color: "#006f9f" });
-      drawExportField(context, `Überziehgeschwindigkeit · ${result.stallLabel}`, `${result.stallSpeedKt.toFixed(1)} kt / ${result.stallSpeedKmh.toFixed(1)} km/h IAS`, 40, 242, 1120);
+      drawExportField(context, `Überziehgeschwindigkeit · ${result.stallLabel} · IAS`, `${result.stallSpeedKt.toFixed(1)} kt / ${result.stallSpeedKmh.toFixed(1)} km/h`, 40, 242, 1120);
 
       const original = await loadImage("assets/grob115b-stall-chart.png");
       context.drawImage(original, 0, 350, 1200, 1751);
@@ -187,7 +187,7 @@
       ui.el("div", { className: "takeoff-chart-legend" },
         ui.el("span", { className: "stall-chart-key", text: `${inputs.powerMode === "leerlauf" ? "Leerlauf" : "Vollast"} · Klappen ${inputs.flapsDegrees}°` }),
         ui.el("span", { text: `${inputs.massKg} kg` }),
-        ui.el("span", { text: `${result.stallSpeedKmh.toFixed(1)} km/h IAS · ${result.stallSpeedKt.toFixed(1)} kt` })
+        ui.el("span", { text: `IAS · ${result.stallSpeedKt.toFixed(1)} kt · ${result.stallSpeedKmh.toFixed(1)} km/h` })
       )
     );
   }
@@ -202,7 +202,8 @@
             label: `Überziehgeschwindigkeit · ${result.stallLabel}`,
             value: result.stallSpeedKt.toFixed(1),
             unit: "kt",
-            subtext: `${result.stallSpeedKmh.toFixed(1)} km/h IAS`,
+            speedType: "IAS",
+            subtext: `${result.stallSpeedKmh.toFixed(1)} km/h`,
           })
         )
       ),

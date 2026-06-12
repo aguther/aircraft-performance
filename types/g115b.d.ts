@@ -42,6 +42,7 @@ declare namespace G115B {
     label: string;
     value: string | number;
     unit?: string;
+    speedType?: "IAS" | "TAS";
     subtext?: string;
     valueStyle?: Partial<CSSStyleDeclaration>;
   }
