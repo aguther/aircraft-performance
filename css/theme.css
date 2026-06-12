@@ -81,10 +81,8 @@
 }
 
 html {
-  background:
-    radial-gradient(circle at top left, rgba(69, 199, 245, 0.12), transparent 34%),
-    radial-gradient(circle at top right, rgba(0, 95, 138, 0.12), transparent 28%),
-    var(--bg-app);
+  min-height: 100%;
+  background-color: var(--bg-app);
   color: var(--text);
   font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   font-size: 14px;
@@ -98,13 +96,23 @@ body {
   flex-direction: column;
   min-height: 100vh;
   color: var(--text);
-  background: transparent;
+  background-color: var(--bg-app);
+  background:
+    radial-gradient(circle at top left, rgba(69, 199, 245, 0.12), transparent 34%),
+    radial-gradient(circle at top right, rgba(0, 95, 138, 0.12), transparent 28%),
+    var(--bg-app);
   transition: background 0.2s, color 0.2s;
   padding:
     env(safe-area-inset-top, 0)
     env(safe-area-inset-right, 0)
     env(safe-area-inset-bottom, 0)
     env(safe-area-inset-left, 0);
+}
+
+@supports (min-height: 100dvh) {
+  body {
+    min-height: 100dvh;
+  }
 }
 
 a {
