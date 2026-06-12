@@ -149,7 +149,7 @@
       const exportDate = new Date();
       const canvas = document.createElement("canvas");
       canvas.width = 1200;
-      canvas.height = 2335;
+      canvas.height = 2280;
       const context = canvas.getContext("2d");
       context.fillStyle = "#ffffff";
       context.fillRect(0, 0, canvas.width, canvas.height);
@@ -173,7 +173,6 @@
       svgUrl = URL.createObjectURL(new Blob([serializedSvg], { type: "image/svg+xml;charset=utf-8" }));
       const overlayImage = await loadImage(svgUrl);
       context.drawImage(overlayImage, 0, 472, 1200, 1808);
-      drawExportText(context, `Quelle: ${data.climb.source} · Originaldiagramm mit grafischem Rechenweg`, 40, 2315, { size: 14, color: "#687b8d" });
 
       const blob = await canvasToBlob(canvas);
       const fileName = `${utcTimestamp(exportDate)}Z Grob G115B Steigflugberechnung.png`;
