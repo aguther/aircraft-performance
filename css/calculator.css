@@ -273,6 +273,7 @@
     min-width: 0;
     width: 100%;
   }
+
 }
 
 @media (max-width: 1100px) {
@@ -319,6 +320,7 @@
     min-width: 0;
     width: 100%;
   }
+
 }
 
 /* SIDEBAR */
@@ -962,7 +964,9 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 .climb-chart-stage {
   position: relative;
-  min-width: 760px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   aspect-ratio: 929 / 1400;
   background: #fff;
 }
@@ -1030,13 +1034,19 @@ input[type="range"]::-webkit-slider-thumb:hover {
   background: var(--green-bg);
 }
 
+.results > .climb-chart-card,
+.climb-chart-scroll {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.climb-chart-scroll {
+  overflow-x: hidden;
+}
+
 @media (min-width: 1000px) {
   .results > .climb-chart-card {
     max-width: 760px;
-  }
-
-  .climb-chart-stage {
-    min-width: 0;
   }
 }
 

@@ -389,7 +389,7 @@ test("climb calculator returns stable delta values", () => {
   });
 
   assert.equal(result.climbTimeMinutes.toFixed(1), "7.0");
-  assert.equal(result.climbFuelLiters.toFixed(1), "5.1");
+  assert.equal(result.climbFuelLiters.toFixed(1), "4.9");
   assert.equal(result.climbDistanceKm.toFixed(1), "17.2");
   assert.equal(result.climbDistanceNm.toFixed(1), "9.3");
 });
@@ -403,6 +403,16 @@ test("climb calculator reproduces the POH chart example", () => {
   assert.equal(result.climbTimeMinutes.toFixed(1), "6.0");
   assert.equal(result.climbFuelLiters.toFixed(1), "4.4");
   assert.equal(result.climbDistanceKm.toFixed(1), "14.8");
+});
+
+test("climb fuel axis uses the printed two-liter tick instead of the dashed example line", () => {
+  const result = calculators.calculateClimb({
+    departureDensityAltitudeFt: 2400,
+    destinationDensityAltitudeFt: 8000,
+  });
+
+  assert.equal(result.departureCumulative.timeMinutes.toFixed(1), "2.4");
+  assert.equal(result.departureCumulative.fuelLiters.toFixed(1), "2.0");
 });
 
 test("climb calculator follows the separately calibrated chart axes", () => {
