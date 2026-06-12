@@ -21,12 +21,6 @@
   --warn-border: #ffbf5c;
   --warn-text: #ffe2a8;
   --warn-shadow: rgba(245, 169, 58, 0.18);
-  --notice-bg: linear-gradient(135deg, rgba(255, 183, 77, 0.3), rgba(168, 95, 12, 0.18));
-  --notice-border: rgba(255, 196, 98, 0.5);
-  --notice-tag-bg: rgba(255, 209, 128, 0.14);
-  --notice-tag: #ffd68b;
-  --notice-text: #fff4de;
-  --notice-shadow: rgba(255, 183, 77, 0.16);
   --danger-bg: linear-gradient(135deg, rgba(239, 83, 80, 0.22), rgba(239, 83, 80, 0.08));
   --danger-border: #ff8b88;
   --danger-text: #ffc1be;
@@ -58,12 +52,6 @@
   --warn-border: #bf6f00;
   --warn-text: #6c3d00;
   --warn-shadow: rgba(191, 111, 0, 0.12);
-  --notice-bg: linear-gradient(135deg, rgba(255, 205, 132, 0.62), rgba(255, 233, 196, 0.96));
-  --notice-border: rgba(204, 132, 22, 0.34);
-  --notice-tag-bg: rgba(255, 255, 255, 0.34);
-  --notice-tag: #8d5400;
-  --notice-text: #352000;
-  --notice-shadow: rgba(204, 132, 22, 0.12);
   --danger-bg: linear-gradient(135deg, rgba(255, 171, 166, 0.32), rgba(255, 171, 166, 0.12));
   --danger-border: #b33a38;
   --danger-text: #7d1614;
@@ -226,6 +214,137 @@ a {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.usage-notice-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 38px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-soft);
+  color: var(--text-sub);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s, transform 0.15s;
+  white-space: nowrap;
+}
+
+.usage-notice-open:hover {
+  color: var(--cyan);
+  border-color: var(--border-strong);
+  background: var(--bg-active);
+  transform: translateY(-1px);
+}
+
+.usage-notice-open-icon,
+.usage-notice-icon {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--cyan-bg);
+  color: var(--cyan);
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+}
+
+.usage-notice-open-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  font-size: 12px;
+}
+
+.usage-notice {
+  width: min(31rem, calc(100vw - 2rem));
+  max-width: none;
+  height: fit-content;
+  min-height: 0;
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  block-size: fit-content;
+  min-block-size: 0;
+  max-block-size: calc(100vh - 2rem);
+  max-block-size: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 1.4rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 26px;
+  background: var(--bg-card);
+  color: var(--text);
+  box-shadow: var(--shadow-strong);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.usage-notice[open] {
+  display: block;
+}
+
+.usage-notice-panel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.usage-notice::backdrop {
+  background: rgba(5, 15, 25, 0.58);
+  backdrop-filter: blur(5px);
+}
+
+.usage-notice-icon {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.45rem;
+}
+
+.usage-notice-content {
+  min-width: 0;
+}
+
+.usage-notice h2 {
+  margin-bottom: 0.4rem;
+  font-size: 1.25rem;
+}
+
+.usage-notice p {
+  color: var(--text-sub);
+  line-height: 1.65;
+}
+
+.usage-notice-confirm {
+  margin-top: 1.15rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--cyan);
+  border-radius: 999px;
+  background: var(--cyan);
+  color: white;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.15s;
+}
+
+.usage-notice-confirm:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+html.usage-notice-active,
+html.usage-notice-active body {
+  position: fixed;
+  top: var(--usage-notice-scroll-offset, 0);
+  right: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 .theme-toggle {
@@ -433,8 +552,32 @@ a {
     font-size: 9px;
   }
 
+  .usage-notice-open {
+    justify-content: center;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .usage-notice-open-label {
+    display: none;
+  }
+
   .nav-title {
     max-width: clamp(8rem, 42vw, 12rem);
     font-size: 13px;
+  }
+}
+
+@media (max-width: 640px) {
+  .usage-notice {
+    padding: 1.2rem;
+  }
+
+  .usage-notice-panel {
+    grid-template-columns: 1fr;
   }
 }

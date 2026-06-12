@@ -418,7 +418,6 @@
 
   function renderResult(elements, inputs, result) {
     ui.replaceContent(elements.resultRoot, [
-      ui.createDisclaimerCard(),
       ui.createContextCard({
         atmosphere: createAtmosphereCardProps(result.atmosphere),
         conditions: result.conditions,

@@ -733,47 +733,6 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 20%, transparent);
 }
 
-/* DISCLAIMER */
-.disclaimer-card {
-  position: relative;
-  overflow: hidden;
-  padding: 0.92rem 1rem;
-  border: 1px solid var(--notice-border);
-  border-radius: 20px;
-  background: var(--notice-bg);
-  box-shadow: 0 12px 28px var(--notice-shadow);
-}
-
-.disclaimer-card::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 7px;
-  background: var(--warn-border);
-}
-
-.disclaimer-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 0.25rem;
-  padding: 0.22rem 0.55rem;
-  border-radius: 999px;
-  background: var(--notice-tag-bg);
-  color: var(--notice-tag);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.disclaimer-text {
-  color: var(--notice-text);
-  font-size: 13.5px;
-  font-weight: 700;
-  line-height: 1.6;
-}
-
 /* ATMOS */
 .atmos-grid,
 .result-grid,
@@ -1277,7 +1236,6 @@ input[type="range"]:focus-visible::-moz-range-thumb {
     max-width: none;
   }
 
-  .results > .disclaimer-card,
   .results > .warnings,
   .results > .takeoff-chart-card {
     grid-column: 1 / -1;

@@ -194,7 +194,6 @@
 
   function renderResult(elements, inputs, result) {
     ui.replaceContent(elements.resultRoot, [
-      ui.createDisclaimerCard(),
       ui.createConditionsCard(result.conditions),
       ui.createCard(
         `Ergebnis - ${inputs.massKg} kg · ${inputs.powerMode === "leerlauf" ? "Leerlauf" : "Vollast"} · Klappen ${inputs.flapsDegrees}°`,

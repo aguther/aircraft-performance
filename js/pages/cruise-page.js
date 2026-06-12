@@ -354,7 +354,7 @@
   }
 
   function renderResult(elements, inputs, result) {
-    const nodes = [ui.createDisclaimerCard()];
+    const nodes = [];
 
     if (inputs.mode !== "da") {
       nodes.push(

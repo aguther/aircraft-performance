@@ -1,5 +1,6 @@
 (function () {
   const THEME_STORAGE_KEY = "g115b-theme";
+  const USAGE_NOTICE_STORAGE_KEY = "g115b-usage-notice-accepted";
   const THEME_AUTO = "auto";
   const systemThemeQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
 
@@ -192,6 +193,97 @@
     if (dropdown) dropdown.classList.toggle("open");
   }
 
+  function setupUsageNotice() {
+    const openButtons = document.querySelectorAll(".usage-notice-open");
+    if (openButtons.length === 0) return;
+    let lockedScrollY = 0;
+
+    const dialog = el(
+      "dialog",
+      {
+        className: "usage-notice",
+        attrs: {
+          id: "usageNotice",
+          "aria-labelledby": "usageNoticeTitle",
+          "aria-describedby": "usageNoticeText",
+        },
+      },
+      el(
+        "div",
+        { className: "usage-notice-panel" },
+        el("div", { className: "usage-notice-icon", text: "i", attrs: { "aria-hidden": "true" } }),
+        el(
+          "div",
+          { className: "usage-notice-content" },
+          el("h2", { text: "Hinweis zur Nutzung", attrs: { id: "usageNoticeTitle" } }),
+          el("p", {
+            text: "Die Rechner unterstützen die Flugplanung. Maßgeblich bleiben das zugelassene AFM/POH und die Entscheidung des Piloten.",
+            attrs: { id: "usageNoticeText" },
+          }),
+          el("button", {
+            className: "usage-notice-confirm",
+            text: "Verstanden",
+            attrs: { type: "button" },
+          })
+        )
+      )
+    );
+
+    const lockPageScroll = () => {
+      if (document.documentElement.classList.contains("usage-notice-active")) return;
+      lockedScrollY = window.scrollY;
+      document.documentElement.style.setProperty("--usage-notice-scroll-offset", `-${lockedScrollY}px`);
+      document.documentElement.classList.add("usage-notice-active");
+    };
+
+    const unlockPageScroll = () => {
+      if (!document.documentElement.classList.contains("usage-notice-active")) return;
+      document.documentElement.classList.remove("usage-notice-active");
+      document.documentElement.style.removeProperty("--usage-notice-scroll-offset");
+      window.scrollTo(0, lockedScrollY);
+    };
+
+    const openNotice = () => {
+      lockPageScroll();
+      if (typeof dialog.showModal === "function") {
+        if (!dialog.open) dialog.showModal();
+        return;
+      }
+      dialog.setAttribute("open", "");
+    };
+
+    const closeNotice = () => {
+      unlockPageScroll();
+      if (typeof dialog.close === "function") {
+        dialog.close();
+        return;
+      }
+      dialog.removeAttribute("open");
+    };
+
+    dialog.querySelector(".usage-notice-confirm").addEventListener("click", () => {
+      try {
+        localStorage.setItem(USAGE_NOTICE_STORAGE_KEY, "true");
+      } catch (_) {
+        // Closing the notice should still work if storage is unavailable.
+      }
+      closeNotice();
+    });
+
+    dialog.addEventListener("cancel", () => {
+      unlockPageScroll();
+    });
+
+    openButtons.forEach((button) => button.addEventListener("click", openNotice));
+    document.body.append(dialog);
+
+    try {
+      if (localStorage.getItem(USAGE_NOTICE_STORAGE_KEY) !== "true") openNotice();
+    } catch (_) {
+      openNotice();
+    }
+  }
+
   function normalizeNumericString(value) {
     const source = String(value ?? "").trim().replace(/,/g, ".");
     let normalized = "";
@@ -295,18 +387,6 @@
       { className: "card" },
       el("div", { className: "card-title", text: title }),
       content
-    );
-  }
-
-  function createDisclaimerCard() {
-    return el(
-      "div",
-      { className: "disclaimer-card" },
-      el("div", { className: "disclaimer-tag", text: "⚠ Wichtiger Hinweis" }),
-      el("div", {
-        className: "disclaimer-text",
-        text: "Diese Anwendung ersetzt nicht das originale, zugelassene AFM/POH der jeweiligen Maschine. Die Verantwortung für alle Flugentscheidungen liegt ausschliesslich beim Piloten.",
-      }),
     );
   }
 
@@ -474,7 +554,6 @@
     syncInput,
     commitInput,
     createCard,
-    createDisclaimerCard,
     createWarnings,
     createAtmosphereCard,
     createMetricItem,
@@ -496,6 +575,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     initTheme();
     setupNavigationDropdown();
+    setupUsageNotice();
     markResponsiveFields();
   });
 

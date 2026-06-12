@@ -69,7 +69,7 @@
   }
 
   function renderResult(elements, inputs, result) {
-    const nodes = [ui.createDisclaimerCard(), ui.createWarnings(result.warnings)];
+    const nodes = [ui.createWarnings(result.warnings)];
 
     if (inputs.mode !== "da") {
       nodes.push(

@@ -204,7 +204,6 @@
 
   function renderResult(elements, result) {
     const nodes = [
-      ui.createDisclaimerCard(),
       createWeightBalanceCard(result),
       ui.createCard("Envelope", createEnvelopeChart(result)),
       ui.createGridCard("Geschwindigkeiten", "speed-grid", [

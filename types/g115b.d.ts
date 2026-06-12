@@ -63,7 +63,6 @@ declare namespace G115B {
     syncSlider(inputId: string, rangeId: string, config?: any): void;
     syncInput(inputId: string, rangeId: string, config?: any): void;
     createCard(title: string, content: Node | string): HTMLElement;
-    createDisclaimerCard(): HTMLElement;
     createWarnings(warnings?: Warning[]): HTMLElement | null;
     createAtmosphereCard(config: AtmosphereCardConfig): HTMLElement;
     createMetricItem(config: MetricItemConfig): HTMLElement;

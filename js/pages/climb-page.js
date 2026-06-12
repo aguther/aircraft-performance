@@ -316,7 +316,6 @@
     );
 
     ui.replaceContent(elements.resultRoot, [
-      ui.createDisclaimerCard(),
       ui.createWarnings(result.warnings),
       contextCard,
       ui.createGridCard(hasResult
