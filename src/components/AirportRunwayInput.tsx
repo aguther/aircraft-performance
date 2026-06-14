@@ -224,8 +224,8 @@ export function AirportRunwayInput({
             </select>
           </label>
           <div className="airport-time">
-            <label className="airport-field">
-              <span>Geplante {operation === "departure" ? "Startzeit" : "Landezeit"} · UTC · 24 h</span>
+            <div className="airport-field-label">Geplante {operation === "departure" ? "Startzeit" : "Landezeit"} · UTC · 24 h</div>
+            <div className="airport-time-row">
               <span className="airport-datetime-control">
                 <input
                   type="date"
@@ -244,20 +244,18 @@ export function AirportRunwayInput({
                   onChange={(event) => setPlannedAt(`${plannedAt.slice(0, 10)}T${event.target.value}`)}
                 />
               </span>
-            </label>
-            <label className="import-toggle airport-now-toggle">
-              <input type="checkbox" checked={weatherNow} onChange={(event) => onWeatherNowChange(event.target.checked)} />
-              <span>Jetzt · aktuelle Wetterwerte</span>
-            </label>
+              <label className="import-toggle airport-now-toggle">
+                <input type="checkbox" checked={weatherNow} onChange={(event) => onWeatherNowChange(event.target.checked)} />
+                <span>Jetzt</span>
+              </label>
+            </div>
           </div>
           {runway ? (
             <>
               <div className="airport-preview">
                 <AirportPreviewValue label="Elevation" value={airport.elevationFt} unit="ft" />
-                <AirportPreviewValue label="Deklination" value={`${airport.magneticDeclinationDeg >= 0 ? "+" : ""}${airport.magneticDeclinationDeg.toFixed(1)}`} unit="°" />
                 <AirportPreviewValue label="RWY true / mag" value={`${formatDirection(runway.trueHeadingDeg)}° / ${formatDirection(runway.magneticHeadingDeg)}°`} />
                 <AirportPreviewValue label="Bahnlänge" value={runway.lengthM} unit="m" />
-                <AirportPreviewValue label="Bahnbreite" value={runway.widthM} unit="m" />
               </div>
               {weatherLoading && !weather ? <div className="airport-status">Wetterdaten werden geladen…</div> : null}
               {weatherError ? <div className="airport-status error">{weatherError}</div> : null}
