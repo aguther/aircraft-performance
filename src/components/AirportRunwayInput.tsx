@@ -228,21 +228,26 @@ export function AirportRunwayInput({
               <span>Geplante {operation === "departure" ? "Startzeit" : "Landezeit"} · UTC · 24 h</span>
               <span className="airport-datetime-control">
                 <input
-                  type="datetime-local"
+                  type="date"
                   lang="de-DE"
-                  value={plannedAt}
+                  value={plannedAt.slice(0, 10)}
                   required
                   disabled={weatherNow}
-                  onChange={(event) => {
-                    setWeather(null);
-                    setPlannedAt(event.target.value);
-                  }}
+                  onChange={(event) => setPlannedAt(`${event.target.value}T${plannedAt.slice(11)}`)}
+                />
+                <input
+                  type="time"
+                  lang="de-DE"
+                  value={plannedAt.slice(11)}
+                  required
+                  disabled={weatherNow}
+                  onChange={(event) => setPlannedAt(`${plannedAt.slice(0, 10)}T${event.target.value}`)}
                 />
               </span>
             </label>
             <label className="import-toggle airport-now-toggle">
               <input type="checkbox" checked={weatherNow} onChange={(event) => onWeatherNowChange(event.target.checked)} />
-              <span>Jetzt · aktuelle ICON-D2-Werte</span>
+              <span>Jetzt · aktuelle Wetterwerte</span>
             </label>
           </div>
           {runway ? (
