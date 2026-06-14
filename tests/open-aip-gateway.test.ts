@@ -44,6 +44,34 @@ describe("Flight data gateway", () => {
     fetchMock.mockRestore();
   });
 
+  it("loads current 15-minute ICON-D2 model conditions", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(Response.json({
+      current: {
+        time: "2026-06-14T19:15",
+        temperature_2m: 16.2,
+        pressure_msl: 1016.1,
+        wind_speed_10m: 4.8,
+        wind_direction_10m: 330,
+        wind_gusts_10m: 14.9,
+      },
+    }));
+
+    const response = await handleApiRequest(
+      new Request("https://example.test/api/weather?latitude=49.9608&longitude=8.6436&elevationFt=384&plannedAt=invalid&current=true"),
+      { ASSETS: assets },
+      context,
+    );
+    const payload = await response.json() as { validAt: string };
+    const upstreamUrl = String(fetchMock.mock.calls[0][0]);
+
+    expect(response.status).toBe(200);
+    expect(payload.validAt).toBe("2026-06-14T19:15Z");
+    expect(response.headers.get("Cache-Control")).toContain("s-maxage=300");
+    expect(upstreamUrl).toContain("current=temperature_2m%2Cpressure_msl");
+    expect(upstreamUrl).not.toContain("hourly=");
+    fetchMock.mockRestore();
+  });
+
   it("normalizes OpenAIP search responses without exposing the API key", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(Response.json({ totalCount: 1, items: [openAipAirportFixture] }));
     const response = await handleApiRequest(

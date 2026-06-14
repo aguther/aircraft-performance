@@ -360,18 +360,22 @@ export function LandingPage() {
             <>
               <AirportRunwayInput
                 operation="arrival"
-                enabled={flightPlan.imports.arrivalAirport}
-                onEnabledChange={(enabled) => updateImports({ arrivalAirport: enabled })}
+                airportEnabled={flightPlan.imports.arrivalAirport}
+                weatherEnabled={flightPlan.imports.arrivalWeather}
+                weatherNow={flightPlan.imports.arrivalWeatherNow}
+                onAirportEnabledChange={(enabled) => updateImports({ arrivalAirport: enabled })}
+                onWeatherEnabledChange={(enabled) => updateImports({ arrivalWeather: enabled })}
+                onWeatherNowChange={(enabled) => updateImports({ arrivalWeatherNow: enabled })}
                 onApply={(values) => {
-                  setElevationFt(values.elevationFt);
+                  if (values.elevationFt != null) setElevationFt(values.elevationFt);
                   if (values.qnhHpa != null) setQnhHpa(values.qnhHpa);
                   if (values.oatC != null) setOatC(values.oatC);
                   if (values.windKt != null) setWindKt(values.windKt);
                 }}
               />
               <div className="pa-mode airport-manual-weather">
-                <SliderField label="QNH" unit="hPa" value={qnhHpa} min={950} max={1050} disabled={flightPlan.imports.arrivalAirport} onChange={setQnhHpa} />
-                <SliderField label="OAT" unit="°C" value={oatC} min={-20} max={40} disabled={flightPlan.imports.arrivalAirport} onChange={setOatC} />
+                <SliderField label="QNH" unit="hPa" value={qnhHpa} min={950} max={1050} disabled={flightPlan.imports.arrivalWeather} onChange={setQnhHpa} />
+                <SliderField label="OAT" unit="°C" value={oatC} min={-20} max={40} disabled={flightPlan.imports.arrivalWeather} onChange={setOatC} />
               </div>
             </>
           ) : pressureAltitudeMode === "qnh" ? (
@@ -405,7 +409,7 @@ export function LandingPage() {
         </div>
         <div className="sidebar-section">
           <div className="section-header">Pistenbedingungen</div>
-          <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} disabled={flightPlan.imports.arrivalAirport} onChange={setWindKt} />
+          <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} disabled={flightPlan.imports.arrivalWeather} onChange={setWindKt} />
         </div>
         <div className="sidebar-section">
           <div className="section-header">Betrieblicher Zuschlag</div>

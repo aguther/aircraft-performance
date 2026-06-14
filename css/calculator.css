@@ -646,6 +646,7 @@
 .airport-field {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   gap: 0.3rem;
   color: var(--text-sub);
   font-size: 10.5px;
@@ -656,6 +657,9 @@
 
 .airport-field input,
 .airport-field select {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
   width: 100%;
   padding: 0.68rem 0.72rem;
   border: 1px solid var(--border);
@@ -667,6 +671,33 @@
   font-size: 12px;
   font-weight: 700;
   text-transform: none;
+}
+
+.airport-time {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.airport-time input[type="datetime-local"] {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.airport-time input[type="datetime-local"]::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
+}
+
+.airport-now-toggle {
+  padding-left: 0.15rem;
 }
 
 .airport-preview {
@@ -733,6 +764,12 @@
 
 .airport-sources a {
   color: inherit;
+}
+
+.airport-imports {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
 }
 
 .import-toggle {

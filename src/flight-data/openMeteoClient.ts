@@ -13,6 +13,7 @@ export function getOpenMeteoWeather(
   longitude: number,
   elevationFt: number,
   plannedAt: string,
+  current: boolean,
   airportId?: string,
   signal?: AbortSignal,
 ) {
@@ -21,6 +22,7 @@ export function getOpenMeteoWeather(
     longitude: String(longitude),
     elevationFt: String(elevationFt),
     plannedAt,
+    current: String(current),
   });
   if (airportId) params.set("airportId", airportId);
   return weatherGatewayRequest(`/api/weather?${params}`, signal);

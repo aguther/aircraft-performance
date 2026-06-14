@@ -1,5 +1,10 @@
 import { normalizeOpenAipAirport, type OpenAipAirport, type OpenAipAirportList } from "../src/flight-data/openAip";
-import { normalizeOpenMeteoForecast, type OpenMeteoHourlyResponse } from "../src/flight-data/openMeteo";
+import {
+  normalizeOpenMeteoCurrent,
+  normalizeOpenMeteoForecast,
+  type OpenMeteoCurrentResponse,
+  type OpenMeteoHourlyResponse,
+} from "../src/flight-data/openMeteo";
 
 type Env = {
   ASSETS: { fetch(request: Request): Promise<Response> };
@@ -83,32 +88,38 @@ export async function handleApiRequest(request: Request, env: Env, context: Work
       const longitude = Number(url.searchParams.get("longitude"));
       const elevationFt = Number(url.searchParams.get("elevationFt"));
       const plannedAt = url.searchParams.get("plannedAt") ?? "";
+      const current = url.searchParams.get("current") === "true";
       const airportId = url.searchParams.get("airportId")?.slice(0, 64);
-      const forecastHour = nearestForecastHour(plannedAt);
+      const forecastHour = current ? null : nearestForecastHour(plannedAt);
       if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
         return json({ error: "Ungültige Koordinaten für die Wetterabfrage." }, 400);
       }
       if (!Number.isFinite(elevationFt) || elevationFt < -1500 || elevationFt > 30000) {
         return json({ error: "Ungültige Flugplatzhöhe für die Wetterabfrage." }, 400);
       }
-      if (!forecastHour) return json({ error: "Ungültige geplante Zeit für die Wetterabfrage." }, 400);
+      if (!current && !forecastHour) return json({ error: "Ungültige geplante Zeit für die Wetterabfrage." }, 400);
       return cached(request, context, async () => {
         const params = new URLSearchParams({
           latitude: String(latitude),
           longitude: String(longitude),
           elevation: String(Math.round(elevationFt * 0.3048)),
           models: "icon_d2",
-          hourly: "temperature_2m,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m",
           wind_speed_unit: "kn",
           timezone: "GMT",
-          start_hour: forecastHour,
-          end_hour: forecastHour,
         });
-        const response = await openMeteoJson<OpenMeteoHourlyResponse>(await fetch(`${OPEN_METEO_BASE_URL}?${params}`, {
+        if (current) params.set("current", "temperature_2m,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m");
+        else {
+          params.set("hourly", "temperature_2m,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m");
+          params.set("start_hour", forecastHour!);
+          params.set("end_hour", forecastHour!);
+        }
+        const response = await openMeteoJson<OpenMeteoHourlyResponse & OpenMeteoCurrentResponse>(await fetch(`${OPEN_METEO_BASE_URL}?${params}`, {
           headers: { Accept: "application/json" },
         }));
-        const forecast = normalizeOpenMeteoForecast(response, airportId);
-        return forecast ? json(forecast) : json({ error: "ICON-D2 liefert für die gewählte Zeit und Position keine Wetterdaten." }, 404);
+        const forecast = current ? normalizeOpenMeteoCurrent(response, airportId) : normalizeOpenMeteoForecast(response, airportId);
+        return forecast
+          ? json(forecast, 200, current ? { "Cache-Control": "public, max-age=60, s-maxage=300" } : {})
+          : json({ error: "ICON-D2 liefert für die gewählte Zeit und Position keine Wetterdaten." }, 404);
       });
     }
 

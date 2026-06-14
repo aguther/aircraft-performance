@@ -11,19 +11,31 @@ export type OpenMeteoHourlyResponse = {
   };
 };
 
-export function normalizeOpenMeteoForecast(
-  response: OpenMeteoHourlyResponse,
+export type OpenMeteoCurrentResponse = {
+  current?: {
+    time?: string;
+    temperature_2m?: number | null;
+    pressure_msl?: number | null;
+    wind_speed_10m?: number | null;
+    wind_direction_10m?: number | null;
+    wind_gusts_10m?: number | null;
+  };
+};
+
+function weatherForecast(
+  values: {
+    time?: string;
+    temperatureC?: number | null;
+    qnhHpa?: number | null;
+    windSpeedKt?: number | null;
+    windDirectionTrueDeg?: number | null;
+    windGustKt?: number | null;
+  },
   airportId?: string,
   updatedAt = new Date().toISOString(),
-): WeatherForecast | null {
-  const time = response.hourly?.time?.[0];
-  const temperatureC = response.hourly?.temperature_2m?.[0];
-  const qnhHpa = response.hourly?.pressure_msl?.[0];
-  const windSpeedKt = response.hourly?.wind_speed_10m?.[0];
-  const windDirectionTrueDeg = response.hourly?.wind_direction_10m?.[0];
-  const windGustKt = response.hourly?.wind_gusts_10m?.[0];
+) {
+  const { time, temperatureC, qnhHpa, windSpeedKt, windDirectionTrueDeg, windGustKt } = values;
   if (!time || temperatureC == null || qnhHpa == null || windSpeedKt == null || windDirectionTrueDeg == null) return null;
-
   return {
     id: `icon-d2-${time}Z`,
     airportId,
@@ -34,9 +46,39 @@ export function normalizeOpenMeteoForecast(
     windSpeedKt,
     ...(windGustKt == null ? {} : { windGustKt }),
     source: {
-      provider: "Open-Meteo",
+      provider: "Open-Meteo" as const,
       model: "ICON-D2",
       updatedAt,
     },
   };
+}
+
+export function normalizeOpenMeteoForecast(
+  response: OpenMeteoHourlyResponse,
+  airportId?: string,
+  updatedAt = new Date().toISOString(),
+): WeatherForecast | null {
+  return weatherForecast({
+    time: response.hourly?.time?.[0],
+    temperatureC: response.hourly?.temperature_2m?.[0],
+    qnhHpa: response.hourly?.pressure_msl?.[0],
+    windSpeedKt: response.hourly?.wind_speed_10m?.[0],
+    windDirectionTrueDeg: response.hourly?.wind_direction_10m?.[0],
+    windGustKt: response.hourly?.wind_gusts_10m?.[0],
+  }, airportId, updatedAt);
+}
+
+export function normalizeOpenMeteoCurrent(
+  response: OpenMeteoCurrentResponse,
+  airportId?: string,
+  updatedAt = new Date().toISOString(),
+): WeatherForecast | null {
+  return weatherForecast({
+    time: response.current?.time,
+    temperatureC: response.current?.temperature_2m,
+    qnhHpa: response.current?.pressure_msl,
+    windSpeedKt: response.current?.wind_speed_10m,
+    windDirectionTrueDeg: response.current?.wind_direction_10m,
+    windGustKt: response.current?.wind_gusts_10m,
+  }, airportId, updatedAt);
 }
