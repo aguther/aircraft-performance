@@ -477,6 +477,71 @@
   line-height: 1.55;
 }
 
+.flight-plan-import {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.78rem 0.85rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  background: var(--cyan-bg);
+}
+
+.flight-plan-import.empty {
+  display: block;
+  background: var(--bg-card);
+}
+
+.flight-plan-import-label {
+  color: var(--cyan-dim);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.flight-plan-import-value {
+  margin-top: 0.15rem;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.flight-plan-import-copy {
+  margin-top: 0.2rem;
+  color: var(--text-dim);
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+.flight-plan-import a {
+  display: inline-block;
+  margin-top: 0.45rem;
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.flight-plan-import button {
+  flex-shrink: 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--cyan);
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.flight-plan-import button:disabled {
+  color: var(--text-dim);
+  cursor: default;
+}
+
 .mode-toggle {
   display: grid;
   overflow: hidden;

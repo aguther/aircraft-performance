@@ -67,7 +67,7 @@ Die Datei `_headers` ergänzt Sicherheits-Header für statische Antworten und ve
 Die Startseite, gemeinsame App-Grundlage und alle Rechner verwenden React, TypeScript und Vite. Die bisherigen Rechner-URLs bleiben durch das SPA-Routing erhalten.
 
 - `src/app/`
-  Enthält zentrale Definitionen wie Aircraft Registry, Flugzeug-Kontext, Calculator Registry und Theme-Verhalten. Der Flugzeug-Kontext verwaltet die zentrale Typauswahl und filtert die verfügbaren Rechner anhand der Fähigkeiten des gewählten Flugzeugs.
+  Enthält zentrale Definitionen wie Aircraft Registry, Flugzeug-Kontext, Flight-Plan-Kontext, Calculator Registry und Theme-Verhalten. Der Flugzeug-Kontext verwaltet die zentrale Typauswahl und filtert die verfügbaren Rechner anhand der Fähigkeiten des gewählten Flugzeugs.
 - `src/components/`
   Enthält gemeinsame React-Komponenten der App-Shell.
 - `src/pages/`
@@ -120,3 +120,5 @@ npm test
 ```
 
 Die Tests verwenden feste Referenzfälle gegen die pure Calculator-Logik in `src/aircraft/g115b/calculators.ts`, Rendering-Tests für alle Rechnerseiten sowie jsdom-Interaktionstests für wichtige UI-Abläufe.
+
+Weight & Balance ist die führende Quelle für Beladung, Startkraftstoff, geplanten Verbrauch sowie daraus berechnete Start- und Landemasse. Takeoff und Landing können die jeweils passende Masse explizit aus dem persistenten Flugplan übernehmen. Anschließende lokale Änderungen in diesen Rechnern werden nicht in den Flugplan zurückgeschrieben.

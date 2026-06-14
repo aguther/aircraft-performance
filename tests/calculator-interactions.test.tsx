@@ -4,6 +4,7 @@ import { useState } from "react";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import { AircraftProvider, useAircraft } from "../src/app/AircraftContext";
 import type { AircraftDefinition } from "../src/app/aircraft";
 import { FlightPlanProvider, useFlightPlan } from "../src/app/FlightPlanContext";
@@ -11,6 +12,7 @@ import { AltitudeInput, type AltitudeInputValue } from "../src/components/Altitu
 import { ClimbPage } from "../src/pages/ClimbPage";
 import { StallPage } from "../src/pages/StallPage";
 import { WeightBalancePage } from "../src/pages/WeightBalancePage";
+import { TakeoffPage } from "../src/pages/TakeoffPage";
 
 afterEach(() => {
   cleanup();
@@ -105,6 +107,40 @@ describe("calculator interactions", () => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
       expect(storedPlan.masses.startMassKg).toBeGreaterThan(storedPlan.masses.landingMassKg);
       expect(storedPlan.masses.landingFuelLiters).toBe(77);
+    });
+  });
+
+  it("imports the planned takeoff mass without writing local changes back", async () => {
+    window.localStorage.setItem("performance-calculators-flight-plan", JSON.stringify({
+      weightBalance: {
+        registration: "D-EBFT",
+        pilotMassKg: 85,
+        copilotMassKg: 0,
+        baggageMassKg: 0,
+        startFuelLiters: 60,
+        plannedFuelBurnLiters: 30,
+      },
+      masses: {
+        startMassKg: 850,
+        landingMassKg: 828.4,
+        startFuelLiters: 60,
+        landingFuelLiters: 30,
+        updatedAt: "2026-06-14T12:00:00.000Z",
+      },
+    }));
+    const user = userEvent.setup();
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    await user.click(screen.getByRole("button", { name: "Masse übernehmen" }));
+    const massField = screen.getByText("Masse", { selector: ".field-label" }).parentElement!;
+    const massInput = massField.querySelector('input[type="number"]')!;
+    expect(massInput.getAttribute("value")).toBe("850");
+
+    fireEvent.change(massInput, { target: { value: "840" } });
+
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.masses.startMassKg).toBe(850);
     });
   });
 

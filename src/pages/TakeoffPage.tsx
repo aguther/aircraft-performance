@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { calculateTakeoff } from "../aircraft/g115b/calculators";
 import type { TakeoffInputs } from "../aircraft/g115b/types";
+import { useFlightPlan } from "../app/FlightPlanContext";
 import {
   formatSigned,
   interpolate1D,
@@ -11,6 +12,7 @@ import {
 } from "../domain";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
 import { CalculatorContextCard } from "../components/CalculatorContextCard";
+import { FlightPlanMassImport } from "../components/FlightPlanMassImport";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
 
@@ -314,6 +316,7 @@ function ChartCard({ inputs, result, exportContext }: { inputs: TakeoffInputs; r
 }
 
 export function TakeoffPage() {
+  const { flightPlan } = useFlightPlan();
   const [pressureAltitudeMode, setPressureAltitudeMode] = useState<PressureAltitudeMode>("qnh");
   const [elevationFt, setElevationFt] = useState(0);
   const [qnhHpa, setQnhHpa] = useState(1013);
@@ -370,6 +373,14 @@ export function TakeoffPage() {
         </div>
         <div className="sidebar-section">
           <div className="section-header">Flugzeug</div>
+          <FlightPlanMassImport
+            label="Startmasse aus Flugplanung"
+            massKg={flightPlan.masses?.startMassKg}
+            fuelLiters={flightPlan.masses?.startFuelLiters}
+            updatedAt={flightPlan.masses?.updatedAt}
+            currentMassKg={massKg}
+            onImport={setMassKg}
+          />
           <SliderField label="Masse" labelDetail="kg · MTOW 920" unit="kg" value={massKg} min={750} max={920} step={5} onChange={setMassKg} />
         </div>
         <div className="sidebar-section">
