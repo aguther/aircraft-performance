@@ -88,6 +88,6 @@ export const calculatorRegistry: CalculatorDefinition[] = [
     description: "Rate of Climb und VY nach Masse und Dichtehöhe.",
     source: "POH 5.3.8",
     group: "reference",
-    runtime: "legacy",
+    runtime: "react",
   },
 ];
