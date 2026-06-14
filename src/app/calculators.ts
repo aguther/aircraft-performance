@@ -55,7 +55,7 @@ export const calculatorRegistry: CalculatorDefinition[] = [
     description: "Drehzahl, Kraftstoffverbrauch und TAS.",
     source: "POH 5.3.10, 5.3.11, 5.3.12",
     group: "planning",
-    runtime: "legacy",
+    runtime: "react",
   },
   {
     capability: "landing",
