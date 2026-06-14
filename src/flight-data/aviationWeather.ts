@@ -9,6 +9,7 @@ export type AwcMetar = {
   wdir: number | "VRB" | null;
   wspd: number | null;
   wgst: number | null;
+  rawOb?: string | null;
 };
 
 export type AwcTafPeriod = {
@@ -29,10 +30,20 @@ export type AwcTaf = {
 };
 
 const INHG_TO_HPA = 33.8639;
-// AWC returns altim in inHg for US stations (A-format) but in hPa for ICAO stations (Q-format)
-function altimToHpa(altim: number): number {
-  return altim > 100 ? altim : altim * INHG_TO_HPA;
+
+// Parse QNH from raw METAR string: Q1017 → 1017 hPa, A2992 → 29.92 inHg → hPa
+function parseQnhHpa(rawOb: string | null | undefined, altim: number | null): number | null {
+  if (rawOb) {
+    const q = /(?:^|\s)Q(\d{4})(?:\s|$)/.exec(rawOb);
+    if (q) return Number.parseInt(q[1], 10);
+    const a = /(?:^|\s)A(\d{4})(?:\s|$)/.exec(rawOb);
+    if (a) return Math.round((Number.parseInt(a[1], 10) / 100) * INHG_TO_HPA);
+  }
+  // Fallback: altim field — AWC returns inHg for US, hPa for ICAO stations
+  if (altim == null) return null;
+  return altim > 100 ? altim : Math.round(altim * INHG_TO_HPA);
 }
+
 const SKIP_INDICATORS = new Set(["TEMPO", "INTER", "PROB30", "PROB40"]);
 
 function parseAwcTime(value: string): string {
@@ -42,15 +53,16 @@ function parseAwcTime(value: string): string {
 export function normalizeAwcMetar(data: AwcMetar[], airportId?: string): WeatherForecast | null {
   const metar = data[0];
   if (!metar) return null;
-  const { temp, altim, wdir, wspd, wgst, reportTime, icaoId, obsTime } = metar;
-  if (temp == null || altim == null || wdir == null || typeof wdir !== "number" || wspd == null) return null;
+  const { temp, altim, wdir, wspd, wgst, reportTime, icaoId, obsTime, rawOb } = metar;
+  const qnhHpa = parseQnhHpa(rawOb, altim);
+  if (temp == null || qnhHpa == null || wdir == null || typeof wdir !== "number" || wspd == null) return null;
   const validAt = parseAwcTime(reportTime);
   return {
     id: `metar-${icaoId.toLowerCase()}-${obsTime ?? new Date(validAt).getTime()}`,
     airportId,
     validAt,
     temperatureC: Math.round(temp * 10) / 10,
-    qnhHpa: Math.round(altimToHpa(altim) * 10) / 10,
+    qnhHpa,
     windDirectionTrueDeg: wdir,
     windSpeedKt: wspd,
     ...(wgst != null ? { windGustKt: wgst } : {}),
