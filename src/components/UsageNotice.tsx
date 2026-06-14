@@ -45,18 +45,20 @@ export function UsageNotice({ open, onClose }: UsageNoticeProps) {
       onCancel={cancelNotice}
     >
       <div className="usage-notice-panel">
-        <div className="usage-notice-icon" aria-hidden="true">
-          i
-        </div>
-        <div className="usage-notice-content">
-          <h2 id="usageNoticeTitle">Wichtiger Hinweis</h2>
-          <p className="usage-notice-intro" id="usageNoticeText">
-            Bitte lesen und bestätigen Sie vor der Nutzung
-          </p>
+        <header className="usage-notice-header">
+          <div className="usage-notice-icon" aria-hidden="true">
+            !
+          </div>
+          <div>
+            <h2 id="usageNoticeTitle">Wichtiger Hinweis</h2>
+            <p className="usage-notice-intro" id="usageNoticeText">
+              Bitte lesen und bestätigen Sie vor der Nutzung
+            </p>
+          </div>
+        </header>
+        <div className="usage-notice-body">
+          <p className="usage-notice-lead">Diese Anwendung ist ein <strong>Hilfsmittel zur Unterstützung des Situationsbewusstseins</strong> des Piloten und dient ausschließlich der allgemeinen Orientierung.</p>
           <div className="usage-notice-sections">
-            <section>
-              <p>Diese Anwendung ist ein Hilfsmittel zur Unterstützung des Situationsbewusstseins des Piloten und dient ausschließlich der allgemeinen Orientierung.</p>
-            </section>
             <section>
               <h3>Keine Entscheidungsgrundlage</h3>
               <p>Die Anwendung darf niemals als alleinige oder primäre Grundlage für fliegerische Entscheidungen verwendet werden. Für alle operativen Entscheidungen sind ausschließlich offizielle Dokumente (AFM/POH, AIP, NOTAM, aktuelle METARs/TAFs) maßgeblich.</p>
@@ -77,10 +79,12 @@ export function UsageNotice({ open, onClose }: UsageNoticeProps) {
               <h3>Haftungsausschluss</h3>
               <p>Der Entwickler übernimmt keinerlei Haftung für Schäden, die mittelbar oder unmittelbar durch die Nutzung oder das Vertrauen auf die Ausgaben dieser Anwendung entstehen.</p>
             </section>
-            <section>
+            <section className="usage-notice-confirmation-text">
               <p>Durch Tippen auf „Verstanden – Weiter zur App“ bestätigen Sie, dass Sie diesen Hinweis gelesen und verstanden haben.</p>
             </section>
           </div>
+        </div>
+        <footer className="usage-notice-footer">
           <div
             className="usage-notice-version"
             title={`Commit ${buildInfo.fullCommit}${buildInfo.dirty ? " · lokal verändert" : ""} · Build ${buildInfo.builtAt}`}
@@ -94,7 +98,7 @@ export function UsageNotice({ open, onClose }: UsageNoticeProps) {
           >
             Verstanden – Weiter zur App
           </button>
-        </div>
+        </footer>
       </div>
     </dialog>
   );

@@ -12,5 +12,8 @@ describe("UsageNotice", () => {
     expect(markup).toContain("Teilweise inoffizielle Datenquellen");
     expect(markup).toContain("Verantwortung des Piloten");
     expect(markup).toContain("Verstanden – Weiter zur App");
+    expect(markup).toContain("usage-notice-header");
+    expect(markup).toContain("usage-notice-body");
+    expect(markup).toContain("usage-notice-footer");
   });
 });
