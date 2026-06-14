@@ -1,4 +1,4 @@
-const RELEASE = "87";
+const RELEASE = "88";
 const CACHE_PREFIX = "g115b-performance-v";
 const CACHE_NAME = `${CACHE_PREFIX}${RELEASE}`;
 const versioned = (path) => `${path}?v=${RELEASE}`;
@@ -8,14 +8,9 @@ const APP_SHELL = [
   "./react/app.js",
   "./react/style.css",
   versioned("./manifest.webmanifest"),
-  versioned("./app.js"),
   versioned("./css/theme.css"),
   versioned("./css/index.css"),
   versioned("./css/calculator.css"),
-  versioned("./js/g115b-core.js"),
-  versioned("./js/g115b-ui.js"),
-  versioned("./js/g115b-calculators.js"),
-  versioned("./js/performance-data.js"),
   "./icons/icon-192-v2.png",
   "./icons/icon-512-v2.png",
   "./icons/apple-touch-icon-v2.png",

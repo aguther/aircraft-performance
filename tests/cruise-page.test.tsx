@@ -1,6 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { calculatorRegistry } from "../src/app/calculators";
 import { CruisePage } from "../src/pages/CruisePage";
 
 describe("CruisePage", () => {
@@ -11,11 +10,5 @@ describe("CruisePage", () => {
     expect(markup).toContain("grob115b-cruise-speed-chart.png");
     expect(markup).toContain("grob115b-cruise-rpm-chart.png");
     expect(markup).toContain("Density Altitude");
-  });
-
-  it("is registered as a React calculator", () => {
-    expect(
-      calculatorRegistry.find((calculator) => calculator.capability === "cruise")?.runtime,
-    ).toBe("react");
   });
 });

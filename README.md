@@ -38,7 +38,7 @@ Danach die App unter `http://localhost:8080` im Browser öffnen und von dort ins
 
 ## Deployment auf Cloudflare Workers
 
-Die Anwendung wird mit Vite gebaut. Der Build erzeugt die React-App und kopiert die noch nicht migrierten Rechnerseiten nach `dist`:
+Die Anwendung wird mit Vite gebaut. Der Build erzeugt die React-App und kopiert die statischen Diagramme, Icons sowie PWA-Ressourcen nach `dist`:
 
 ```powershell
 npm run build
@@ -62,18 +62,18 @@ Die Datei `_headers` ergänzt Sicherheits-Header für statische Antworten und ve
 
 ---
 
-## React-Migration
+## React-Anwendung
 
-Die Startseite, gemeinsame App-Grundlage und Weight-&-Balance-Seite verwenden React, TypeScript und Vite. Die noch nicht migrierten Rechner bleiben während der schrittweisen Migration unter ihren bisherigen HTML-URLs erreichbar.
+Die Startseite, gemeinsame App-Grundlage und alle Rechner verwenden React, TypeScript und Vite. Die bisherigen Rechner-URLs bleiben durch das SPA-Routing erhalten.
 
 - `src/app/`
   Enthält zentrale Definitionen wie Aircraft Registry, Calculator Registry und Theme-Verhalten.
 - `src/components/`
   Enthält gemeinsame React-Komponenten der App-Shell.
 - `src/pages/`
-  Enthält migrierte React-Seiten.
-- `scripts/copy-legacy.cjs`
-  Kopiert die noch nicht migrierten Rechner und ihre Assets nach dem Vite-Build in `dist`.
+  Enthält die React-Seiten der Rechner.
+- `scripts/copy-static.cjs`
+  Kopiert Diagramme, Icons und PWA-Ressourcen nach dem Vite-Build in `dist`.
 
 Lokale Entwicklung:
 
@@ -101,8 +101,6 @@ Die Rechenlogik ist jetzt bewusst von der HTML-Oberfläche getrennt:
   Enthält flugzeugunabhängige Rechenhilfen, Atmosphärenlogik, Geometrie und gemeinsame Typen.
 - `src/aircraft/g115b/`
   Enthält die typisierten G115B-Performance-Daten und Calculator-Funktionen.
-- `js/pages/*.js`
-  Enthält während der React-Migration weiterhin die Controller der bestehenden Rechnerseiten.
 - `css/theme.css`
   Enthält die zentralen Theme-Variablen sowie die gemeinsamen App-/Navigations-Styles.
 - `css/calculator.css`
@@ -110,8 +108,8 @@ Die Rechenlogik ist jetzt bewusst von der HTML-Oberfläche getrennt:
 - `css/index.css`
   Enthält die spezifischen Styles der Übersichtsseite.
 
-Damit sind die fachlichen Daten und die eigentliche Berechnung deutlich einfacher zu prüfen als in den vorherigen großen Inline-Skripten der HTML-Dateien.
-Die DOM-Zugriffe sind auf die Page-Controller beschränkt, während die Berechnungen selbst browserunabhängig bleiben.
+Damit sind die fachlichen Daten und die eigentliche Berechnung deutlich einfacher zu prüfen als in den vorherigen großen Inline-Skripten der HTML-Dateien.
+Die Berechnungen bleiben browserunabhängig, während React die Benutzeroberfläche verwaltet.
 
 ## Tests
 
@@ -121,5 +119,4 @@ Die Rechenlogik wird mit Vitest direkt gegen den TypeScript-Domain-Layer geprüf
 npm test
 ```
 
-Die Tests verwenden feste Referenzfälle gegen die pure Calculator-Logik in `src/aircraft/g115b/calculators.ts`.
-Zusätzliche Paritätstests vergleichen repräsentative Ergebnisse mit den während der Migration weiterhin ausgelieferten Legacy-Rechnern.
+Die Tests verwenden feste Referenzfälle gegen die pure Calculator-Logik in `src/aircraft/g115b/calculators.ts` sowie Rendering-Tests für alle Rechnerseiten.

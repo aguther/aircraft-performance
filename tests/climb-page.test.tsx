@@ -1,6 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { calculatorRegistry } from "../src/app/calculators";
 import { ClimbPage } from "../src/pages/ClimbPage";
 
 describe("ClimbPage", () => {
@@ -11,11 +10,5 @@ describe("ClimbPage", () => {
     expect(markup).toContain("Start- und Ziel-Dichtehöhe sind gültig");
     expect(markup).toContain("grob115b-climb-chart.png");
     expect(markup).toContain("Steigflug · Differenz");
-  });
-
-  it("is registered as a React calculator", () => {
-    expect(
-      calculatorRegistry.find((calculator) => calculator.capability === "climb")?.runtime,
-    ).toBe("react");
   });
 });

@@ -24,10 +24,4 @@ describe("aircraft registry", () => {
     expect(new Set(links).size).toBe(links.length);
   });
 
-  it("marks Weight & Balance as a React calculator", () => {
-    expect(
-      calculatorRegistry.find((calculator) => calculator.capability === "weightBalance")
-        ?.runtime,
-    ).toBe("react");
-  });
 });

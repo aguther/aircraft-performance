@@ -41,14 +41,10 @@ function CalculatorGroup({
             </>
           );
 
-          return calculator.runtime === "react" ? (
+          return (
             <Link className="idx-card" to={calculator.href} key={calculator.href}>
               {content}
             </Link>
-          ) : (
-            <a className="idx-card" href={calculator.href} key={calculator.href}>
-              {content}
-            </a>
           );
         })}
       </div>

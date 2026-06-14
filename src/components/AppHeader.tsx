@@ -68,25 +68,14 @@ export function AppHeader({
                 Übersicht
               </Link>
               {calculatorRegistry.map((calculator) => (
-                calculator.runtime === "react" ? (
-                  <Link
-                    className={calculator.href === currentCalculatorHref ? "current" : undefined}
-                    to={calculator.href}
-                    key={calculator.href}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {calculator.title} · {calculator.tag}
-                  </Link>
-                ) : (
-                  <a
-                    className={calculator.href === currentCalculatorHref ? "current" : undefined}
-                    href={calculator.href}
-                    key={calculator.href}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {calculator.title} · {calculator.tag}
-                  </a>
-                )
+                <Link
+                  className={calculator.href === currentCalculatorHref ? "current" : undefined}
+                  to={calculator.href}
+                  key={calculator.href}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {calculator.title} · {calculator.tag}
+                </Link>
               ))}
             </div>
           </div>

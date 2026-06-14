@@ -1,6 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { calculatorRegistry } from "../src/app/calculators";
 import { TakeoffPage } from "../src/pages/TakeoffPage";
 
 describe("TakeoffPage", () => {
@@ -12,11 +11,5 @@ describe("TakeoffPage", () => {
     expect(markup).toContain("Grafische Nachvollziehbarkeit");
     expect(markup).toContain("grob115b-takeoff-chart.png");
     expect(markup).toContain("Rechenweg");
-  });
-
-  it("is registered as a React calculator", () => {
-    expect(
-      calculatorRegistry.find((calculator) => calculator.capability === "takeoff")?.runtime,
-    ).toBe("react");
   });
 });

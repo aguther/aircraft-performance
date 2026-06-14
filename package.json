@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build && node scripts/copy-legacy.cjs",
+    "build": "vite build && node scripts/copy-static.cjs",
     "dev": "vite",
     "preview": "vite preview",
     "test": "vitest run",
