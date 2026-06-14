@@ -14,7 +14,6 @@ const legacyFiles = [
   "manifest.webmanifest",
   "service-worker.js",
   "stall.html",
-  "takeoff.html",
 ];
 
 for (const directory of legacyDirectories) {

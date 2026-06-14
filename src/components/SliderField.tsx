@@ -1,6 +1,8 @@
 type SliderFieldProps = {
   label: string;
   unit: string;
+  labelDetail?: string;
+  formatValue?: (value: number) => string;
   value: number;
   min: number;
   max: number;
@@ -13,6 +15,8 @@ type SliderFieldProps = {
 export function SliderField({
   label,
   unit,
+  labelDetail = unit,
+  formatValue = String,
   value,
   min,
   max,
@@ -29,7 +33,7 @@ export function SliderField({
   return (
     <div className="field range-field">
       <div className="field-label">
-        {label} <span>{unit}</span>
+        {label} <span>{labelDetail}</span>
       </div>
       <div className="slider-row">
         <input
@@ -41,7 +45,7 @@ export function SliderField({
           onChange={(event) => updateValue(event.target.value)}
         />
         <span className="slider-val">
-          {value} {unit}
+          {formatValue(value)} {unit}
         </span>
       </div>
       <div className="input-wrap" style={{ marginTop: 6 }}>

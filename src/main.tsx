@@ -16,7 +16,7 @@ createRoot(document.getElementById("root")!).render(
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js?v=81", {
+    navigator.serviceWorker.register("/service-worker.js?v=82", {
       updateViaCache: "none",
     });
   });

@@ -33,7 +33,7 @@ export const calculatorRegistry: CalculatorDefinition[] = [
     description: "Startrollstrecke und Startstrecke über Hindernis.",
     source: "POH 5.3.7",
     group: "planning",
-    runtime: "legacy",
+    runtime: "react",
   },
   {
     capability: "climb",
