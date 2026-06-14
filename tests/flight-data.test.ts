@@ -2,32 +2,26 @@ import { describe, expect, it } from "vitest";
 import {
   calculateRunwaySlopePercent,
   calculateWindComponents,
-  getMockDeclination,
-  getMockWeatherForecasts,
   magneticHeading,
-  mockAirports,
-  searchMockAirports,
+  normalizeOpenAipAirport,
 } from "../src/flight-data";
+import { openAipAirportFixture } from "./fixtures/openAipAirport";
 
-describe("flight data models and mock providers", () => {
-  it("searches airports using OpenAIP-like identifiers", () => {
-    expect(searchMockAirports("EDFO")[0].name).toBe("Michelstadt");
-    expect(searchMockAirports("oberpfaffenhofen")[0].icaoCode).toBe("EDMO");
+describe("flight data models and OpenAIP adapter", () => {
+  it("normalizes official OpenAIP airport and directional runway fields", () => {
+    const airport = normalizeOpenAipAirport(openAipAirportFixture)!;
+
+    expect(airport.name).toBe("Frankfurt-Egelsbach");
+    expect(airport.elevationFt).toBe(384);
+    expect(airport.source.provider).toBe("OpenAIP");
+    expect(airport.runways[0].surface).toBe("asphalt");
+    expect(airport.runways[0].toraM).toBe(1400);
+    expect(airport.runways[0].magneticHeadingDeg).toBe(78.5);
+    expect(airport.runways[0].slopePercent).toBeCloseTo(0.1429, 3);
   });
 
-  it("provides ICON-D2-like forecasts and NOAA-like declination", () => {
-    const airport = mockAirports[0];
-    const forecasts = getMockWeatherForecasts(airport.id, new Date("2026-06-14T12:00:00Z"));
-    const declination = getMockDeclination(airport, forecasts[0].validAt);
-
-    expect(forecasts).toHaveLength(17);
-    expect(airport.source.provider).toBe("OpenAIP");
-    expect(airport.source.mock).toBe(true);
-    expect(airport.runways[0].toraM).toBe(airport.runways[0].todaM);
-    expect(forecasts[0].source.provider).toBe("Open-Meteo");
-    expect(forecasts[0].source.model).toBe("ICON-D2");
-    expect(declination.source.provider).toBe("NOAA");
-    expect(declination.source.model).toBe("WMM");
+  it("rejects incomplete OpenAIP airport responses", () => {
+    expect(normalizeOpenAipAirport({ name: "Incomplete" })).toBeNull();
   });
 
   it("calculates magnetic headings, slope and wind components consistently", () => {

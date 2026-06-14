@@ -13,8 +13,6 @@ describe("LandingPage", () => {
     expect(markup).toContain("grob115b-landing-chart.png");
     expect(markup).toContain("Anfluggeschwindigkeiten");
     expect(markup).toContain("Airport");
-    expect(markup).toContain("Geplante Landezeit / Prognose");
-    expect(markup).toContain("airport-preview-unit");
-    expect(markup).toContain("airport-preview-value warn");
+    expect(markup).toContain("Bitte Flugplatz über ICAO-Code oder Namen suchen.");
   });
 });

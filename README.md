@@ -44,7 +44,7 @@ Die Anwendung wird mit Vite gebaut. Der Build erzeugt die React-App und kopiert 
 npm run build
 ```
 
-Cloudflare verwendet für neue Git-Deployments den gemeinsamen Workers-Dialog. Die statische Website wird dabei über Workers Static Assets ausgeliefert. `wrangler.jsonc` legt `dist` als auszulieferndes Verzeichnis fest.
+Cloudflare verwendet für neue Git-Deployments den gemeinsamen Workers-Dialog. Die statische Website wird dabei über Workers Static Assets ausgeliefert. `wrangler.jsonc` startet das Flight-Data-Gateway aus `worker/index.ts` zuerst; alle Nicht-API-Anfragen werden von dort an die statischen Assets in `dist` weitergereicht.
 
 Für das über GitHub verbundene Cloudflare-Projekt werden folgende Einstellungen verwendet:
 
@@ -58,7 +58,19 @@ Für das über GitHub verbundene Cloudflare-Projekt werden folgende Einstellunge
 
 `main` wird als Production Branch gewählt. Builds für Non-production Branches können aktiviert bleiben.
 
-Die Datei `_headers` ergänzt Sicherheits-Header für statische Antworten und verhindert langlebiges Browser-Caching von Service Worker und Web App Manifest. Spätere API-Zugriffe können direkt durch einen Worker ergänzt werden.
+Für die OpenAIP-Anbindung muss das API-Key-Secret einmal pro Cloudflare-Worker gesetzt werden:
+
+```powershell
+npx wrangler secret put OPENAIP_API_KEY
+```
+
+Für die lokale Entwicklung mit `npx wrangler dev` kann der Schlüssel in einer nicht eingecheckten Datei `.dev.vars` stehen:
+
+```text
+OPENAIP_API_KEY=...
+```
+
+Die Datei `_headers` ergänzt Sicherheits-Header für statische Antworten und verhindert langlebiges Browser-Caching von Service Worker und Web App Manifest. API-Antworten werden nicht durch den Service Worker gespeichert; das Gateway cached erfolgreiche OpenAIP-Antworten stattdessen für bis zu eine Stunde am Cloudflare-Edge.
 
 ---
 
@@ -127,18 +139,17 @@ W&B zeigt die berechneten Massen mit einer Nachkommastelle. Bei der Übernahme i
 
 ## Flugplatz- und Wetterdaten
 
-Die Takeoff- und Landing-Rechner besitzen einen `Airport`-Modus mit provider-unabhängigen Mock-Daten. Start- und Zielplatz werden mit gewählter Bahn und Prognosezeit getrennt in der zentralen Flugplanung gespeichert. Die Modelle sind auf die späteren Schnittstellen ausgerichtet:
+Die Takeoff- und Landing-Rechner besitzen einen `Airport`-Modus mit echten OpenAIP-Daten. Start- und Zielplatz werden mit gewählter Bahn und geplanter Zeit getrennt in der zentralen Flugplanung gespeichert.
 
-- OpenAIP `/airports` und `/airports/{id}`: Suche, Position, Elevation, magnetische Deklination sowie richtungsbezogene Bahndaten mit True Heading, Oberfläche, Abmessungen, erklärten Distanzen und Schwellenhöhe.
-- Open-Meteo DWD ICON API: Temperatur, QNH, Windrichtung und Windstärke für gewählte Prognosezeitpunkte mit explizitem Modell `ICON-D2`.
-- NOAA WMM: datums- und positionsbezogene magnetische Deklination.
+- `/api/airports?search=...`: Same-Origin-Gateway für die OpenAIP-Flugplatzsuche.
+- `/api/airports/{id}`: Same-Origin-Gateway für einen gespeicherten Flugplatz.
+- OpenAIP liefert Position, Elevation, magnetische Deklination sowie richtungsbezogene Bahndaten mit True Heading, Oberfläche, Abmessungen, erklärten Distanzen und Schwellenhöhe.
 
-OpenAIP liefert keine direkte Bahnneigung. Diese wird, sofern beide Schwellenhöhen verfügbar sind, aus Höhendifferenz und Bahnlänge berechnet. Wetterwind und Windkomponenten werden intern immer relativ zu True Heading berechnet.
+Der OpenAIP-API-Key bleibt ausschließlich als Worker-Secret auf Cloudflare und wird nicht an den Browser ausgeliefert. Das Gateway normalisiert die Anbieterantworten in das interne Flight-Data-Modell. OpenAIP liefert keine direkte Bahnneigung; diese wird, sofern beide Schwellenhöhen verfügbar sind, aus Höhendifferenz und Bahnlänge berechnet.
 
-Beim Takeoff werden Elevation, QNH, OAT, Windkomponente und Bahnneigung übernommen. Beim Landing werden Elevation, QNH, OAT und Windkomponente übernommen; die Bahnneigung bleibt dort eine Information, da sie im aktuellen Landestreckenmodell nicht berücksichtigt wird.
+Beim Takeoff werden Elevation und Bahnneigung übernommen. Beim Landing wird die Elevation übernommen; die Bahnneigung bleibt dort eine Information, da sie im aktuellen Landestreckenmodell nicht berücksichtigt wird. Wetterdaten sind noch nicht angebunden, deshalb bleiben QNH, OAT und Wind bei der Übernahme bewusst unverändert.
 
 Offizielle Dokumentation:
 
 - [OpenAIP API](https://docs.openaip.net/) und [Airport-Antwortschema](https://api.core.openaip.net/api/schemas/response/airport/airport-schema.json) – die Core API verlangt eine API-Key- oder Bearer-Authentifizierung.
 - [Open-Meteo DWD ICON API](https://open-meteo.com/en/docs/dwd-api)
-- [NOAA/NCEI Geomagnetic Calculators](https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml)

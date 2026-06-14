@@ -4,10 +4,9 @@ export type Coordinates = {
 };
 
 export type DataSource = {
-  provider: "OpenAIP" | "Open-Meteo" | "NOAA";
+  provider: "OpenAIP" | "Open-Meteo";
   updatedAt: string;
   model?: string;
-  mock?: boolean;
 };
 
 export type RunwaySurface = "asphalt" | "concrete" | "grass" | "gravel" | "other";
@@ -49,13 +48,6 @@ export type WeatherForecast = {
   windDirectionTrueDeg: number;
   windSpeedKt: number;
   windGustKt?: number;
-  source: DataSource;
-};
-
-export type MagneticDeclination = {
-  coordinates: Coordinates;
-  validAt: string;
-  declinationDeg: number;
   source: DataSource;
 };
 

@@ -14,9 +14,7 @@ describe("TakeoffPage", () => {
     expect(markup).toContain("grob115b-takeoff-chart.png");
     expect(markup).toContain("Rechenweg");
     expect(markup).toContain("Airport");
-    expect(markup).toContain("airport-preview-unit");
-    expect(markup).toContain("hPa");
-    expect(markup).toContain("warn");
+    expect(markup).toContain("Bitte Flugplatz über ICAO-Code oder Namen suchen.");
     expect(markup).toContain('step="1" value="920"');
   });
 });

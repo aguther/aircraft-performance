@@ -358,10 +358,7 @@ export function TakeoffPage() {
           {pressureAltitudeMode === "airport" ? (
             <AirportRunwayInput operation="departure" onApply={(values) => {
               setElevationFt(values.elevationFt);
-              setQnhHpa(values.qnhHpa);
-              setOatC(values.oatC);
               setSlopePercent(values.slopePercent);
-              setWindKt(values.windKt);
             }} />
           ) : pressureAltitudeMode === "qnh" ? (
             <div className="pa-mode">

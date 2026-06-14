@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { AircraftProvider, useAircraft } from "../src/app/AircraftContext";
 import type { AircraftDefinition } from "../src/app/aircraft";
 import { FlightPlanProvider, useFlightPlan } from "../src/app/FlightPlanContext";
 import { AltitudeInput, type AltitudeInputValue } from "../src/components/AltitudeInput";
-import { crosswindTone } from "../src/components/AirportRunwayInput";
+import type { Airport } from "../src/flight-data";
 import { ClimbPage } from "../src/pages/ClimbPage";
 import { StallPage } from "../src/pages/StallPage";
 import { WeightBalancePage } from "../src/pages/WeightBalancePage";
@@ -19,6 +19,7 @@ import { LandingPage } from "../src/pages/LandingPage";
 afterEach(() => {
   cleanup();
   window.localStorage.clear();
+  vi.unstubAllGlobals();
 });
 
 function AltitudeInputHarness() {
@@ -76,13 +77,6 @@ function FlightPlanContextHarness() {
 }
 
 describe("calculator interactions", () => {
-  it("warns for crosswind from 10 knots", () => {
-    expect(crosswindTone(9.9)).toBeUndefined();
-    expect(crosswindTone(-9.9)).toBeUndefined();
-    expect(crosswindTone(10)).toBe("warn");
-    expect(crosswindTone(-12)).toBe("warn");
-  });
-
   it("selects and persists the central aircraft", async () => {
     const user = userEvent.setup();
     render(<AircraftProvider availableAircraft={testAircraft}><AircraftContextHarness /></AircraftProvider>);
@@ -167,48 +161,74 @@ describe("calculator interactions", () => {
     expect(slopeInput.getAttribute("value")).toBe("1.0");
   });
 
-  it("applies airport, runway and ICON-D2 mock data to takeoff", async () => {
+  const airport: Airport = {
+    id: "open-aip-edfe",
+    name: "Frankfurt-Egelsbach",
+    icaoCode: "EDFE",
+    country: "DE",
+    coordinates: { latitude: 49.9608, longitude: 8.6436 },
+    elevationFt: 384,
+    magneticDeclinationDeg: 3.5,
+    runways: [{
+      id: "edfe-08",
+      designator: "08",
+      trueHeadingDeg: 82,
+      magneticHeadingDeg: 78.5,
+      lengthM: 1400,
+      widthM: 25,
+      surface: "asphalt",
+      slopePercent: 0.1,
+    }],
+    source: { provider: "OpenAIP", updatedAt: "2026-06-14T12:00:00.000Z" },
+  };
+
+  function stubAirportSearch() {
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      return Response.json(url.includes("/api/airports?") ? { items: [airport], totalCount: 1 } : airport);
+    }));
+  }
+
+  it("applies real OpenAIP airport and runway data to takeoff", async () => {
+    stubAirportSearch();
     const user = userEvent.setup();
     render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
 
-    await user.click(screen.getByRole("button", { name: "Airport" }));
-    expect(screen.getByText(/Mock · OpenAIP · Open-Meteo ICON-D2 · NOAA WMM/)).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "Werte übernehmen" }));
+    await user.type(screen.getByRole("searchbox", { name: "Flugplatzsuche" }), "EDFE");
+    await user.click(screen.getByRole("button", { name: "Suchen" }));
+    expect(await screen.findByText(/OpenAIP · Stand/)).toBeTruthy();
+    expect(screen.getByText(/Wetterdaten sind noch nicht angebunden/)).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Flugplatzwerte übernehmen" }));
     await user.click(screen.getByRole("button", { name: "Elevation" }));
 
     const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;
     expect(within(atmosphereSection).getByDisplayValue("384")).toBeTruthy();
-    expect(within(atmosphereSection).getAllByDisplayValue("1016")).toHaveLength(2);
-    expect(within(atmosphereSection).getAllByDisplayValue("23")).toHaveLength(2);
     const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".section-header" }).parentElement!;
-    expect(within(runwaySection).getAllByDisplayValue("-9")).toHaveLength(2);
+    expect(within(runwaySection).getAllByDisplayValue("0.1")).toHaveLength(2);
     await waitFor(() => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
-      expect(storedPlan.departure.airportId).toBe("mock-edfe");
+      expect(storedPlan.departure.airportId).toBe("open-aip-edfe");
       expect(storedPlan.departure.runwayId).toBe("edfe-08");
     });
   });
 
-  it("applies destination airport, runway and ICON-D2 mock data to landing", async () => {
+  it("applies real OpenAIP destination airport data to landing", async () => {
+    stubAirportSearch();
     const user = userEvent.setup();
     render(<MemoryRouter><FlightPlanProvider><LandingPage /></FlightPlanProvider></MemoryRouter>);
 
-    await user.click(screen.getByRole("button", { name: "Airport" }));
-    expect(screen.getByText("Landebahn")).toBeTruthy();
-    expect(screen.getByText("Geplante Landezeit / Prognose")).toBeTruthy();
-    expect(screen.getByText(/Mock · OpenAIP · Open-Meteo ICON-D2 · NOAA WMM/)).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "Werte übernehmen" }));
+    await user.type(screen.getByRole("searchbox", { name: "Flugplatzsuche" }), "EDFE");
+    await user.click(screen.getByRole("button", { name: "Suchen" }));
+    expect(await screen.findByText("Landebahn")).toBeTruthy();
+    expect(screen.getByText("Geplante Landezeit")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Flugplatzwerte übernehmen" }));
     await user.click(screen.getByRole("button", { name: "Elevation" }));
 
     const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;
     expect(within(atmosphereSection).getByDisplayValue("384")).toBeTruthy();
-    expect(within(atmosphereSection).getAllByDisplayValue("1016")).toHaveLength(2);
-    expect(within(atmosphereSection).getAllByDisplayValue("23")).toHaveLength(2);
-    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".section-header" }).parentElement!;
-    expect(within(runwaySection).getAllByDisplayValue("-9")).toHaveLength(2);
     await waitFor(() => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
-      expect(storedPlan.arrival.airportId).toBe("mock-edfe");
+      expect(storedPlan.arrival.airportId).toBe("open-aip-edfe");
       expect(storedPlan.arrival.runwayId).toBe("edfe-08");
     });
   });

@@ -22,7 +22,6 @@ export type FlightPlanMasses = {
 export type FlightPlanAirportSelection = {
   airportId: string;
   runwayId: string;
-  forecastId: string;
   plannedAt: string;
   updatedAt: string;
 };

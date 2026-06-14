@@ -592,6 +592,47 @@
   gap: 0.75rem;
 }
 
+.airport-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.5rem;
+}
+
+.airport-search button {
+  min-height: 38px;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--cyan-bg);
+  color: var(--cyan);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.airport-search button:disabled,
+.airport-apply:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.airport-status {
+  padding: 0.65rem 0.7rem;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  color: var(--text-dim);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+.airport-status.error {
+  border-color: var(--warn-border);
+  color: var(--warn-text);
+  background: var(--warn-bg);
+}
+
 .airport-field {
   display: flex;
   flex-direction: column;
@@ -1558,6 +1599,10 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 }
 
 @media (max-width: 640px) {
+  .airport-search {
+    grid-template-columns: 1fr;
+  }
+
   .stall-calculator,
   .stall-calculator .page-layout,
   .stall-calculator .sidebar,

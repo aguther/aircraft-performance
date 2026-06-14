@@ -356,9 +356,6 @@ export function LandingPage() {
           {pressureAltitudeMode === "airport" ? (
             <AirportRunwayInput operation="arrival" onApply={(values) => {
               setElevationFt(values.elevationFt);
-              setQnhHpa(values.qnhHpa);
-              setOatC(values.oatC);
-              setWindKt(values.windKt);
             }} />
           ) : pressureAltitudeMode === "qnh" ? (
             <div className="pa-mode">

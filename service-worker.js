@@ -1,4 +1,4 @@
-const RELEASE = "88";
+const RELEASE = "89";
 const CACHE_PREFIX = "g115b-performance-v";
 const CACHE_NAME = `${CACHE_PREFIX}${RELEASE}`;
 const versioned = (path) => `${path}?v=${RELEASE}`;
@@ -48,6 +48,11 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  if (url.pathname.startsWith("/api/")) {
+    event.respondWith(fetch(new Request(request, { cache: "no-store" })));
     return;
   }
 

@@ -16,5 +16,5 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src", "tests/**/*.ts", "vite.config.ts"]
+  "include": ["src", "tests/**/*.ts", "vite.config.ts", "worker"]
 }
