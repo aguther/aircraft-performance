@@ -1,4 +1,5 @@
 import { normalizeOpenAipAirport, type OpenAipAirport, type OpenAipAirportList } from "../src/flight-data/openAip";
+import { normalizeOpenMeteoForecast, type OpenMeteoHourlyResponse } from "../src/flight-data/openMeteo";
 
 type Env = {
   ASSETS: { fetch(request: Request): Promise<Response> };
@@ -10,6 +11,7 @@ type WorkerContext = {
 };
 
 const OPENAIP_BASE_URL = "https://api.core.openaip.net/api";
+const OPEN_METEO_BASE_URL = "https://api.open-meteo.com/v1/dwd-icon";
 const CACHE_CONTROL = "public, max-age=300, s-maxage=3600";
 
 function json(payload: unknown, status = 200, headers: HeadersInit = {}) {
@@ -47,6 +49,19 @@ async function upstreamJson<T>(response: Response): Promise<T> {
   throw new Error(`OpenAIP ist derzeit nicht erreichbar (${response.status}).`);
 }
 
+async function openMeteoJson<T>(response: Response): Promise<T> {
+  if (response.ok) return response.json() as Promise<T>;
+  if (response.status === 429) throw new Error("Open-Meteo hat das Anfrage-Limit erreicht. Bitte später erneut versuchen.");
+  throw new Error(`Open-Meteo ist derzeit nicht erreichbar (${response.status}).`);
+}
+
+export function nearestForecastHour(value: string) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return null;
+  date.setUTCMinutes(date.getUTCMinutes() >= 30 ? 60 : 0, 0, 0);
+  return date.toISOString().slice(0, 13) + ":00";
+}
+
 export function openAipSearchVariants(search: string) {
   const variants = [
     search,
@@ -60,11 +75,45 @@ export function openAipSearchVariants(search: string) {
 }
 
 export async function handleApiRequest(request: Request, env: Env, context: WorkerContext) {
-  if (!env.OPENAIP_API_KEY) return json({ error: "OpenAIP ist noch nicht konfiguriert. Das Worker-Secret OPENAIP_API_KEY fehlt." }, 503);
   const url = new URL(request.url);
 
   try {
+    if (url.pathname === "/api/weather") {
+      const latitude = Number(url.searchParams.get("latitude"));
+      const longitude = Number(url.searchParams.get("longitude"));
+      const elevationFt = Number(url.searchParams.get("elevationFt"));
+      const plannedAt = url.searchParams.get("plannedAt") ?? "";
+      const airportId = url.searchParams.get("airportId")?.slice(0, 64);
+      const forecastHour = nearestForecastHour(plannedAt);
+      if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+        return json({ error: "Ungültige Koordinaten für die Wetterabfrage." }, 400);
+      }
+      if (!Number.isFinite(elevationFt) || elevationFt < -1500 || elevationFt > 30000) {
+        return json({ error: "Ungültige Flugplatzhöhe für die Wetterabfrage." }, 400);
+      }
+      if (!forecastHour) return json({ error: "Ungültige geplante Zeit für die Wetterabfrage." }, 400);
+      return cached(request, context, async () => {
+        const params = new URLSearchParams({
+          latitude: String(latitude),
+          longitude: String(longitude),
+          elevation: String(Math.round(elevationFt * 0.3048)),
+          models: "icon_d2",
+          hourly: "temperature_2m,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m",
+          wind_speed_unit: "kn",
+          timezone: "GMT",
+          start_hour: forecastHour,
+          end_hour: forecastHour,
+        });
+        const response = await openMeteoJson<OpenMeteoHourlyResponse>(await fetch(`${OPEN_METEO_BASE_URL}?${params}`, {
+          headers: { Accept: "application/json" },
+        }));
+        const forecast = normalizeOpenMeteoForecast(response, airportId);
+        return forecast ? json(forecast) : json({ error: "ICON-D2 liefert für die gewählte Zeit und Position keine Wetterdaten." }, 404);
+      });
+    }
+
     if (url.pathname === "/api/airports") {
+      if (!env.OPENAIP_API_KEY) return json({ error: "OpenAIP ist noch nicht konfiguriert. Das Worker-Secret OPENAIP_API_KEY fehlt." }, 503);
       const search = url.searchParams.get("search")?.trim() ?? "";
       if (search.length < 2) return json({ error: "Bitte mindestens zwei Zeichen für die Flugplatzsuche eingeben." }, 400);
       if (search.length > 80) return json({ error: "Die Flugplatzsuche ist zu lang." }, 400);
@@ -82,6 +131,7 @@ export async function handleApiRequest(request: Request, env: Env, context: Work
 
     const match = url.pathname.match(/^\/api\/airports\/([^/]+)$/);
     if (match) {
+      if (!env.OPENAIP_API_KEY) return json({ error: "OpenAIP ist noch nicht konfiguriert. Das Worker-Secret OPENAIP_API_KEY fehlt." }, 503);
       if (!/^[a-zA-Z0-9_-]{1,64}$/.test(match[1])) return json({ error: "Ungültige Flugplatz-ID." }, 400);
       return cached(request, context, async () => {
         const airport = normalizeOpenAipAirport(await upstreamJson<OpenAipAirport>(await openAip(`/airports/${encodeURIComponent(match[1])}`, env.OPENAIP_API_KEY!)));

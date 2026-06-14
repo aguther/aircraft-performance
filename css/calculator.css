@@ -675,6 +675,20 @@
   gap: 0.45rem;
 }
 
+.airport-weather {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.airport-weather-title {
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 .airport-preview-item {
   display: flex;
   flex-direction: column;
@@ -715,6 +729,10 @@
   color: var(--text-dim);
   font-size: 10px;
   line-height: 1.5;
+}
+
+.airport-sources a {
+  color: inherit;
 }
 
 .import-toggle {

@@ -40,7 +40,7 @@ export type Airport = {
 
 export type WeatherForecast = {
   id: string;
-  airportId: string;
+  airportId?: string;
   validAt: string;
   temperatureC: number;
   qnhHpa: number;

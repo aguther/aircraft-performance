@@ -364,11 +364,16 @@ export function TakeoffPage() {
                 operation="departure"
                 enabled={flightPlan.imports.departureAirport}
                 onEnabledChange={(enabled) => updateImports({ departureAirport: enabled })}
-                onApply={(values) => setElevationFt(values.elevationFt)}
+                onApply={(values) => {
+                  setElevationFt(values.elevationFt);
+                  if (values.qnhHpa != null) setQnhHpa(values.qnhHpa);
+                  if (values.oatC != null) setOatC(values.oatC);
+                  if (values.windKt != null) setWindKt(values.windKt);
+                }}
               />
               <div className="pa-mode airport-manual-weather">
-                <SliderField label="QNH" unit="hPa" value={qnhHpa} min={950} max={1050} onChange={setQnhHpa} />
-                <SliderField label="OAT" unit="°C" value={oatC} min={-20} max={40} onChange={setOatC} />
+                <SliderField label="QNH" unit="hPa" value={qnhHpa} min={950} max={1050} disabled={flightPlan.imports.departureAirport} onChange={setQnhHpa} />
+                <SliderField label="OAT" unit="°C" value={oatC} min={-20} max={40} disabled={flightPlan.imports.departureAirport} onChange={setOatC} />
               </div>
             </>
           ) : pressureAltitudeMode === "qnh" ? (
@@ -403,7 +408,7 @@ export function TakeoffPage() {
         <div className="sidebar-section">
           <div className="section-header">Pistenbedingungen</div>
           <SliderField label="Slope" labelDetail="% · bergauf(+) bergab(−)" unit="%" value={slopePercent} min={-2} max={2} step={0.1} onChange={setSlopePercent} />
-          <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} onChange={setWindKt} />
+          <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} disabled={flightPlan.imports.departureAirport} onChange={setWindKt} />
         </div>
         <div className="sidebar-section">
           <div className="section-header">Betrieblicher Zuschlag</div>

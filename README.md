@@ -142,12 +142,13 @@ W&B zeigt die berechneten Massen mit einer Nachkommastelle. Bei der Übernahme i
 Die Takeoff- und Landing-Rechner besitzen einen `Airport`-Modus mit echten OpenAIP-Daten. Start- und Zielplatz werden mit gewählter Bahn und geplanter Zeit getrennt in der zentralen Flugplanung gespeichert.
 
 - `/api/airports?search=...`: Same-Origin-Gateway für die OpenAIP-Flugplatzsuche.
+- `/api/weather?...`: Same-Origin-Gateway für die Open-Meteo-Prognose aus dem DWD-Modell ICON-D2.
 - `/api/airports/{id}`: Same-Origin-Gateway für einen gespeicherten Flugplatz.
 - OpenAIP liefert Position, Elevation, magnetische Deklination sowie richtungsbezogene Bahndaten mit True Heading, Oberfläche, Abmessungen, erklärten Distanzen und Schwellenhöhe.
 
 Der OpenAIP-API-Key bleibt ausschließlich als Worker-Secret auf Cloudflare und wird nicht an den Browser ausgeliefert. Das Gateway normalisiert die Anbieterantworten in das interne Flight-Data-Modell. OpenAIP-Bahnneigungen werden nicht verwendet, da die bereitgestellten Werte nicht zuverlässig nutzbar sind.
 
-Die Übernahme von Flugplatzwerten und Massen wird in Takeoff und Landing jeweils über einen persistenten Schalter gesteuert. Aktiv übernommene Werte sind gegen manuelle Bearbeitung gesperrt; nach dem Ausschalten bleibt ihr aktueller Wert erhalten. Beim Flugplatz wird ausschließlich die Elevation übernommen. Die Bahnneigung wird im Takeoff-Rechner immer manuell gesetzt. Wetterdaten sind noch nicht angebunden, deshalb bleiben QNH, OAT und Wind manuell veränderbar.
+Die Übernahme von Flugplatz-, Wetter- und Massenwerten wird in Takeoff und Landing jeweils über einen persistenten Schalter gesteuert. Aktiv übernommene Werte sind gegen manuelle Bearbeitung gesperrt; nach dem Ausschalten bleibt ihr aktueller Wert erhalten. Für die gewählte UTC-Zeit wird der nächstgelegene stündliche ICON-D2-Prognosepunkt genutzt; die OpenAIP-Flugplatzhöhe wird für die räumliche Herunterskalierung an Open-Meteo übergeben. QNH, OAT und die Windkomponente entlang der gewählten Bahn werden auf die vom Rechner unterstützte Granularität gerundet. Die Bahnneigung wird im Takeoff-Rechner immer manuell gesetzt.
 
 Geplante Start- und Landezeiten werden explizit in UTC und im 24-Stunden-Format erfasst. Die OpenAIP-Suche fragt zusätzlich diakritikfreie und deutsch transliterierte Varianten ab, sodass beispielsweise `Günzburg` auch `Guenzburg-Donauried` findet.
 

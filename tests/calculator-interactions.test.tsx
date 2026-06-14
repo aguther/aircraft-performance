@@ -9,7 +9,7 @@ import { AircraftProvider, useAircraft } from "../src/app/AircraftContext";
 import type { AircraftDefinition } from "../src/app/aircraft";
 import { FlightPlanProvider, useFlightPlan } from "../src/app/FlightPlanContext";
 import { AltitudeInput, type AltitudeInputValue } from "../src/components/AltitudeInput";
-import { utcDateTimeIso, utcDateTimeValue } from "../src/components/AirportRunwayInput";
+import { utcDateTimeIso, utcDateTimeValue, weatherValuesForRunway } from "../src/components/AirportRunwayInput";
 import type { Airport } from "../src/flight-data";
 import { ClimbPage } from "../src/pages/ClimbPage";
 import { StallPage } from "../src/pages/StallPage";
@@ -202,13 +202,33 @@ describe("calculator interactions", () => {
     }],
     source: { provider: "OpenAIP", updatedAt: "2026-06-14T12:00:00.000Z" },
   };
+  const weather = {
+    id: "icon-d2-2026-06-14T19:00Z",
+    airportId: airport.id,
+    validAt: "2026-06-14T19:00Z",
+    temperatureC: 16.5,
+    qnhHpa: 1015.9,
+    windDirectionTrueDeg: 82,
+    windSpeedKt: 7.8,
+    windGustKt: 12.4,
+    source: { provider: "Open-Meteo" as const, model: "ICON-D2", updatedAt: "2026-06-14T18:45:00.000Z" },
+  };
 
   function stubAirportSearch() {
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
+      if (url.includes("/api/weather?")) return Response.json(weather);
       return Response.json(url.includes("/api/airports?") ? { items: [airport], totalCount: 1 } : airport);
     }));
   }
+
+  it("maps ICON-D2 weather to supported calculator values", () => {
+    expect(weatherValuesForRunway(weather, airport.runways[0])).toEqual({
+      qnhHpa: 1016,
+      oatC: 17,
+      windKt: 7,
+    });
+  });
 
   it("applies real OpenAIP airport and runway data to takeoff", async () => {
     stubAirportSearch();
@@ -218,14 +238,20 @@ describe("calculator interactions", () => {
     await user.type(screen.getByRole("searchbox", { name: "Flugplatzsuche" }), "EDFE");
     await user.click(screen.getByRole("button", { name: "Suchen" }));
     expect(await screen.findByText(/OpenAIP · Stand/)).toBeTruthy();
-    expect(screen.getByText(/Wetterdaten sind noch nicht angebunden/)).toBeTruthy();
+    expect(await screen.findByText(/ICON-D2-Prognose/)).toBeTruthy();
+    expect(screen.getByText("Gegenwind")).toBeTruthy();
     expect(screen.getByText("Geplante Startzeit · UTC · 24 h")).toBeTruthy();
-    await user.click(screen.getByRole("checkbox", { name: "Flugplatzwerte übernehmen" }));
+    await user.click(screen.getByRole("checkbox", { name: "Flugplatz- und Wetterwerte übernehmen" }));
     expect(screen.getByRole("button", { name: "Elevation" }).hasAttribute("disabled")).toBe(true);
-    await user.click(screen.getByRole("checkbox", { name: "Flugplatzwerte übernommen" }));
+    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;
+    const qnhField = within(atmosphereSection).getByText("QNH", { selector: ".field-label" }).parentElement!;
+    expect(qnhField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(true);
+    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".section-header" }).parentElement!;
+    const windField = within(runwaySection).getByText("Wind", { selector: ".field-label" }).parentElement!;
+    expect(windField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(true);
+    await user.click(screen.getByRole("checkbox", { name: "Flugplatz- und Wetterwerte übernommen" }));
     await user.click(screen.getByRole("button", { name: "Elevation" }));
 
-    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;
     expect(within(atmosphereSection).getByDisplayValue("384")).toBeTruthy();
     await waitFor(() => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
@@ -245,8 +271,8 @@ describe("calculator interactions", () => {
     await user.click(screen.getByRole("button", { name: "Suchen" }));
     expect(await screen.findByText("Landebahn")).toBeTruthy();
     expect(screen.getByText("Geplante Landezeit · UTC · 24 h")).toBeTruthy();
-    await user.click(screen.getByRole("checkbox", { name: "Flugplatzwerte übernehmen" }));
-    await user.click(screen.getByRole("checkbox", { name: "Flugplatzwerte übernommen" }));
+    await user.click(screen.getByRole("checkbox", { name: "Flugplatz- und Wetterwerte übernehmen" }));
+    await user.click(screen.getByRole("checkbox", { name: "Flugplatz- und Wetterwerte übernommen" }));
     await user.click(screen.getByRole("button", { name: "Elevation" }));
 
     const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;

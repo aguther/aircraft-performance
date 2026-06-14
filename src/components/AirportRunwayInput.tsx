@@ -1,10 +1,22 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { useFlightPlan } from "../app/FlightPlanContext";
-import { getOpenAipAirport, searchOpenAipAirports, type Airport, type RunwayDirection } from "../flight-data";
+import {
+  calculateWindComponents,
+  getOpenAipAirport,
+  getOpenMeteoWeather,
+  searchOpenAipAirports,
+  type Airport,
+  type RunwayDirection,
+  type WeatherForecast,
+} from "../flight-data";
 
 export type AirportRunwayValues = {
   elevationFt: number;
+  qnhHpa?: number;
+  oatC?: number;
+  windKt?: number;
 };
+type WeatherRunwayValues = Omit<AirportRunwayValues, "elevationFt">;
 
 type AirportRunwayOperation = "departure" | "arrival";
 
@@ -20,11 +32,11 @@ export function utcDateTimeIso(value: string) {
   return new Date(`${value}:00Z`).toISOString();
 }
 
-function AirportPreviewValue({ label, value, unit }: { label: string; value: string | number; unit?: string }) {
+function AirportPreviewValue({ label, value, unit, status }: { label: string; value: string | number; unit?: string; status?: "good" | "warn" }) {
   return (
     <div className="airport-preview-item">
       <span className="airport-preview-label">{label}</span>
-      <strong className="airport-preview-value">
+      <strong className={`airport-preview-value${status ? ` ${status}` : ""}`}>
         {value}{unit ? <span className="airport-preview-unit">{unit}</span> : null}
       </strong>
     </div>
@@ -33,6 +45,15 @@ function AirportPreviewValue({ label, value, unit }: { label: string; value: str
 
 function runwayLabel(runway: RunwayDirection) {
   return `RWY ${runway.designator} · ${runway.lengthM} m · ${runway.surface}`;
+}
+
+export function weatherValuesForRunway(weather: WeatherForecast, runway: RunwayDirection): WeatherRunwayValues {
+  const wind = calculateWindComponents(weather.windDirectionTrueDeg, weather.windSpeedKt, runway.trueHeadingDeg);
+  return {
+    qnhHpa: Math.round(weather.qnhHpa),
+    oatC: Math.round(weather.temperatureC),
+    windKt: Math.floor(wind.headwindKt),
+  };
 }
 
 export function AirportRunwayInput({
@@ -55,6 +76,9 @@ export function AirportRunwayInput({
   const [plannedAt, setPlannedAt] = useState(utcDateTimeValue(savedSelection?.plannedAt));
   const [loading, setLoading] = useState(Boolean(savedSelection?.airportId));
   const [error, setError] = useState("");
+  const [weather, setWeather] = useState<WeatherForecast | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState("");
 
   useEffect(() => {
     if (!savedSelection?.airportId) return;
@@ -76,6 +100,15 @@ export function AirportRunwayInput({
   }, [savedSelection?.airportId, savedSelection?.runwayId]);
 
   const runway = airport?.runways?.find((candidate) => candidate.id === runwayId) ?? airport?.runways?.[0];
+  const windComponents = weather && runway
+    ? calculateWindComponents(weather.windDirectionTrueDeg, weather.windSpeedKt, runway.trueHeadingDeg)
+    : null;
+  const appliedValues = airport && runway
+    ? {
+        elevationFt: airport.elevationFt,
+        ...(weather ? { ...weatherValuesForRunway(weather, runway), elevationFt: airport.elevationFt } : {}),
+      }
+    : null;
 
   const saveSelection = (selectedAirport: Airport, selectedRunway: RunwayDirection, selectedPlannedAt: string) => {
     const selection = {
@@ -89,9 +122,35 @@ export function AirportRunwayInput({
 
   useEffect(() => {
     if (!enabled || !airport || !runway || !plannedAt) return;
-    onApply({ elevationFt: airport.elevationFt });
+    if (appliedValues) onApply(appliedValues);
     saveSelection(airport, runway, plannedAt);
-  }, [airport?.id, enabled, plannedAt, runway?.id]);
+  }, [airport?.id, enabled, plannedAt, runway?.id, weather?.id]);
+
+  useEffect(() => {
+    if (!airport || !plannedAt) {
+      setWeather(null);
+      return;
+    }
+    const controller = new AbortController();
+    setWeatherLoading(true);
+    setWeatherError("");
+    getOpenMeteoWeather(
+      airport.coordinates.latitude,
+      airport.coordinates.longitude,
+      airport.elevationFt,
+      utcDateTimeIso(plannedAt),
+      airport.id,
+      controller.signal,
+    )
+      .then(setWeather)
+      .catch((loadError) => {
+        if (loadError instanceof DOMException && loadError.name === "AbortError") return;
+        setWeather(null);
+        setWeatherError(loadError instanceof Error ? loadError.message : "ICON-D2-Wetterdaten konnten nicht geladen werden.");
+      })
+      .finally(() => setWeatherLoading(false));
+    return () => controller.abort();
+  }, [airport?.id, plannedAt]);
 
   const submitSearch = async (event: FormEvent) => {
     event.preventDefault();
@@ -101,6 +160,7 @@ export function AirportRunwayInput({
       const response = await searchOpenAipAirports(search);
       setResults(response.items);
       const selected = response.items[0] ?? null;
+      setWeather(null);
       setAirport(selected);
       setRunwayId(selected?.runways[0]?.id ?? "");
       if (!selected) setError("Kein passender Flugplatz gefunden.");
@@ -116,6 +176,7 @@ export function AirportRunwayInput({
 
   const selectAirport = (airportId: string) => {
     const selected = results.find((candidate) => candidate.id === airportId) ?? null;
+    setWeather(null);
     setAirport(selected);
     setRunwayId(selected?.runways[0]?.id ?? "");
   };
@@ -123,7 +184,7 @@ export function AirportRunwayInput({
   const toggleImport = (nextEnabled: boolean) => {
     onEnabledChange(nextEnabled);
     if (nextEnabled && airport && runway && plannedAt) {
-      onApply({ elevationFt: airport.elevationFt });
+      if (appliedValues) onApply(appliedValues);
       saveSelection(airport, runway, plannedAt);
     }
   };
@@ -155,25 +216,60 @@ export function AirportRunwayInput({
           </label>
           <label className="airport-field">
             <span>Geplante {operation === "departure" ? "Startzeit" : "Landezeit"} · UTC · 24 h</span>
-            <input type="datetime-local" lang="de-DE" value={plannedAt} required onChange={(event) => setPlannedAt(event.target.value)} />
+            <input
+              type="datetime-local"
+              lang="de-DE"
+              value={plannedAt}
+              required
+              onChange={(event) => {
+                setWeather(null);
+                setPlannedAt(event.target.value);
+              }}
+            />
           </label>
           {runway ? (
-            <div className="airport-preview">
-              <AirportPreviewValue label="Elevation" value={airport.elevationFt} unit="ft" />
-              <AirportPreviewValue label="Deklination" value={`${airport.magneticDeclinationDeg >= 0 ? "+" : ""}${airport.magneticDeclinationDeg.toFixed(1)}`} unit="°" />
-              <AirportPreviewValue label="RWY true / mag" value={`${formatDirection(runway.trueHeadingDeg)}° / ${formatDirection(runway.magneticHeadingDeg)}°`} />
-              <AirportPreviewValue label="Bahnlänge" value={runway.lengthM} unit="m" />
-              <AirportPreviewValue label="Bahnbreite" value={runway.widthM} unit="m" />
-            </div>
+            <>
+              <div className="airport-preview">
+                <AirportPreviewValue label="Elevation" value={airport.elevationFt} unit="ft" />
+                <AirportPreviewValue label="Deklination" value={`${airport.magneticDeclinationDeg >= 0 ? "+" : ""}${airport.magneticDeclinationDeg.toFixed(1)}`} unit="°" />
+                <AirportPreviewValue label="RWY true / mag" value={`${formatDirection(runway.trueHeadingDeg)}° / ${formatDirection(runway.magneticHeadingDeg)}°`} />
+                <AirportPreviewValue label="Bahnlänge" value={runway.lengthM} unit="m" />
+                <AirportPreviewValue label="Bahnbreite" value={runway.widthM} unit="m" />
+              </div>
+              {weatherLoading ? <div className="airport-status">ICON-D2-Wetterdaten werden geladen…</div> : null}
+              {weatherError ? <div className="airport-status error">{weatherError}</div> : null}
+              {weather && windComponents ? (
+                <div className="airport-weather">
+                  <div className="airport-weather-title">ICON-D2-Prognose · {new Date(weather.validAt).toLocaleString("de-DE", { timeZone: "UTC", dateStyle: "short", timeStyle: "short" })} UTC</div>
+                  <div className="airport-preview">
+                    <AirportPreviewValue label="QNH" value={weather.qnhHpa.toFixed(1)} unit="hPa" />
+                    <AirportPreviewValue label="OAT" value={weather.temperatureC.toFixed(1)} unit="°C" />
+                    <AirportPreviewValue label="Wind true" value={`${formatDirection(weather.windDirectionTrueDeg)}° / ${weather.windSpeedKt.toFixed(1)}`} unit="kt" />
+                    <AirportPreviewValue label="Böen" value={weather.windGustKt?.toFixed(1) ?? "–"} unit={weather.windGustKt == null ? undefined : "kt"} />
+                    <AirportPreviewValue
+                      label={windComponents.headwindKt >= 0 ? "Gegenwind" : "Rückenwind"}
+                      value={Math.abs(windComponents.headwindKt).toFixed(1)}
+                      unit="kt"
+                      status={windComponents.headwindKt >= 0 ? "good" : "warn"}
+                    />
+                    <AirportPreviewValue
+                      label="Seitenwind"
+                      value={Math.abs(windComponents.crosswindKt).toFixed(1)}
+                      unit="kt"
+                      status={Math.abs(windComponents.crosswindKt) >= 10 ? "warn" : "good"}
+                    />
+                  </div>
+                </div>
+              ) : null}
+            </>
           ) : <div className="airport-status error">OpenAIP liefert für diesen Flugplatz keine aktive Bahn.</div>}
           <div className="airport-sources">
             OpenAIP · Stand {new Date(airport.source.updatedAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })}
-            <br />
-            Wetterdaten sind noch nicht angebunden. QNH, OAT und Wind bleiben unverändert.
+            {weather ? <><br /><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · ICON-D2 · Prognose für {new Date(weather.validAt).toLocaleString("de-DE", { timeZone: "UTC", dateStyle: "short", timeStyle: "short" })} UTC</> : null}
           </div>
           <label className="import-toggle airport-import-toggle">
             <input type="checkbox" checked={enabled} disabled={!runway || !plannedAt} onChange={(event) => toggleImport(event.target.checked)} />
-            <span>{enabled ? "Flugplatzwerte übernommen" : "Flugplatzwerte übernehmen"}</span>
+            <span>{enabled ? "Flugplatz- und Wetterwerte übernommen" : "Flugplatz- und Wetterwerte übernehmen"}</span>
           </label>
         </>
       ) : null}
