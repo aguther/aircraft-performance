@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { buildInfo, formatBuildVersion } from "../app/buildInfo";
 
 const USAGE_NOTICE_STORAGE_KEY = "g115b-usage-notice-accepted";
 
@@ -45,7 +46,12 @@ export function UsageNotice({ open, onClose }: UsageNoticeProps) {
             Die Rechner unterstützen die Flugplanung. Maßgeblich bleiben das
             zugelassene AFM/POH und die Entscheidung des Piloten.
           </p>
-          <div className="usage-notice-version">React-Migrationsstand</div>
+          <div
+            className="usage-notice-version"
+            title={`Commit ${buildInfo.fullCommit} · Build ${buildInfo.builtAt}`}
+          >
+            Version: {formatBuildVersion()}
+          </div>
           <button
             className="usage-notice-confirm"
             type="button"
@@ -58,4 +64,3 @@ export function UsageNotice({ open, onClose }: UsageNoticeProps) {
     </dialog>
   );
 }
-

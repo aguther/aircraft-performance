@@ -87,6 +87,10 @@ TypeScript-Prüfung:
 npm run typecheck
 ```
 
+Der Vite-Build liest den aktuellen Git-Commit ein und zeigt ihn im Hinweisfenster
+als Versionsstand an. Lokale Builds mit uncommitteten Änderungen werden zusätzlich
+als `lokal verändert` gekennzeichnet.
+
 ---
 
 ## Code-Struktur
