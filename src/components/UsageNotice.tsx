@@ -48,9 +48,9 @@ export function UsageNotice({ open, onClose }: UsageNoticeProps) {
           </p>
           <div
             className="usage-notice-version"
-            title={`Commit ${buildInfo.fullCommit} · Build ${buildInfo.builtAt}`}
+            title={`Commit ${buildInfo.fullCommit}${buildInfo.dirty ? " · lokal verändert" : ""} · Build ${buildInfo.builtAt}`}
           >
-            Version: {formatBuildVersion()}
+            {formatBuildVersion()}
           </div>
           <button
             className="usage-notice-confirm"

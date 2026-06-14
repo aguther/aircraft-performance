@@ -19,7 +19,7 @@ export default defineConfig(() => {
   const dirty = process.env.CI ? false : Boolean(git(["status", "--porcelain"]));
   const buildInfo = {
     fullCommit,
-    shortCommit: fullCommit === "unknown" ? fullCommit : fullCommit.slice(0, 8),
+    shortCommit: fullCommit === "unknown" ? fullCommit : fullCommit.slice(0, 7),
     dirty,
     builtAt: new Date().toISOString(),
   };

@@ -6,21 +6,21 @@ describe("build version", () => {
     expect(
       formatBuildVersion({
         fullCommit: "1234567890abcdef",
-        shortCommit: "12345678",
+        shortCommit: "1234567",
         dirty: false,
         builtAt: "2026-06-14T00:00:00.000Z",
       }),
-    ).toBe("Commit 12345678");
+    ).toBe("VERSION: 1234567");
   });
 
   it("marks locally modified builds", () => {
     expect(
       formatBuildVersion({
         fullCommit: "1234567890abcdef",
-        shortCommit: "12345678",
+        shortCommit: "1234567",
         dirty: true,
         builtAt: "2026-06-14T00:00:00.000Z",
       }),
-    ).toBe("Commit 12345678 · lokal verändert");
+    ).toBe("VERSION: 1234567");
   });
 });

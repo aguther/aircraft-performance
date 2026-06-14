@@ -88,8 +88,8 @@ npm run typecheck
 ```
 
 Der Vite-Build liest den aktuellen Git-Commit ein und zeigt ihn im Hinweisfenster
-als Versionsstand an. Lokale Builds mit uncommitteten Änderungen werden zusätzlich
-als `lokal verändert` gekennzeichnet.
+als Versionsstand im Format `VERSION: a4f4540` an. Vollständiger Commit,
+Build-Zeitpunkt und lokaler Änderungsstatus stehen im Tooltip.
 
 ---
 
