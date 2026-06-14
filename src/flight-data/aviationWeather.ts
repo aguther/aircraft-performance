@@ -29,6 +29,10 @@ export type AwcTaf = {
 };
 
 const INHG_TO_HPA = 33.8639;
+// AWC returns altim in inHg for US stations (A-format) but in hPa for ICAO stations (Q-format)
+function altimToHpa(altim: number): number {
+  return altim > 100 ? altim : altim * INHG_TO_HPA;
+}
 const SKIP_INDICATORS = new Set(["TEMPO", "INTER", "PROB30", "PROB40"]);
 
 function parseAwcTime(value: string): string {
@@ -46,7 +50,7 @@ export function normalizeAwcMetar(data: AwcMetar[], airportId?: string): Weather
     airportId,
     validAt,
     temperatureC: Math.round(temp * 10) / 10,
-    qnhHpa: Math.round(altim * INHG_TO_HPA * 10) / 10,
+    qnhHpa: Math.round(altimToHpa(altim) * 10) / 10,
     windDirectionTrueDeg: wdir,
     windSpeedKt: wspd,
     ...(wgst != null ? { windGustKt: wgst } : {}),
