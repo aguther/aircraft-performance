@@ -1,0 +1,356 @@
+import { useEffect, useMemo, useState } from "react";
+import { calculateCruise } from "../aircraft/g115b/calculators";
+import {
+  densityAltitude,
+  flightLevelToFeet,
+  formatSigned,
+  interpolate1D,
+  pressureAltitudeFromQnh,
+} from "../domain";
+import { CalculatorCard, MetricItem } from "../components/CalculatorCard";
+import { NumberField } from "../components/NumberField";
+import { SliderField } from "../components/SliderField";
+
+type CruiseMode = "alt" | "fl" | "da";
+type ChartPoint = readonly [number, number];
+type CruiseChart = {
+  title: string;
+  cardTitle: string;
+  fileName: string;
+  source: string;
+  width: number;
+  height: number;
+  temperatureValues: readonly number[];
+  temperaturePixels: readonly number[];
+  temperatureBottomPixel: number;
+  resultBottomPixel: number;
+  altitudeValues: readonly number[];
+  altitudePixels: readonly number[];
+  densityAxisPixels: readonly number[];
+  resultEntryPixels: readonly number[];
+  resultValues: readonly number[];
+  resultPixels: readonly number[];
+  value: number;
+  resultText: string;
+  exportResultLabel: string;
+  exportResultValue: string;
+};
+type CruiseViewInputs = {
+  mode: CruiseMode;
+  altitudeFt?: number;
+  qnhHpa?: number;
+  flightLevel?: number;
+  pressureAltitudeFt?: number;
+  oatC?: number;
+  isaDeviationC?: number;
+  densityAltitudeFt: number;
+  powerPercent: number;
+};
+
+function axisPosition(value: number, values: readonly number[], pixels: readonly number[]) {
+  return interpolate1D(values, pixels, Math.min(values[values.length - 1], Math.max(values[0], value)));
+}
+
+function createTrace(inputs: CruiseViewInputs, chart: CruiseChart) {
+  const resultX = axisPosition(chart.value, chart.resultValues, chart.resultPixels);
+  const y = axisPosition(inputs.densityAltitudeFt, chart.altitudeValues, chart.altitudePixels);
+  const densityAxisX = axisPosition(inputs.densityAltitudeFt, chart.altitudeValues, chart.densityAxisPixels);
+  const resultEntryX = axisPosition(inputs.densityAltitudeFt, chart.altitudeValues, chart.resultEntryPixels);
+  if (inputs.mode === "da") {
+    return {
+      linePoints: [[densityAxisX, y], [resultEntryX, y], [resultX, y], [resultX, chart.resultBottomPixel]] as ChartPoint[],
+      markerPoints: [[densityAxisX, y], [resultX, chart.resultBottomPixel]] as ChartPoint[],
+    };
+  }
+  const oatX = axisPosition(inputs.oatC!, chart.temperatureValues, chart.temperaturePixels);
+  return {
+    linePoints: [[oatX, chart.temperatureBottomPixel], [oatX, y], [densityAxisX, y], [resultEntryX, y], [resultX, y], [resultX, chart.resultBottomPixel]] as ChartPoint[],
+    markerPoints: [[oatX, chart.temperatureBottomPixel], [oatX, y], [densityAxisX, y], [resultX, chart.resultBottomPixel], [resultX, y]] as ChartPoint[],
+  };
+}
+
+function loadImage(source: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = source;
+  });
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("PNG konnte nicht erzeugt werden.")), "image/png");
+  });
+}
+
+function drawText(context: CanvasRenderingContext2D, text: string, x: number, y: number, options: { color?: string; weight?: number; size?: number } = {}) {
+  context.fillStyle = options.color || "#152235";
+  context.font = `${options.weight || 400} ${options.size || 28}px Arial, sans-serif`;
+  context.fillText(text, x, y);
+}
+
+function drawField(context: CanvasRenderingContext2D, label: string, value: string, x: number, y: number, width: number, disabled = false) {
+  context.fillStyle = disabled ? "#f1f3f5" : "#f7fafc";
+  context.strokeStyle = disabled ? "#aeb6bd" : "#9aafc0";
+  context.lineWidth = 2;
+  context.setLineDash(disabled ? [10, 7] : []);
+  context.beginPath();
+  context.roundRect(x, y, width, 116, 18);
+  context.fill();
+  context.stroke();
+  context.setLineDash([]);
+  drawText(context, label.toUpperCase(), x + 24, y + 39, { size: 21, weight: 700, color: disabled ? "#7d878f" : "#607487" });
+  drawText(context, value, x + 24, y + 87, { size: disabled ? 28 : 34, weight: 700, color: disabled ? "#7d878f" : "#152235" });
+}
+
+function timestamp(date: Date) {
+  return date.toISOString().replace("T", " ").replace(/:/g, "-").slice(0, 19);
+}
+
+function altitudeFields(inputs: CruiseViewInputs): Array<[string, string, boolean?]> {
+  if (inputs.mode === "alt") {
+    return [
+      ["Höhenmodus", "Altitude"],
+      ["Flughöhe", `${inputs.altitudeFt!.toLocaleString("de-DE")} ft`],
+      ["QNH", `${inputs.qnhHpa!.toLocaleString("de-DE")} hPa`],
+      ["Druckhöhe", `${inputs.pressureAltitudeFt!.toLocaleString("de-DE")} ft`],
+    ];
+  }
+  if (inputs.mode === "fl") {
+    return [
+      ["Höhenmodus", "Flight Level"],
+      ["Flight Level", `FL ${inputs.flightLevel}`],
+      ["Druckhöhe", `${inputs.pressureAltitudeFt!.toLocaleString("de-DE")} ft`],
+      ["QNH", "Nicht anwendbar", true],
+    ];
+  }
+  return [
+    ["Höhenmodus", "Density Altitude"],
+    ["Density Altitude", `${inputs.densityAltitudeFt.toLocaleString("de-DE")} ft`],
+    ["Druckhöhe", "Nicht bereitgestellt", true],
+    ["QNH", "Nicht bereitgestellt", true],
+  ];
+}
+
+function drawExportHeader(context: CanvasRenderingContext2D, inputs: CruiseViewInputs, chart: CruiseChart, time: string) {
+  const margin = 96;
+  const gap = 32;
+  const fieldWidth = (chart.width - margin * 2 - gap * 3) / 4;
+  drawText(context, `${time}Z – Grob G115B Reiseflugberechnung`, margin, 76, { size: 46, weight: 700 });
+  drawText(context, chart.title, margin, 126, { size: 28, weight: 600, color: "#526274" });
+  drawText(context, "Eingangswerte", margin, 188, { size: 30, weight: 700, color: "#006f9f" });
+  altitudeFields(inputs).forEach(([label, value, disabled], index) => drawField(context, label, value, margin + index * (fieldWidth + gap), 212, fieldWidth, disabled));
+  drawField(context, "OAT", inputs.mode === "da" ? "Nicht bereitgestellt" : `${inputs.oatC!.toLocaleString("de-DE")} °C`, margin, 352, fieldWidth, inputs.mode === "da");
+  drawField(context, "Leistung", inputs.powerPercent >= 100 ? "Vollgas" : `${inputs.powerPercent}%`, margin + fieldWidth + gap, 352, fieldWidth);
+  drawField(context, "Density Altitude", `${inputs.densityAltitudeFt.toLocaleString("de-DE")} ft`, margin + 2 * (fieldWidth + gap), 352, fieldWidth);
+  drawField(context, "ISA-Abweichung", inputs.mode === "da" ? "Nicht berechnet" : `${formatSigned(inputs.isaDeviationC!, 1)} °C`, margin + 3 * (fieldWidth + gap), 352, fieldWidth, inputs.mode === "da");
+  drawText(context, "Ergebnis", margin, 528, { size: 30, weight: 700, color: "#006f9f" });
+  drawField(context, chart.exportResultLabel, chart.exportResultValue, margin, 552, fieldWidth * 2 + gap);
+}
+
+async function exportChart(inputs: CruiseViewInputs, chart: CruiseChart, trace: ReturnType<typeof createTrace>) {
+  const time = timestamp(new Date());
+  const headerHeight = 720;
+  const image = await loadImage(chart.source);
+  const canvas = document.createElement("canvas");
+  canvas.width = chart.width;
+  canvas.height = headerHeight + chart.height;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  drawExportHeader(context, inputs, chart, time);
+  context.drawImage(image, 0, headerHeight);
+  context.save();
+  context.translate(0, headerHeight);
+  context.strokeStyle = "#e90000";
+  context.fillStyle = "#e90000";
+  context.lineWidth = chart.width * (5 / 1516);
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.beginPath();
+  trace.linePoints.forEach(([x, y], index) => index === 0 ? context.moveTo(x, y) : context.lineTo(x, y));
+  context.stroke();
+  trace.markerPoints.forEach(([x, y]) => {
+    context.beginPath();
+    context.arc(x, y, chart.width * (6 / 1516), 0, Math.PI * 2);
+    context.fill();
+  });
+  context.restore();
+  const blob = await canvasToBlob(canvas);
+  const fileName = `${time}Z Grob G115B ${chart.fileName}.png`;
+  const file = new File([blob], fileName, { type: "image/png" });
+  if (navigator.share && navigator.canShare?.({ files: [file] })) {
+    await navigator.share({ files: [file], title: `Grob G115B ${chart.fileName}` });
+    return;
+  }
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = fileName;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+
+function CruiseChartCard({ inputs, chart }: { inputs: CruiseViewInputs; chart: CruiseChart }) {
+  const [overlayVisible, setOverlayVisible] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const trace = createTrace(inputs, chart);
+  const saveImage = async () => {
+    setExporting(true);
+    try {
+      await exportChart(inputs, chart, trace);
+    } finally {
+      setExporting(false);
+    }
+  };
+  return (
+    <section className="card takeoff-chart-card">
+      <div className="takeoff-chart-header">
+        <div className="card-title">{chart.cardTitle}</div>
+        <div className="takeoff-chart-actions">
+          <label className="takeoff-chart-toggle">
+            <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
+            <span>Rechenweg</span>
+          </label>
+          <button className="takeoff-chart-download" type="button" disabled={exporting} onClick={saveImage}>
+            {exporting ? "Erzeuge PNG…" : "Als Bild speichern"}
+          </button>
+        </div>
+      </div>
+      <div className="takeoff-chart-scroll">
+        <div className={`takeoff-chart-stage cruise-chart-stage${overlayVisible ? "" : " overlay-hidden"}`} style={{ aspectRatio: `${chart.width} / ${chart.height}` }}>
+          <img className="takeoff-chart-image" src={chart.source} alt={chart.title} width={chart.width} height={chart.height} />
+          <svg className="takeoff-chart-overlay" viewBox={`0 0 ${chart.width} ${chart.height}`} aria-label={`Grafischer Rechenweg im originalen ${chart.title}`}>
+            <polyline className="cruise-chart-trace" points={trace.linePoints.map((point) => point.join(",")).join(" ")} />
+            {trace.markerPoints.map(([x, y], index) => <circle className="cruise-chart-trace-point" cx={x} cy={y} r={Math.max(9, chart.width / 350)} key={`${index}-${x}-${y}`} />)}
+          </svg>
+        </div>
+      </div>
+      <div className="takeoff-chart-legend">
+        <span className="takeoff-chart-key">Rechenweg im POH-Diagramm</span>
+        <span>Density Altitude: {inputs.densityAltitudeFt.toLocaleString("de-DE")} ft</span>
+        <span>{chart.resultText}</span>
+      </div>
+    </section>
+  );
+}
+
+const chartBase = {
+  altitudeValues: [0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000],
+};
+
+export function CruisePage() {
+  const [mode, setMode] = useState<CruiseMode>("alt");
+  const [altitudeFt, setAltitudeFt] = useState(4500);
+  const [flightLevel, setFlightLevel] = useState(45);
+  const [directDensityAltitudeFt, setDirectDensityAltitudeFt] = useState(4500);
+  const [qnhHpa, setQnhHpa] = useState(1013);
+  const [oatC, setOatC] = useState(6);
+  const [powerPercent, setPowerPercent] = useState(65);
+  const inputs = useMemo<CruiseViewInputs>(() => {
+    if (mode === "da") return { mode, densityAltitudeFt: directDensityAltitudeFt, powerPercent };
+    const pressureAltitudeFt = mode === "alt" ? pressureAltitudeFromQnh(altitudeFt, qnhHpa) : flightLevelToFeet(flightLevel);
+    const atmosphere = densityAltitude(pressureAltitudeFt, oatC);
+    return {
+      mode,
+      altitudeFt: mode === "alt" ? altitudeFt : undefined,
+      qnhHpa: mode === "alt" ? qnhHpa : undefined,
+      flightLevel: mode === "fl" ? flightLevel : undefined,
+      pressureAltitudeFt,
+      oatC,
+      isaDeviationC: atmosphere.isaDeviationC,
+      densityAltitudeFt: atmosphere.densityAltitudeFt,
+      powerPercent,
+    };
+  }, [mode, altitudeFt, flightLevel, directDensityAltitudeFt, qnhHpa, oatC, powerPercent]);
+  const result = useMemo(() => calculateCruise(inputs), [inputs]);
+
+  useEffect(() => {
+    document.body.classList.add("cruise-calculator");
+    return () => document.body.classList.remove("cruise-calculator");
+  }, []);
+
+  const speedChart: CruiseChart = {
+    ...chartBase,
+    title: "POH Bild 5.3.12 Reiseflug wahre Fluggeschwindigkeit",
+    cardTitle: "Grafische Nachvollziehbarkeit · Wahre Fluggeschwindigkeit",
+    fileName: "Wahre Fluggeschwindigkeit",
+    source: "/assets/grob115b-cruise-speed-chart.png",
+    width: 4101,
+    height: 2880,
+    temperatureValues: [-30, -20, -10, 0, 10, 20, 30, 40],
+    temperaturePixels: [675, 843, 1011, 1179, 1347, 1515, 1682, 1849],
+    temperatureBottomPixel: 2253,
+    resultBottomPixel: 2253,
+    altitudePixels: [2253, 2083, 1916, 1746, 1579, 1409, 1236, 1068, 899, 731, 563],
+    densityAxisPixels: Array(11).fill(675),
+    resultEntryPixels: Array(11).fill(1798),
+    resultValues: [170, 180, 190, 200, 210, 220, 230, 240, 250, 260],
+    resultPixels: [1948, 2112, 2276, 2440, 2604, 2768, 2932, 3096, 3260, 3423],
+    value: result.tasKmh,
+    resultText: `TAS · ${result.tasKt.toFixed(1)} kt · ${Math.round(result.tasKmh)} km/h`,
+    exportResultLabel: "Wahre Fluggeschwindigkeit · TAS",
+    exportResultValue: `${result.tasKt.toFixed(1)} kt / ${Math.round(result.tasKmh)} km/h`,
+  };
+  const rpmChart: CruiseChart = {
+    ...chartBase,
+    title: "POH Bild 5.3.11 Reiseflug Drehzahl",
+    cardTitle: "Grafische Nachvollziehbarkeit · Drehzahl",
+    fileName: "Drehzahl",
+    source: "/assets/grob115b-cruise-rpm-chart.png",
+    width: 4105,
+    height: 2886,
+    temperatureValues: [-30, -20, -10, 0, 10, 20, 30, 40],
+    temperaturePixels: [696, 863, 1032, 1197, 1365, 1534, 1703, 1879],
+    temperatureBottomPixel: 2185,
+    resultBottomPixel: 2191,
+    altitudePixels: [2181, 2012, 1843, 1673, 1507, 1340, 1166, 997, 830, 662, 494],
+    densityAxisPixels: Array(11).fill(696),
+    resultEntryPixels: Array(11).fill(1852),
+    resultValues: [2000, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000],
+    resultPixels: [2010, 2152, 2292, 2436, 2580, 2724, 2867, 3012, 3152, 3296, 3440],
+    value: result.rpm,
+    resultText: `${Math.round(result.rpm)} rpm`,
+    exportResultLabel: "Drehzahl",
+    exportResultValue: `${Math.round(result.rpm)} rpm`,
+  };
+
+  return (
+    <div className="page-layout">
+      <aside className="sidebar">
+        <div className="sidebar-section">
+          <div className="section-header">Höhe</div>
+          <div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
+            {([["alt", "Altitude"], ["fl", "Flight Level"], ["da", "Density Alt."]] as const).map(([value, label]) => (
+              <button className={`mode-btn${mode === value ? " active" : ""}`} type="button" onClick={() => setMode(value)} key={value}>{label}</button>
+            ))}
+          </div>
+          {mode === "alt" ? <div className="pa-mode"><NumberField label="Flughöhe" unit="ft" value={altitudeFt} step={100} onChange={setAltitudeFt} /><SliderField label="QNH" unit="hPa" value={qnhHpa} min={950} max={1050} onChange={setQnhHpa} /></div> : null}
+          {mode === "fl" ? <div className="pa-mode"><NumberField label="Flight Level" unit="FL" value={flightLevel} step={5} onChange={setFlightLevel} /></div> : null}
+          {mode === "da" ? <div className="pa-mode"><NumberField label="Density Altitude" unit="ft" value={directDensityAltitudeFt} step={100} onChange={setDirectDensityAltitudeFt} /></div> : null}
+          {mode !== "da" ? <div style={{ marginTop: "1.25rem" }}><SliderField label="OAT" unit="°C" value={oatC} min={-40} max={50} onChange={setOatC} /></div> : null}
+          {mode !== "da" ? <div className="derived-box"><div className="derived-label">Density Altitude</div><div className="derived-value">{inputs.densityAltitudeFt.toLocaleString("de-DE")} ft</div></div> : null}
+        </div>
+        <div className="sidebar-section">
+          <div className="section-header">Leistung</div>
+          <SliderField label="Leistung" unit="%" value={powerPercent} min={45} max={100} hint="Vollgas = 100% · Leistungseinstellung POH Abschnitt 4" onChange={setPowerPercent} />
+        </div>
+      </aside>
+      <main className="results">
+        {mode !== "da" ? <CalculatorCard title="Atmosphäre"><div className="atmos-grid"><div className="atmos-item"><div className="atmos-item-label">Density Altitude</div><div className={`atmos-item-value${inputs.densityAltitudeFt > 10000 ? " warn" : ""}`}>{inputs.densityAltitudeFt.toLocaleString("de-DE")} <span>ft</span></div></div><div className="atmos-item"><div className="atmos-item-label">ISA-Abweichung</div><div className={`atmos-item-value${Math.abs(inputs.isaDeviationC!) < 0.1 ? "" : inputs.isaDeviationC! > 0 ? " warn" : " good"}`}>{formatSigned(inputs.isaDeviationC!, 1)} <span>°C</span></div></div></div></CalculatorCard> : null}
+        <CalculatorCard title={`Ergebnis - ${result.powerLabel} Leistung · DA ${inputs.densityAltitudeFt.toLocaleString("de-DE")} ft`}>
+          <div className="result-grid">
+            <MetricItem label="Drehzahl · POH 5.3.11" value={String(Math.round(result.rpm))} unit="rpm" />
+            <MetricItem label="Fuel Flow · POH 5.3.10" value={result.fuelFlowLitersPerHour.toFixed(1)} unit="l/h" subtext={`${result.nauticalMilesPerLiter.toFixed(2)} nm/l`} />
+            <MetricItem label="Wahre Fluggeschwindigkeit · POH 5.3.12" value={result.tasKt.toFixed(1)} unit="kt" speedType="TAS" subtext={`${Math.round(result.tasKmh)} km/h`} />
+          </div>
+        </CalculatorCard>
+        <CruiseChartCard inputs={inputs} chart={speedChart} />
+        <CruiseChartCard inputs={inputs} chart={rpmChart} />
+      </main>
+    </div>
+  );
+}

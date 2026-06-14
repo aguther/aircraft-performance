@@ -1,33 +1,16 @@
-const RELEASE = "79";
+const RELEASE = "89";
 const CACHE_PREFIX = "g115b-performance-v";
 const CACHE_NAME = `${CACHE_PREFIX}${RELEASE}`;
 const versioned = (path) => `${path}?v=${RELEASE}`;
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./takeoff.html",
-  "./landing.html",
-  "./weight_balance.html",
-  "./cruise.html",
-  "./climb.html",
-  "./climb_rate.html",
-  "./stall.html",
+  "./react/app.js",
+  "./react/style.css",
   versioned("./manifest.webmanifest"),
-  versioned("./app.js"),
   versioned("./css/theme.css"),
   versioned("./css/index.css"),
   versioned("./css/calculator.css"),
-  versioned("./js/g115b-core.js"),
-  versioned("./js/g115b-ui.js"),
-  versioned("./js/g115b-calculators.js"),
-  versioned("./js/performance-data.js"),
-  versioned("./js/pages/takeoff-page.js"),
-  versioned("./js/pages/landing-page.js"),
-  versioned("./js/pages/weight-balance-page.js"),
-  versioned("./js/pages/cruise-page.js"),
-  versioned("./js/pages/climb-page.js"),
-  versioned("./js/pages/climb-rate-page.js"),
-  versioned("./js/pages/stall-page.js"),
   "./icons/icon-192-v2.png",
   "./icons/icon-512-v2.png",
   "./icons/apple-touch-icon-v2.png",
@@ -65,6 +48,11 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  if (url.pathname.startsWith("/api/")) {
+    event.respondWith(fetch(new Request(request, { cache: "no-store" })));
     return;
   }
 
