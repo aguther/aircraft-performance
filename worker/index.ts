@@ -120,10 +120,15 @@ export async function handleApiRequest(request: Request, env: Env, context: Work
           iconParams.set("start_hour", forecastHour!);
           iconParams.set("end_hour", forecastHour!);
         }
-        const iconData = await openMeteoJson<OpenMeteoHourlyResponse & OpenMeteoCurrentResponse>(
-          await fetch(`${OPEN_METEO_ICON_URL}?${iconParams}`, { headers: { Accept: "application/json" } }),
-        );
-        const iconForecast = current ? normalizeOpenMeteoCurrent(iconData, airportId) : normalizeOpenMeteoForecast(iconData, airportId);
+        let iconForecast = null;
+        try {
+          const iconData = await openMeteoJson<OpenMeteoHourlyResponse & OpenMeteoCurrentResponse>(
+            await fetch(`${OPEN_METEO_ICON_URL}?${iconParams}`, { headers: { Accept: "application/json" } }),
+          );
+          iconForecast = current ? normalizeOpenMeteoCurrent(iconData, airportId) : normalizeOpenMeteoForecast(iconData, airportId);
+        } catch {
+          // ICON-D2 nicht verfügbar für diesen Standort — Fallback auf ECMWF
+        }
         if (iconForecast) return json(iconForecast, 200, current ? SHORT_CACHE : {});
 
         // Fallback: ECMWF (global coverage, up to 240 h)
