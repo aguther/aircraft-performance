@@ -243,7 +243,7 @@ export function AirportRunwayInput({
             </label>
             <label className="import-toggle airport-now-toggle">
               <input type="checkbox" checked={weatherNow} onChange={(event) => onWeatherNowChange(event.target.checked)} />
-              <span>Jetzt · aktuelle ICON-D2-Modellbedingungen</span>
+              <span>Jetzt · aktuelle ICON-D2-Werte</span>
             </label>
           </div>
           {runway ? (
@@ -259,7 +259,7 @@ export function AirportRunwayInput({
               {weatherError ? <div className="airport-status error">{weatherError}</div> : null}
               {weather && windComponents ? (
                 <div className="airport-weather">
-                  <div className="airport-weather-title">{weatherNow ? "Aktuelle ICON-D2-Modellbedingungen" : "ICON-D2-Prognose"} · {new Date(weather.validAt).toLocaleString("de-DE", { timeZone: "UTC", dateStyle: "short", timeStyle: "short" })} UTC</div>
+                  <div className="airport-weather-title">{weatherNow ? "Aktuelle ICON-D2-Werte" : "ICON-D2-Prognose"} · {new Date(weather.validAt).toLocaleString("de-DE", { timeZone: "UTC", dateStyle: "short", timeStyle: "short" })} UTC</div>
                   <div className="airport-preview">
                     <AirportPreviewValue label="QNH" value={weather.qnhHpa.toFixed(1)} unit="hPa" />
                     <AirportPreviewValue label="OAT" value={weather.temperatureC.toFixed(1)} unit="°C" />
