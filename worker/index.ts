@@ -47,6 +47,18 @@ async function upstreamJson<T>(response: Response): Promise<T> {
   throw new Error(`OpenAIP ist derzeit nicht erreichbar (${response.status}).`);
 }
 
+export function openAipSearchVariants(search: string) {
+  const variants = [
+    search,
+    search.normalize("NFD").replace(/\p{Diacritic}/gu, ""),
+    search.replace(/ä/gi, (value) => value === "Ä" ? "Ae" : "ae")
+      .replace(/ö/gi, (value) => value === "Ö" ? "Oe" : "oe")
+      .replace(/ü/gi, (value) => value === "Ü" ? "Ue" : "ue")
+      .replace(/ß/g, "ss"),
+  ];
+  return [...new Set(variants.map((value) => value.trim()).filter(Boolean))];
+}
+
 export async function handleApiRequest(request: Request, env: Env, context: WorkerContext) {
   if (!env.OPENAIP_API_KEY) return json({ error: "OpenAIP ist noch nicht konfiguriert. Das Worker-Secret OPENAIP_API_KEY fehlt." }, 503);
   const url = new URL(request.url);
@@ -57,10 +69,14 @@ export async function handleApiRequest(request: Request, env: Env, context: Work
       if (search.length < 2) return json({ error: "Bitte mindestens zwei Zeichen für die Flugplatzsuche eingeben." }, 400);
       if (search.length > 80) return json({ error: "Die Flugplatzsuche ist zu lang." }, 400);
       return cached(request, context, async () => {
-        const params = new URLSearchParams({ search, searchOptLwc: "true", limit: "15" });
-        const result = await upstreamJson<OpenAipAirportList>(await openAip(`/airports?${params}`, env.OPENAIP_API_KEY!));
-        const items = (result.items ?? []).map(normalizeOpenAipAirport).filter((airport) => airport !== null);
-        return json({ items, totalCount: result.totalCount ?? items.length });
+        const results = await Promise.all(openAipSearchVariants(search).map(async (variant) => {
+          const params = new URLSearchParams({ search: variant, searchOptLwc: "true", limit: "15" });
+          return upstreamJson<OpenAipAirportList>(await openAip(`/airports?${params}`, env.OPENAIP_API_KEY!));
+        }));
+        const airports = results.flatMap((result) => result.items ?? []);
+        const uniqueAirports = [...new Map(airports.filter((airport) => airport._id).map((airport) => [airport._id!, airport])).values()];
+        const items = uniqueAirports.map(normalizeOpenAipAirport).filter((airport) => airport !== null).slice(0, 15);
+        return json({ items, totalCount: items.length });
       });
     }
 

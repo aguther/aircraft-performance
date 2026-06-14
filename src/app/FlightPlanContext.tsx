@@ -26,8 +26,16 @@ export type FlightPlanAirportSelection = {
   updatedAt: string;
 };
 
+export type FlightPlanImports = {
+  departureAirport: boolean;
+  arrivalAirport: boolean;
+  takeoffMass: boolean;
+  landingMass: boolean;
+};
+
 export type FlightPlan = {
   weightBalance: WeightBalancePlan;
+  imports: FlightPlanImports;
   masses?: FlightPlanMasses;
   departure?: FlightPlanAirportSelection;
   arrival?: FlightPlanAirportSelection;
@@ -39,6 +47,7 @@ type FlightPlanContextValue = {
   publishMasses: (masses: Omit<FlightPlanMasses, "updatedAt">) => void;
   updateDeparture: (departure: Omit<FlightPlanAirportSelection, "updatedAt">) => void;
   updateArrival: (arrival: Omit<FlightPlanAirportSelection, "updatedAt">) => void;
+  updateImports: (change: Partial<FlightPlanImports>) => void;
 };
 
 const defaultFlightPlan: FlightPlan = {
@@ -49,6 +58,12 @@ const defaultFlightPlan: FlightPlan = {
     baggageMassKg: 0,
     startFuelLiters: 107,
     plannedFuelBurnLiters: 0,
+  },
+  imports: {
+    departureAirport: false,
+    arrivalAirport: false,
+    takeoffMass: false,
+    landingMass: false,
   },
 };
 
@@ -64,6 +79,7 @@ function loadFlightPlan(): FlightPlan {
       ...defaultFlightPlan,
       ...parsed,
       weightBalance: { ...defaultFlightPlan.weightBalance, ...parsed.weightBalance },
+      imports: { ...defaultFlightPlan.imports, ...parsed.imports },
     };
   } catch {
     return defaultFlightPlan;
@@ -88,6 +104,10 @@ export function FlightPlanProvider({ children }: { children: ReactNode }) {
     ...current,
     arrival: { ...arrival, updatedAt: new Date().toISOString() },
   })), []);
+  const updateImports = useCallback((change: Partial<FlightPlanImports>) => setFlightPlan((current) => ({
+    ...current,
+    imports: { ...current.imports, ...change },
+  })), []);
 
   useEffect(() => {
     try {
@@ -103,7 +123,8 @@ export function FlightPlanProvider({ children }: { children: ReactNode }) {
     publishMasses,
     updateDeparture,
     updateArrival,
-  }), [flightPlan, publishMasses, updateArrival, updateDeparture, updateWeightBalance]);
+    updateImports,
+  }), [flightPlan, publishMasses, updateArrival, updateDeparture, updateImports, updateWeightBalance]);
 
   return <FlightPlanContext.Provider value={value}>{children}</FlightPlanContext.Provider>;
 }

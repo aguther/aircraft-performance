@@ -4,7 +4,6 @@ import { getOpenAipAirport, searchOpenAipAirports, type Airport, type RunwayDire
 
 export type AirportRunwayValues = {
   elevationFt: number;
-  slopePercent: number;
 };
 
 type AirportRunwayOperation = "departure" | "arrival";
@@ -13,10 +12,12 @@ function formatDirection(value: number) {
   return Math.round(value).toString().padStart(3, "0");
 }
 
-function dateTimeLocalValue(value?: string) {
-  const date = value ? new Date(value) : new Date();
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
-  return local.toISOString().slice(0, 16);
+export function utcDateTimeValue(value?: string) {
+  return (value ? new Date(value) : new Date()).toISOString().slice(0, 16);
+}
+
+export function utcDateTimeIso(value: string) {
+  return new Date(`${value}:00Z`).toISOString();
 }
 
 function AirportPreviewValue({ label, value, unit }: { label: string; value: string | number; unit?: string }) {
@@ -36,9 +37,13 @@ function runwayLabel(runway: RunwayDirection) {
 
 export function AirportRunwayInput({
   operation,
+  enabled,
+  onEnabledChange,
   onApply,
 }: {
   operation: AirportRunwayOperation;
+  enabled: boolean;
+  onEnabledChange: (enabled: boolean) => void;
   onApply: (values: AirportRunwayValues) => void;
 }) {
   const { flightPlan, updateArrival, updateDeparture } = useFlightPlan();
@@ -47,7 +52,7 @@ export function AirportRunwayInput({
   const [results, setResults] = useState<Airport[]>([]);
   const [airport, setAirport] = useState<Airport | null>(null);
   const [runwayId, setRunwayId] = useState(savedSelection?.runwayId ?? "");
-  const [plannedAt, setPlannedAt] = useState(dateTimeLocalValue(savedSelection?.plannedAt));
+  const [plannedAt, setPlannedAt] = useState(utcDateTimeValue(savedSelection?.plannedAt));
   const [loading, setLoading] = useState(Boolean(savedSelection?.airportId));
   const [error, setError] = useState("");
 
@@ -71,6 +76,22 @@ export function AirportRunwayInput({
   }, [savedSelection?.airportId, savedSelection?.runwayId]);
 
   const runway = airport?.runways?.find((candidate) => candidate.id === runwayId) ?? airport?.runways?.[0];
+
+  const saveSelection = (selectedAirport: Airport, selectedRunway: RunwayDirection, selectedPlannedAt: string) => {
+    const selection = {
+      airportId: selectedAirport.id,
+      runwayId: selectedRunway.id,
+      plannedAt: utcDateTimeIso(selectedPlannedAt),
+    };
+    if (operation === "departure") updateDeparture(selection);
+    else updateArrival(selection);
+  };
+
+  useEffect(() => {
+    if (!enabled || !airport || !runway || !plannedAt) return;
+    onApply({ elevationFt: airport.elevationFt });
+    saveSelection(airport, runway, plannedAt);
+  }, [airport?.id, enabled, plannedAt, runway?.id]);
 
   const submitSearch = async (event: FormEvent) => {
     event.preventDefault();
@@ -99,19 +120,12 @@ export function AirportRunwayInput({
     setRunwayId(selected?.runways[0]?.id ?? "");
   };
 
-  const apply = () => {
-    if (!airport || !runway) return;
-    onApply({
-      elevationFt: airport.elevationFt,
-      slopePercent: runway.slopePercent ?? 0,
-    });
-    const selection = {
-      airportId: airport.id,
-      runwayId: runway.id,
-      plannedAt: new Date(plannedAt).toISOString(),
-    };
-    if (operation === "departure") updateDeparture(selection);
-    else updateArrival(selection);
+  const toggleImport = (nextEnabled: boolean) => {
+    onEnabledChange(nextEnabled);
+    if (nextEnabled && airport && runway && plannedAt) {
+      onApply({ elevationFt: airport.elevationFt });
+      saveSelection(airport, runway, plannedAt);
+    }
   };
 
   return (
@@ -140,15 +154,14 @@ export function AirportRunwayInput({
             </select>
           </label>
           <label className="airport-field">
-            <span>Geplante {operation === "departure" ? "Startzeit" : "Landezeit"}</span>
-            <input type="datetime-local" value={plannedAt} required onChange={(event) => setPlannedAt(event.target.value)} />
+            <span>Geplante {operation === "departure" ? "Startzeit" : "Landezeit"} · UTC · 24 h</span>
+            <input type="datetime-local" lang="de-DE" value={plannedAt} required onChange={(event) => setPlannedAt(event.target.value)} />
           </label>
           {runway ? (
             <div className="airport-preview">
               <AirportPreviewValue label="Elevation" value={airport.elevationFt} unit="ft" />
               <AirportPreviewValue label="Deklination" value={`${airport.magneticDeclinationDeg >= 0 ? "+" : ""}${airport.magneticDeclinationDeg.toFixed(1)}`} unit="°" />
               <AirportPreviewValue label="RWY true / mag" value={`${formatDirection(runway.trueHeadingDeg)}° / ${formatDirection(runway.magneticHeadingDeg)}°`} />
-              <AirportPreviewValue label="Slope" value={(runway.slopePercent ?? 0).toFixed(1)} unit="%" />
               <AirportPreviewValue label="Bahnlänge" value={runway.lengthM} unit="m" />
               <AirportPreviewValue label="Bahnbreite" value={runway.widthM} unit="m" />
             </div>
@@ -158,7 +171,10 @@ export function AirportRunwayInput({
             <br />
             Wetterdaten sind noch nicht angebunden. QNH, OAT und Wind bleiben unverändert.
           </div>
-          <button className="airport-apply" type="button" disabled={!runway || !plannedAt} onClick={apply}>Flugplatzwerte übernehmen</button>
+          <label className="import-toggle airport-import-toggle">
+            <input type="checkbox" checked={enabled} disabled={!runway || !plannedAt} onChange={(event) => toggleImport(event.target.checked)} />
+            <span>{enabled ? "Flugplatzwerte übernommen" : "Flugplatzwerte übernehmen"}</span>
+          </label>
         </>
       ) : null}
     </div>

@@ -3,6 +3,7 @@ type NumberFieldProps = {
   unit: string;
   value: number;
   step?: number;
+  disabled?: boolean;
   onChange: (value: number) => void;
 };
 
@@ -11,6 +12,7 @@ export function NumberField({
   unit,
   value,
   step = 1,
+  disabled = false,
   onChange,
 }: NumberFieldProps) {
   return (
@@ -21,6 +23,7 @@ export function NumberField({
       <div className="input-wrap">
         <input
           type="number"
+          disabled={disabled}
           step={step}
           value={value}
           onFocus={(event) => event.currentTarget.select()}

@@ -1,4 +1,4 @@
-import { magneticHeading, normalizeDegrees } from "./calculations";
+import { magneticHeading } from "./calculations";
 import type { Airport, RunwayDirection, RunwaySurface } from "./types";
 
 type OpenAipValue = { value?: number };
@@ -47,24 +47,12 @@ function surface(mainComposite?: number): RunwaySurface {
   return "other";
 }
 
-function oppositeRunway(runway: OpenAipRunway, runways: OpenAipRunway[]) {
-  if (!Number.isFinite(runway.trueHeading)) return undefined;
-  return runways
-    .filter((candidate) => candidate !== runway && Number.isFinite(candidate.trueHeading))
-    .map((candidate) => {
-      const headingDifference = normalizeDegrees(candidate.trueHeading! - runway.trueHeading!);
-      return { candidate, difference: Math.abs(180 - Math.min(headingDifference, 360 - headingDifference)) };
-    })
-    .sort((left, right) => left.difference - right.difference)[0]?.candidate;
-}
-
-function normalizeRunway(runway: OpenAipRunway, runways: OpenAipRunway[], declinationDeg: number): RunwayDirection | null {
+function normalizeRunway(runway: OpenAipRunway, declinationDeg: number): RunwayDirection | null {
   const lengthM = runway.dimension?.length?.value;
   const widthM = runway.dimension?.width?.value;
   const trueHeadingDeg = runway.trueHeading;
   if (!runway._id || !runway.designator || !Number.isFinite(lengthM) || !Number.isFinite(widthM) || !Number.isFinite(trueHeadingDeg)) return null;
   const thresholdElevationM = runway.thresholdLocation?.elevation?.value;
-  const oppositeThresholdElevationM = oppositeRunway(runway, runways)?.thresholdLocation?.elevation?.value;
   const thresholdElevationFt = Number.isFinite(thresholdElevationM) ? metersToFeet(thresholdElevationM!) : undefined;
 
   return {
@@ -80,9 +68,6 @@ function normalizeRunway(runway: OpenAipRunway, runways: OpenAipRunway[], declin
     ldaM: runway.declaredDistance?.lda?.value,
     surface: surface(runway.surface?.mainComposite),
     thresholdElevationFt,
-    slopePercent: Number.isFinite(thresholdElevationM) && Number.isFinite(oppositeThresholdElevationM)
-      ? (oppositeThresholdElevationM! - thresholdElevationM!) / lengthM! * 100
-      : undefined,
   };
 }
 
@@ -104,7 +89,7 @@ export function normalizeOpenAipAirport(raw: OpenAipAirport): Airport | null {
     magneticDeclinationDeg,
     runways: rawRunways
       .filter((runway) => runway.operations === undefined || runway.operations === 0)
-      .map((runway) => normalizeRunway(runway, rawRunways, magneticDeclinationDeg))
+      .map((runway) => normalizeRunway(runway, magneticDeclinationDeg))
       .filter((runway): runway is RunwayDirection => runway !== null),
     source: {
       provider: "OpenAIP",

@@ -9,6 +9,7 @@ import { AircraftProvider, useAircraft } from "../src/app/AircraftContext";
 import type { AircraftDefinition } from "../src/app/aircraft";
 import { FlightPlanProvider, useFlightPlan } from "../src/app/FlightPlanContext";
 import { AltitudeInput, type AltitudeInputValue } from "../src/components/AltitudeInput";
+import { utcDateTimeIso, utcDateTimeValue } from "../src/components/AirportRunwayInput";
 import type { Airport } from "../src/flight-data";
 import { ClimbPage } from "../src/pages/ClimbPage";
 import { StallPage } from "../src/pages/StallPage";
@@ -77,6 +78,11 @@ function FlightPlanContextHarness() {
 }
 
 describe("calculator interactions", () => {
+  it("stores planned airport times explicitly as UTC", () => {
+    expect(utcDateTimeValue("2026-06-14T18:30:00.000Z")).toBe("2026-06-14T18:30");
+    expect(utcDateTimeIso("2026-06-14T18:30")).toBe("2026-06-14T18:30:00.000Z");
+  });
+
   it("selects and persists the central aircraft", async () => {
     const user = userEvent.setup();
     render(<AircraftProvider availableAircraft={testAircraft}><AircraftContextHarness /></AircraftProvider>);
@@ -132,20 +138,36 @@ describe("calculator interactions", () => {
       },
     }));
     const user = userEvent.setup();
-    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+    const view = render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
 
     expect(screen.getByText("850.3 kg")).toBeTruthy();
     expect(screen.getByText(/Übernahme konservativ als 851 kg/)).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "Masse übernehmen" }));
+    await user.click(screen.getByRole("checkbox", { name: "Masse übernehmen" }));
     const massField = screen.getByText("Masse", { selector: ".field-label" }).parentElement!;
     const massInput = massField.querySelector('input[type="number"]')!;
     expect(massInput.getAttribute("value")).toBe("851");
+    expect(massInput.hasAttribute("disabled")).toBe(true);
 
-    fireEvent.change(massInput, { target: { value: "840" } });
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.imports.takeoffMass).toBe(true);
+    });
+    view.unmount();
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+    expect(screen.getByRole("checkbox", { name: "Masse übernommen" }).hasAttribute("checked")).toBe(true);
+    const restoredMassField = screen.getByText("Masse", { selector: ".field-label" }).parentElement!;
+    const restoredMassInput = restoredMassField.querySelector('input[type="number"]')!;
+    await waitFor(() => expect(restoredMassInput.getAttribute("value")).toBe("851"));
+    expect(restoredMassInput.hasAttribute("disabled")).toBe(true);
+
+    await user.click(screen.getByRole("checkbox", { name: "Masse übernommen" }));
+    expect(restoredMassInput.hasAttribute("disabled")).toBe(false);
+    fireEvent.change(restoredMassInput, { target: { value: "840" } });
 
     await waitFor(() => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
       expect(storedPlan.masses.startMassKg).toBe(850.3);
+      expect(storedPlan.imports.takeoffMass).toBe(false);
     });
   });
 
@@ -177,7 +199,6 @@ describe("calculator interactions", () => {
       lengthM: 1400,
       widthM: 25,
       surface: "asphalt",
-      slopePercent: 0.1,
     }],
     source: { provider: "OpenAIP", updatedAt: "2026-06-14T12:00:00.000Z" },
   };
@@ -198,17 +219,20 @@ describe("calculator interactions", () => {
     await user.click(screen.getByRole("button", { name: "Suchen" }));
     expect(await screen.findByText(/OpenAIP · Stand/)).toBeTruthy();
     expect(screen.getByText(/Wetterdaten sind noch nicht angebunden/)).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "Flugplatzwerte übernehmen" }));
+    expect(screen.getByText("Geplante Startzeit · UTC · 24 h")).toBeTruthy();
+    await user.click(screen.getByRole("checkbox", { name: "Flugplatzwerte übernehmen" }));
+    expect(screen.getByRole("button", { name: "Elevation" }).hasAttribute("disabled")).toBe(true);
+    await user.click(screen.getByRole("checkbox", { name: "Flugplatzwerte übernommen" }));
     await user.click(screen.getByRole("button", { name: "Elevation" }));
 
     const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;
     expect(within(atmosphereSection).getByDisplayValue("384")).toBeTruthy();
-    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".section-header" }).parentElement!;
-    expect(within(runwaySection).getAllByDisplayValue("0.1")).toHaveLength(2);
     await waitFor(() => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
       expect(storedPlan.departure.airportId).toBe("open-aip-edfe");
       expect(storedPlan.departure.runwayId).toBe("edfe-08");
+      expect(storedPlan.imports.departureAirport).toBe(false);
+      expect(storedPlan.departure.plannedAt).toMatch(/Z$/);
     });
   });
 
@@ -220,8 +244,9 @@ describe("calculator interactions", () => {
     await user.type(screen.getByRole("searchbox", { name: "Flugplatzsuche" }), "EDFE");
     await user.click(screen.getByRole("button", { name: "Suchen" }));
     expect(await screen.findByText("Landebahn")).toBeTruthy();
-    expect(screen.getByText("Geplante Landezeit")).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "Flugplatzwerte übernehmen" }));
+    expect(screen.getByText("Geplante Landezeit · UTC · 24 h")).toBeTruthy();
+    await user.click(screen.getByRole("checkbox", { name: "Flugplatzwerte übernehmen" }));
+    await user.click(screen.getByRole("checkbox", { name: "Flugplatzwerte übernommen" }));
     await user.click(screen.getByRole("button", { name: "Elevation" }));
 
     const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;

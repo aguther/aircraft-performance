@@ -9,6 +9,7 @@ type SliderFieldProps = {
   inputMax?: number;
   step?: number;
   hint?: string;
+  disabled?: boolean;
   onChange: (value: number) => void;
 };
 
@@ -23,6 +24,7 @@ export function SliderField({
   inputMax = max,
   step = 1,
   hint,
+  disabled = false,
   onChange,
 }: SliderFieldProps) {
   const decimals = String(step).includes(".") ? String(step).split(".")[1].length : 0;
@@ -46,6 +48,7 @@ export function SliderField({
       <div className="slider-row">
         <input
           type="range"
+          disabled={disabled}
           min={min}
           max={max}
           step={step}
@@ -60,6 +63,7 @@ export function SliderField({
         {decimals > 0 ? (
           <input
             type="text"
+            disabled={disabled}
             inputMode="decimal"
             value={decimalInput}
             onFocus={(event) => event.currentTarget.select()}
@@ -75,6 +79,7 @@ export function SliderField({
         ) : (
           <input
             type="number"
+            disabled={disabled}
             min={min}
             max={inputMax}
             step={step}

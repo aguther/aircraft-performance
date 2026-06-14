@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export function FlightPlanMassImport({
@@ -5,17 +6,26 @@ export function FlightPlanMassImport({
   massKg,
   fuelLiters,
   updatedAt,
-  currentMassKg,
+  enabled,
+  onEnabledChange,
   onImport,
 }: {
   label: string;
   massKg?: number;
   fuelLiters?: number;
   updatedAt?: string;
-  currentMassKg: number;
+  enabled: boolean;
+  onEnabledChange: (enabled: boolean) => void;
   onImport: (massKg: number) => void;
 }) {
-  if (massKg === undefined || fuelLiters === undefined || updatedAt === undefined) {
+  const available = massKg !== undefined && fuelLiters !== undefined && updatedAt !== undefined;
+  const importedMassKg = available ? Math.ceil(massKg) : undefined;
+
+  useEffect(() => {
+    if (enabled && importedMassKg !== undefined) onImport(importedMassKg);
+  }, [enabled, importedMassKg, onImport]);
+
+  if (!available) {
     return (
       <div className="flight-plan-import empty">
         <div className="flight-plan-import-label">{label}</div>
@@ -25,8 +35,6 @@ export function FlightPlanMassImport({
     );
   }
 
-  const importedMassKg = Math.ceil(massKg);
-  const alreadyImported = currentMassKg === importedMassKg;
   return (
     <div className="flight-plan-import">
       <div>
@@ -36,9 +44,10 @@ export function FlightPlanMassImport({
           Übernahme konservativ als {importedMassKg} kg · {fuelLiters.toFixed(1)} l Kraftstoff · W&B {new Date(updatedAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })}
         </div>
       </div>
-      <button type="button" disabled={alreadyImported} onClick={() => onImport(Math.ceil(massKg))}>
-        {alreadyImported ? "Übernommen" : "Masse übernehmen"}
-      </button>
+      <label className="import-toggle">
+        <input type="checkbox" checked={enabled} onChange={(event) => onEnabledChange(event.target.checked)} />
+        <span>{enabled ? "Masse übernommen" : "Masse übernehmen"}</span>
+      </label>
     </div>
   );
 }

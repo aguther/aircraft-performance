@@ -24,7 +24,6 @@ export type RunwayDirection = {
   ldaM?: number;
   surface: RunwaySurface;
   thresholdElevationFt?: number;
-  slopePercent?: number;
 };
 
 export type Airport = {

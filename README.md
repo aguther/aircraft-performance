@@ -145,9 +145,11 @@ Die Takeoff- und Landing-Rechner besitzen einen `Airport`-Modus mit echten OpenA
 - `/api/airports/{id}`: Same-Origin-Gateway für einen gespeicherten Flugplatz.
 - OpenAIP liefert Position, Elevation, magnetische Deklination sowie richtungsbezogene Bahndaten mit True Heading, Oberfläche, Abmessungen, erklärten Distanzen und Schwellenhöhe.
 
-Der OpenAIP-API-Key bleibt ausschließlich als Worker-Secret auf Cloudflare und wird nicht an den Browser ausgeliefert. Das Gateway normalisiert die Anbieterantworten in das interne Flight-Data-Modell. OpenAIP liefert keine direkte Bahnneigung; diese wird, sofern beide Schwellenhöhen verfügbar sind, aus Höhendifferenz und Bahnlänge berechnet.
+Der OpenAIP-API-Key bleibt ausschließlich als Worker-Secret auf Cloudflare und wird nicht an den Browser ausgeliefert. Das Gateway normalisiert die Anbieterantworten in das interne Flight-Data-Modell. OpenAIP-Bahnneigungen werden nicht verwendet, da die bereitgestellten Werte nicht zuverlässig nutzbar sind.
 
-Beim Takeoff werden Elevation und Bahnneigung übernommen. Beim Landing wird die Elevation übernommen; die Bahnneigung bleibt dort eine Information, da sie im aktuellen Landestreckenmodell nicht berücksichtigt wird. Wetterdaten sind noch nicht angebunden, deshalb bleiben QNH, OAT und Wind bei der Übernahme bewusst unverändert.
+Die Übernahme von Flugplatzwerten und Massen wird in Takeoff und Landing jeweils über einen persistenten Schalter gesteuert. Aktiv übernommene Werte sind gegen manuelle Bearbeitung gesperrt; nach dem Ausschalten bleibt ihr aktueller Wert erhalten. Beim Flugplatz wird ausschließlich die Elevation übernommen. Die Bahnneigung wird im Takeoff-Rechner immer manuell gesetzt. Wetterdaten sind noch nicht angebunden, deshalb bleiben QNH, OAT und Wind manuell veränderbar.
+
+Geplante Start- und Landezeiten werden explizit in UTC und im 24-Stunden-Format erfasst. Die OpenAIP-Suche fragt zusätzlich diakritikfreie und deutsch transliterierte Varianten ab, sodass beispielsweise `Günzburg` auch `Guenzburg-Donauried` findet.
 
 Offizielle Dokumentation:
 

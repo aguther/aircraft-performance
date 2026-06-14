@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { handleApiRequest } from "../worker";
+import { handleApiRequest, openAipSearchVariants } from "../worker";
 import { openAipAirportFixture } from "./fixtures/openAipAirport";
 
 const context = { waitUntil: () => undefined };
@@ -26,6 +26,24 @@ describe("OpenAIP gateway", () => {
     expect(payload.items[0].icaoCode).toBe("EDFE");
     expect(fetchMock.mock.calls[0][1]?.headers).toEqual(expect.objectContaining({ "x-openaip-api-key": "secret-key" }));
     expect(JSON.stringify(payload)).not.toContain("secret-key");
+    fetchMock.mockRestore();
+  });
+
+  it("searches umlaut names using OpenAIP-compatible variants", async () => {
+    expect(openAipSearchVariants("Günzburg")).toEqual(["Günzburg", "Gunzburg", "Guenzburg"]);
+
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) =>
+      Response.json(String(input).includes("Guenzburg")
+        ? { totalCount: 1, items: [{ ...openAipAirportFixture, name: "Guenzburg-Donauried" }] }
+        : { totalCount: 0, items: [] }));
+    const response = await handleApiRequest(
+      new Request("https://example.test/api/airports?search=G%C3%BCnzburg"),
+      { ASSETS: assets, OPENAIP_API_KEY: "secret-key" },
+      context,
+    );
+    const payload = await response.json() as { items: Array<{ name: string }> };
+
+    expect(payload.items[0].name).toBe("Guenzburg-Donauried");
     fetchMock.mockRestore();
   });
 });

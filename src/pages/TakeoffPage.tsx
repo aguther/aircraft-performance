@@ -317,7 +317,7 @@ function ChartCard({ inputs, result, exportContext }: { inputs: TakeoffInputs; r
 }
 
 export function TakeoffPage() {
-  const { flightPlan } = useFlightPlan();
+  const { flightPlan, updateImports } = useFlightPlan();
   const [pressureAltitudeMode, setPressureAltitudeMode] = useState<PressureAltitudeMode>("airport");
   const [elevationFt, setElevationFt] = useState(0);
   const [qnhHpa, setQnhHpa] = useState(1013);
@@ -344,6 +344,9 @@ export function TakeoffPage() {
     document.body.classList.add("runway-calculator");
     return () => document.body.classList.remove("runway-calculator");
   }, []);
+  useEffect(() => {
+    if (flightPlan.imports.departureAirport) setPressureAltitudeMode("airport");
+  }, [flightPlan.imports.departureAirport]);
 
   return (
     <div className="page-layout">
@@ -352,14 +355,22 @@ export function TakeoffPage() {
           <div className="section-header">Atmosphäre</div>
           <div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
             <button className={`mode-btn${pressureAltitudeMode === "airport" ? " active" : ""}`} type="button" onClick={() => setPressureAltitudeMode("airport")}>Airport</button>
-            <button className={`mode-btn${pressureAltitudeMode === "qnh" ? " active" : ""}`} type="button" onClick={() => setPressureAltitudeMode("qnh")}>Elevation</button>
-            <button className={`mode-btn${pressureAltitudeMode === "direct" ? " active" : ""}`} type="button" onClick={() => setPressureAltitudeMode("direct")}>Pressure Alt.</button>
+            <button className={`mode-btn${pressureAltitudeMode === "qnh" ? " active" : ""}`} type="button" disabled={flightPlan.imports.departureAirport} onClick={() => setPressureAltitudeMode("qnh")}>Elevation</button>
+            <button className={`mode-btn${pressureAltitudeMode === "direct" ? " active" : ""}`} type="button" disabled={flightPlan.imports.departureAirport} onClick={() => setPressureAltitudeMode("direct")}>Pressure Alt.</button>
           </div>
           {pressureAltitudeMode === "airport" ? (
-            <AirportRunwayInput operation="departure" onApply={(values) => {
-              setElevationFt(values.elevationFt);
-              setSlopePercent(values.slopePercent);
-            }} />
+            <>
+              <AirportRunwayInput
+                operation="departure"
+                enabled={flightPlan.imports.departureAirport}
+                onEnabledChange={(enabled) => updateImports({ departureAirport: enabled })}
+                onApply={(values) => setElevationFt(values.elevationFt)}
+              />
+              <div className="pa-mode airport-manual-weather">
+                <SliderField label="QNH" unit="hPa" value={qnhHpa} min={950} max={1050} onChange={setQnhHpa} />
+                <SliderField label="OAT" unit="°C" value={oatC} min={-20} max={40} onChange={setOatC} />
+              </div>
+            </>
           ) : pressureAltitudeMode === "qnh" ? (
             <div className="pa-mode">
               <NumberField label="Elevation" unit="ft" value={elevationFt} step={10} onChange={setElevationFt} />
@@ -383,10 +394,11 @@ export function TakeoffPage() {
             massKg={flightPlan.masses?.startMassKg}
             fuelLiters={flightPlan.masses?.startFuelLiters}
             updatedAt={flightPlan.masses?.updatedAt}
-            currentMassKg={massKg}
+            enabled={flightPlan.imports.takeoffMass}
+            onEnabledChange={(enabled) => updateImports({ takeoffMass: enabled })}
             onImport={setMassKg}
           />
-          <SliderField label="Masse" labelDetail="kg · MTOW 920" unit="kg" value={massKg} min={750} max={920} onChange={setMassKg} />
+          <SliderField label="Masse" labelDetail="kg · MTOW 920" unit="kg" value={massKg} min={750} max={920} disabled={flightPlan.imports.takeoffMass} onChange={setMassKg} />
         </div>
         <div className="sidebar-section">
           <div className="section-header">Pistenbedingungen</div>

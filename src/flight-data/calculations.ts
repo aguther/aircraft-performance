@@ -19,12 +19,3 @@ export function calculateWindComponents(
     crosswindKt: windSpeedKt * Math.sin(angleRadians),
   };
 }
-
-export function calculateRunwaySlopePercent(
-  thresholdElevationFt: number,
-  oppositeThresholdElevationFt: number,
-  runwayLengthM: number,
-) {
-  const elevationDifferenceM = (oppositeThresholdElevationFt - thresholdElevationFt) * 0.3048;
-  return elevationDifferenceM / runwayLengthM * 100;
-}
