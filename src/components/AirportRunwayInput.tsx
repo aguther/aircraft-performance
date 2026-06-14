@@ -236,17 +236,19 @@ export function AirportRunwayInput({
           <div className="airport-time">
             <label className="airport-field">
               <span>Geplante {operation === "departure" ? "Startzeit" : "Landezeit"} · UTC · 24 h</span>
-              <input
-                type="datetime-local"
-                lang="de-DE"
-                value={plannedAt}
-                required
-                disabled={weatherNow}
-                onChange={(event) => {
-                  setWeather(null);
-                  setPlannedAt(event.target.value);
-                }}
-              />
+              <span className="airport-datetime-control">
+                <input
+                  type="datetime-local"
+                  lang="de-DE"
+                  value={plannedAt}
+                  required
+                  disabled={weatherNow}
+                  onChange={(event) => {
+                    setWeather(null);
+                    setPlannedAt(event.target.value);
+                  }}
+                />
+              </span>
             </label>
             <label className="import-toggle airport-now-toggle">
               <input type="checkbox" checked={weatherNow} onChange={(event) => onWeatherNowChange(event.target.checked)} />
