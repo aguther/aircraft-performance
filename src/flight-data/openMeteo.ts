@@ -31,13 +31,14 @@ function weatherForecast(
     windDirectionTrueDeg?: number | null;
     windGustKt?: number | null;
   },
+  model: string,
   airportId?: string,
   updatedAt = new Date().toISOString(),
 ) {
   const { time, temperatureC, qnhHpa, windSpeedKt, windDirectionTrueDeg, windGustKt } = values;
   if (!time || temperatureC == null || qnhHpa == null || windSpeedKt == null || windDirectionTrueDeg == null) return null;
   return {
-    id: `icon-d2-${time}Z`,
+    id: `${model.toLowerCase().replace(/[\s.]+/g, "-")}-${time}Z`,
     airportId,
     validAt: `${time}Z`,
     temperatureC,
@@ -47,7 +48,7 @@ function weatherForecast(
     ...(windGustKt == null ? {} : { windGustKt }),
     source: {
       provider: "Open-Meteo" as const,
-      model: "ICON-D2",
+      model,
       updatedAt,
     },
   };
@@ -57,6 +58,7 @@ export function normalizeOpenMeteoForecast(
   response: OpenMeteoHourlyResponse,
   airportId?: string,
   updatedAt = new Date().toISOString(),
+  model = "ICON-D2",
 ): WeatherForecast | null {
   return weatherForecast({
     time: response.hourly?.time?.[0],
@@ -65,13 +67,14 @@ export function normalizeOpenMeteoForecast(
     windSpeedKt: response.hourly?.wind_speed_10m?.[0],
     windDirectionTrueDeg: response.hourly?.wind_direction_10m?.[0],
     windGustKt: response.hourly?.wind_gusts_10m?.[0],
-  }, airportId, updatedAt);
+  }, model, airportId, updatedAt);
 }
 
 export function normalizeOpenMeteoCurrent(
   response: OpenMeteoCurrentResponse,
   airportId?: string,
   updatedAt = new Date().toISOString(),
+  model = "ICON-D2",
 ): WeatherForecast | null {
   return weatherForecast({
     time: response.current?.time,
@@ -80,5 +83,5 @@ export function normalizeOpenMeteoCurrent(
     windSpeedKt: response.current?.wind_speed_10m,
     windDirectionTrueDeg: response.current?.wind_direction_10m,
     windGustKt: response.current?.wind_gusts_10m,
-  }, airportId, updatedAt);
+  }, model, airportId, updatedAt);
 }

@@ -733,6 +733,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  transition: opacity 160ms ease;
+}
+
+.airport-weather--loading {
+  opacity: 0.45;
 }
 
 .airport-weather-title {

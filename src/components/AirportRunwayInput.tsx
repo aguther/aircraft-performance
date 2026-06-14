@@ -137,7 +137,6 @@ export function AirportRunwayInput({
       return;
     }
     const controller = new AbortController();
-    setWeather(null);
     setWeatherLoading(true);
     setWeatherError("");
     getOpenMeteoWeather(
@@ -255,11 +254,11 @@ export function AirportRunwayInput({
                 <AirportPreviewValue label="Bahnlänge" value={runway.lengthM} unit="m" />
                 <AirportPreviewValue label="Bahnbreite" value={runway.widthM} unit="m" />
               </div>
-              {weatherLoading ? <div className="airport-status">ICON-D2-Wetterdaten werden geladen…</div> : null}
+              {weatherLoading && !weather ? <div className="airport-status">Wetterdaten werden geladen…</div> : null}
               {weatherError ? <div className="airport-status error">{weatherError}</div> : null}
               {weather && windComponents ? (
-                <div className="airport-weather">
-                  <div className="airport-weather-title">{weatherNow ? "Aktuelle ICON-D2-Werte" : "ICON-D2-Prognose"} · {new Date(weather.validAt).toLocaleString("de-DE", { timeZone: "UTC", dateStyle: "short", timeStyle: "short" })} UTC</div>
+                <div className={`airport-weather${weatherLoading ? " airport-weather--loading" : ""}`}>
+                  <div className="airport-weather-title">{weatherNow ? `Aktuelle ${weather.source.model}-Werte` : `${weather.source.model}-Prognose`} · {new Date(weather.validAt).toLocaleString("de-DE", { timeZone: "UTC", dateStyle: "short", timeStyle: "short" })} UTC</div>
                   <div className="airport-preview">
                     <AirportPreviewValue label="QNH" value={weather.qnhHpa.toFixed(1)} unit="hPa" />
                     <AirportPreviewValue label="OAT" value={weather.temperatureC.toFixed(1)} unit="°C" />
@@ -284,7 +283,7 @@ export function AirportRunwayInput({
           ) : <div className="airport-status error">OpenAIP liefert für diesen Flugplatz keine aktive Bahn.</div>}
           <div className="airport-sources">
             OpenAIP · Stand {new Date(airport.source.updatedAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })}
-            {weather ? <><br /><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · ICON-D2 · {weatherNow ? "aktuell für" : "Prognose für"} {new Date(weather.validAt).toLocaleString("de-DE", { timeZone: "UTC", dateStyle: "short", timeStyle: "short" })} UTC</> : null}
+            {weather ? <><br /><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · {weather.source.model} · {weatherNow ? "aktuell für" : "Prognose für"} {new Date(weather.validAt).toLocaleString("de-DE", { timeZone: "UTC", dateStyle: "short", timeStyle: "short" })} UTC</> : null}
           </div>
           <div className="airport-imports">
             <label className="import-toggle airport-import-toggle">

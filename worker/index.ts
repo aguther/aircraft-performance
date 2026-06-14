@@ -16,7 +16,8 @@ type WorkerContext = {
 };
 
 const OPENAIP_BASE_URL = "https://api.core.openaip.net/api";
-const OPEN_METEO_BASE_URL = "https://api.open-meteo.com/v1/dwd-icon";
+const OPEN_METEO_ICON_URL = "https://api.open-meteo.com/v1/dwd-icon";
+const OPEN_METEO_ECMWF_URL = "https://api.open-meteo.com/v1/ecmwf";
 const CACHE_CONTROL = "public, max-age=300, s-maxage=3600";
 
 function json(payload: unknown, status = 200, headers: HeadersInit = {}) {
@@ -99,27 +100,50 @@ export async function handleApiRequest(request: Request, env: Env, context: Work
       }
       if (!current && !forecastHour) return json({ error: "Ungültige geplante Zeit für die Wetterabfrage." }, 400);
       return cached(request, context, async () => {
-        const params = new URLSearchParams({
+        const WEATHER_VARIABLES = "temperature_2m,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m";
+        const SHORT_CACHE = { "Cache-Control": "public, max-age=60, s-maxage=300" };
+        const baseParams = new URLSearchParams({
           latitude: String(latitude),
           longitude: String(longitude),
           elevation: String(Math.round(elevationFt * 0.3048)),
-          models: "icon_d2",
           wind_speed_unit: "kn",
           timezone: "GMT",
         });
-        if (current) params.set("current", "temperature_2m,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m");
-        else {
-          params.set("hourly", "temperature_2m,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m");
-          params.set("start_hour", forecastHour!);
-          params.set("end_hour", forecastHour!);
+
+        // ICON-D2
+        const iconParams = new URLSearchParams(baseParams);
+        iconParams.set("models", "icon_d2");
+        if (current) {
+          iconParams.set("current", WEATHER_VARIABLES);
+        } else {
+          iconParams.set("hourly", WEATHER_VARIABLES);
+          iconParams.set("start_hour", forecastHour!);
+          iconParams.set("end_hour", forecastHour!);
         }
-        const response = await openMeteoJson<OpenMeteoHourlyResponse & OpenMeteoCurrentResponse>(await fetch(`${OPEN_METEO_BASE_URL}?${params}`, {
-          headers: { Accept: "application/json" },
-        }));
-        const forecast = current ? normalizeOpenMeteoCurrent(response, airportId) : normalizeOpenMeteoForecast(response, airportId);
-        return forecast
-          ? json(forecast, 200, current ? { "Cache-Control": "public, max-age=60, s-maxage=300" } : {})
-          : json({ error: "ICON-D2 liefert für die gewählte Zeit und Position keine Wetterdaten." }, 404);
+        const iconData = await openMeteoJson<OpenMeteoHourlyResponse & OpenMeteoCurrentResponse>(
+          await fetch(`${OPEN_METEO_ICON_URL}?${iconParams}`, { headers: { Accept: "application/json" } }),
+        );
+        const iconForecast = current ? normalizeOpenMeteoCurrent(iconData, airportId) : normalizeOpenMeteoForecast(iconData, airportId);
+        if (iconForecast) return json(iconForecast, 200, current ? SHORT_CACHE : {});
+
+        // Fallback: ECMWF IFS (global coverage, up to 240 h)
+        const ecmwfHour = forecastHour ?? nearestForecastHour(new Date().toISOString());
+        if (!ecmwfHour) return json({ error: "Keine Wetterdaten für die gewählte Zeit und Position verfügbar." }, 404);
+        try {
+          const ecmwfParams = new URLSearchParams(baseParams);
+          ecmwfParams.set("hourly", WEATHER_VARIABLES);
+          ecmwfParams.set("start_hour", ecmwfHour);
+          ecmwfParams.set("end_hour", ecmwfHour);
+          const ecmwfData = await openMeteoJson<OpenMeteoHourlyResponse>(
+            await fetch(`${OPEN_METEO_ECMWF_URL}?${ecmwfParams}`, { headers: { Accept: "application/json" } }),
+          );
+          const ecmwfForecast = normalizeOpenMeteoForecast(ecmwfData, airportId, undefined, "ECMWF IFS");
+          if (ecmwfForecast) return json(ecmwfForecast, 200, current ? SHORT_CACHE : {});
+        } catch {
+          // fall through to 404
+        }
+
+        return json({ error: "Keine Wetterdaten für die gewählte Zeit und Position verfügbar." }, 404);
       });
     }
 
