@@ -8,6 +8,7 @@ import {
   UsageNotice,
 } from "./components/UsageNotice";
 import { HomePage } from "./pages/HomePage";
+import { ClimbPage } from "./pages/ClimbPage";
 import { CruisePage } from "./pages/CruisePage";
 import { LandingPage } from "./pages/LandingPage";
 import { TakeoffPage } from "./pages/TakeoffPage";
@@ -23,6 +24,7 @@ export function App() {
   const isTakeoff = location.pathname === "/takeoff.html";
   const isLanding = location.pathname === "/landing.html";
   const isCruise = location.pathname === "/cruise.html";
+  const isClimb = location.pathname === "/climb.html";
   const pageTitle = isWeightBalance
     ? "Weight & Balance"
     : isTakeoff
@@ -31,7 +33,9 @@ export function App() {
         ? "Landing"
         : isCruise
           ? "Cruise"
-          : "Performance";
+          : isClimb
+            ? "Climb"
+            : "Performance";
   const currentCalculatorHref = isWeightBalance
     ? "/weight_balance.html"
     : isTakeoff
@@ -40,7 +44,9 @@ export function App() {
         ? "/landing.html"
         : isCruise
           ? "/cruise.html"
-          : undefined;
+          : isClimb
+            ? "/climb.html"
+            : undefined;
 
   useEffect(() => {
     document.title = `Grob 115B — ${pageTitle === "Performance" ? "Performance Calculators" : pageTitle}`;
@@ -65,6 +71,7 @@ export function App() {
         <Route path="/takeoff.html" element={<TakeoffPage />} />
         <Route path="/landing.html" element={<LandingPage />} />
         <Route path="/cruise.html" element={<CruisePage />} />
+        <Route path="/climb.html" element={<ClimbPage />} />
         <Route path="*" element={<HomePage aircraft={defaultAircraft} />} />
       </Routes>
       <UsageNotice

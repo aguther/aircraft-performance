@@ -44,7 +44,7 @@ export const calculatorRegistry: CalculatorDefinition[] = [
     description: "Zeit, Kraftstoff und Distanz zwischen zwei Höhen.",
     source: "POH 5.3.9",
     group: "planning",
-    runtime: "legacy",
+    runtime: "react",
   },
   {
     capability: "cruise",

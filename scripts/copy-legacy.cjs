@@ -7,7 +7,6 @@ const legacyDirectories = ["assets", "css", "icons", "js"];
 const legacyFiles = [
   "_headers",
   "app.js",
-  "climb.html",
   "climb_rate.html",
   "manifest.webmanifest",
   "service-worker.js",
