@@ -702,7 +702,7 @@
 }
 
 .airport-datetime-control input[type="date"],
-.airport-datetime-control input[type="text"] {
+.airport-datetime-control input[type="time"] {
   flex: 1 1 auto;
   min-width: 0;
   padding: 0.68rem 0.72rem;
@@ -719,13 +719,10 @@
   border-right: 1px solid var(--border);
 }
 
-.airport-datetime-control input[type="date"]::-webkit-date-and-time-value {
+.airport-datetime-control input[type="date"]::-webkit-date-and-time-value,
+.airport-datetime-control input[type="time"]::-webkit-date-and-time-value {
   min-width: 0;
   text-align: left;
-}
-
-.airport-datetime-control input[type="text"] {
-  flex: 0 0 5.5rem;
 }
 
 .airport-now-toggle {

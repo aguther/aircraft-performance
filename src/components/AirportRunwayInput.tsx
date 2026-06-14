@@ -78,7 +78,6 @@ export function AirportRunwayInput({
   const [airport, setAirport] = useState<Airport | null>(null);
   const [runwayId, setRunwayId] = useState(savedSelection?.runwayId ?? "");
   const [plannedAt, setPlannedAt] = useState(utcDateTimeValue(savedSelection?.plannedAt));
-  const [timeText, setTimeText] = useState(utcDateTimeValue(savedSelection?.plannedAt).slice(11));
   const [loading, setLoading] = useState(Boolean(savedSelection?.airportId));
   const [error, setError] = useState("");
   const [weather, setWeather] = useState<WeatherForecast | null>(null);
@@ -237,23 +236,12 @@ export function AirportRunwayInput({
                   onChange={(event) => setPlannedAt(`${event.target.value}T${plannedAt.slice(11)}`)}
                 />
                 <input
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="off"
-                  placeholder="HH:MM"
-                  value={timeText}
+                  type="time"
+                  lang="de-DE"
+                  value={plannedAt.slice(11)}
+                  required
                   disabled={weatherNow}
-                  onChange={(event) => {
-                    const digits = event.target.value.replace(/\D/g, "").slice(0, 4);
-                    const formatted = digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
-                    setTimeText(formatted);
-                    if (/^\d{2}:\d{2}$/.test(formatted)) {
-                      const h = Number(formatted.slice(0, 2));
-                      const m = Number(formatted.slice(3));
-                      if (h <= 23 && m <= 59) setPlannedAt(`${plannedAt.slice(0, 10)}T${formatted}`);
-                    }
-                  }}
-                  onBlur={() => { if (!/^\d{2}:\d{2}$/.test(timeText)) setTimeText(plannedAt.slice(11)); }}
+                  onChange={(event) => setPlannedAt(`${plannedAt.slice(0, 10)}T${event.target.value}`)}
                 />
               </span>
             </label>
