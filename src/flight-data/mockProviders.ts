@@ -22,6 +22,9 @@ function runway(
     lengthM,
     widthM,
     toraM: lengthM,
+    todaM: lengthM,
+    asdaM: lengthM,
+    ldaM: lengthM,
     surface,
     thresholdElevationFt,
     slopePercent: calculateRunwaySlopePercent(thresholdElevationFt, oppositeThresholdElevationFt, lengthM),
@@ -41,7 +44,7 @@ export const mockAirports: Airport[] = [
       runway("edfe-08", "08", 82, 3.5, 1400, 25, "asphalt", 381, 387),
       runway("edfe-26", "26", 262, 3.5, 1400, 25, "asphalt", 387, 381),
     ],
-    source: { provider: "Mock", updatedAt },
+    source: { provider: "OpenAIP", updatedAt, mock: true },
   },
   {
     id: "mock-edfo",
@@ -55,7 +58,7 @@ export const mockAirports: Airport[] = [
       runway("edfo-08", "08", 78, 3.6, 604, 15, "grass", 1132, 1156),
       runway("edfo-26", "26", 258, 3.6, 604, 15, "grass", 1156, 1132),
     ],
-    source: { provider: "Mock", updatedAt },
+    source: { provider: "OpenAIP", updatedAt, mock: true },
   },
   {
     id: "mock-edmo",
@@ -69,14 +72,14 @@ export const mockAirports: Airport[] = [
       runway("edmo-04", "04", 42, 4.2, 2286, 45, "asphalt", 1942, 1952),
       runway("edmo-22", "22", 222, 4.2, 2286, 45, "asphalt", 1952, 1942),
     ],
-    source: { provider: "Mock", updatedAt },
+    source: { provider: "OpenAIP", updatedAt, mock: true },
   },
 ];
 
 const weatherByAirport: Record<string, Omit<WeatherForecast, "id" | "airportId" | "validAt">> = {
-  "mock-edfe": { temperatureC: 23, qnhHpa: 1016, windDirectionTrueDeg: 250, windSpeedKt: 9, windGustKt: 15, source: { provider: "Mock", model: "ICON-D2", updatedAt } },
-  "mock-edfo": { temperatureC: 21, qnhHpa: 1015, windDirectionTrueDeg: 110, windSpeedKt: 7, windGustKt: 12, source: { provider: "Mock", model: "ICON-D2", updatedAt } },
-  "mock-edmo": { temperatureC: 19, qnhHpa: 1014, windDirectionTrueDeg: 40, windSpeedKt: 11, windGustKt: 18, source: { provider: "Mock", model: "ICON-D2", updatedAt } },
+  "mock-edfe": { temperatureC: 23, qnhHpa: 1016, windDirectionTrueDeg: 250, windSpeedKt: 9, windGustKt: 15, source: { provider: "Open-Meteo", model: "ICON-D2", updatedAt, mock: true } },
+  "mock-edfo": { temperatureC: 21, qnhHpa: 1015, windDirectionTrueDeg: 110, windSpeedKt: 7, windGustKt: 12, source: { provider: "Open-Meteo", model: "ICON-D2", updatedAt, mock: true } },
+  "mock-edmo": { temperatureC: 19, qnhHpa: 1014, windDirectionTrueDeg: 40, windSpeedKt: 11, windGustKt: 18, source: { provider: "Open-Meteo", model: "ICON-D2", updatedAt, mock: true } },
 };
 
 export function searchMockAirports(query = "") {
@@ -108,6 +111,6 @@ export function getMockDeclination(airport: Airport, validAt: string): MagneticD
     coordinates: airport.coordinates,
     validAt,
     declinationDeg: airport.magneticDeclinationDeg,
-    source: { provider: "Mock", model: "NOAA WMM", updatedAt },
+    source: { provider: "NOAA", model: "WMM", updatedAt, mock: true },
   };
 }

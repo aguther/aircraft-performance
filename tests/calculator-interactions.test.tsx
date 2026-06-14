@@ -158,6 +158,28 @@ describe("calculator interactions", () => {
     expect(slopeInput.getAttribute("value")).toBe("1.0");
   });
 
+  it("applies airport, runway and ICON-D2 mock data to takeoff", async () => {
+    const user = userEvent.setup();
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    await user.click(screen.getByRole("button", { name: "Airport" }));
+    expect(screen.getByText(/Mock · OpenAIP · Open-Meteo ICON-D2 · NOAA WMM/)).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Werte übernehmen" }));
+    await user.click(screen.getByRole("button", { name: "Elevation" }));
+
+    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;
+    expect(within(atmosphereSection).getByDisplayValue("384")).toBeTruthy();
+    expect(within(atmosphereSection).getAllByDisplayValue("1016")).toHaveLength(2);
+    expect(within(atmosphereSection).getAllByDisplayValue("23")).toHaveLength(2);
+    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".section-header" }).parentElement!;
+    expect(within(runwaySection).getAllByDisplayValue("-9")).toHaveLength(2);
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.departure.airportId).toBe("mock-edfe");
+      expect(storedPlan.departure.runwayId).toBe("edfe-08");
+    });
+  });
+
   it("switches the common altitude input to direct density altitude", async () => {
     const user = userEvent.setup();
     render(<AltitudeInputHarness />);

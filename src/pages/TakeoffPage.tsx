@@ -11,13 +11,14 @@ import {
   round,
 } from "../domain";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
+import { AirportTakeoffInput } from "../components/AirportTakeoffInput";
 import { CalculatorContextCard } from "../components/CalculatorContextCard";
 import { FlightPlanMassImport } from "../components/FlightPlanMassImport";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
 
 type TakeoffResult = ReturnType<typeof calculateTakeoff>;
-type PressureAltitudeMode = "qnh" | "direct";
+type PressureAltitudeMode = "airport" | "qnh" | "direct";
 type ExportContext = {
   pressureAltitudeMode: PressureAltitudeMode;
   elevationFt: number;
@@ -204,8 +205,8 @@ async function exportChartImage(inputs: TakeoffInputs, result: TakeoffResult, ex
   context.fillRect(0, 0, canvas.width, canvas.height);
   drawExportText(context, `${timestamp(exportDate)}Z – Grob G115B Startstreckenberechnung`, 48, 54, { size: 30, weight: 700 });
   drawExportText(context, "Eingangswerte", 48, 96, { size: 19, weight: 700, color: "#006f9f" });
-  drawExportField(context, "Elevation", exportContext.pressureAltitudeMode === "qnh" ? `${exportContext.elevationFt} ft` : "Nicht bereitgestellt", 48, 112, 338, exportContext.pressureAltitudeMode !== "qnh");
-  drawExportField(context, "QNH", exportContext.pressureAltitudeMode === "qnh" ? `${exportContext.qnhHpa} hPa` : "Nicht bereitgestellt", 402, 112, 338, exportContext.pressureAltitudeMode !== "qnh");
+  drawExportField(context, "Elevation", exportContext.pressureAltitudeMode !== "direct" ? `${exportContext.elevationFt} ft` : "Nicht bereitgestellt", 48, 112, 338, exportContext.pressureAltitudeMode === "direct");
+  drawExportField(context, "QNH", exportContext.pressureAltitudeMode !== "direct" ? `${exportContext.qnhHpa} hPa` : "Nicht bereitgestellt", 402, 112, 338, exportContext.pressureAltitudeMode === "direct");
   drawExportField(context, "Druckhöhe", `${inputs.pressureAltitudeFt} ft`, 756, 112, 338);
   drawExportField(context, "OAT", `${inputs.oatC} °C`, 1110, 112, 302);
   drawExportField(context, "Masse", `${inputs.massKg} kg`, 48, 192, 338);
@@ -326,7 +327,7 @@ export function TakeoffPage() {
   const [slopePercent, setSlopePercent] = useState(0);
   const [windKt, setWindKt] = useState(0);
   const [safetyMarginPercent, setSafetyMarginPercent] = useState(15);
-  const pressureAltitudeFt = pressureAltitudeMode === "qnh"
+  const pressureAltitudeFt = pressureAltitudeMode !== "direct"
     ? pressureAltitudeFromQnh(elevationFt, qnhHpa)
     : directPressureAltitudeFt;
   const inputs = useMemo<TakeoffInputs>(() => ({
@@ -349,11 +350,20 @@ export function TakeoffPage() {
       <aside className="sidebar">
         <div className="sidebar-section">
           <div className="section-header">Atmosphäre</div>
-          <div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr" }}>
+          <div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
+            <button className={`mode-btn${pressureAltitudeMode === "airport" ? " active" : ""}`} type="button" onClick={() => setPressureAltitudeMode("airport")}>Airport</button>
             <button className={`mode-btn${pressureAltitudeMode === "qnh" ? " active" : ""}`} type="button" onClick={() => setPressureAltitudeMode("qnh")}>Elevation</button>
             <button className={`mode-btn${pressureAltitudeMode === "direct" ? " active" : ""}`} type="button" onClick={() => setPressureAltitudeMode("direct")}>Pressure Alt.</button>
           </div>
-          {pressureAltitudeMode === "qnh" ? (
+          {pressureAltitudeMode === "airport" ? (
+            <AirportTakeoffInput onApply={(values) => {
+              setElevationFt(values.elevationFt);
+              setQnhHpa(values.qnhHpa);
+              setOatC(values.oatC);
+              setSlopePercent(values.slopePercent);
+              setWindKt(values.windKt);
+            }} />
+          ) : pressureAltitudeMode === "qnh" ? (
             <div className="pa-mode">
               <NumberField label="Elevation" unit="ft" value={elevationFt} step={10} onChange={setElevationFt} />
               <SliderField label="QNH" unit="hPa" value={qnhHpa} min={950} max={1050} onChange={setQnhHpa} />
@@ -367,9 +377,7 @@ export function TakeoffPage() {
               <NumberField label="Pressure Altitude" unit="ft" value={directPressureAltitudeFt} step={100} onChange={setDirectPressureAltitudeFt} />
             </div>
           )}
-          <div style={{ marginTop: "1.25rem" }}>
-            <SliderField label="OAT" unit="°C" value={oatC} min={-20} max={40} onChange={setOatC} />
-          </div>
+          {pressureAltitudeMode !== "airport" ? <div style={{ marginTop: "1.25rem" }}><SliderField label="OAT" unit="°C" value={oatC} min={-20} max={40} onChange={setOatC} /></div> : null}
         </div>
         <div className="sidebar-section">
           <div className="section-header">Flugzeug</div>

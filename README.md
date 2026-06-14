@@ -124,3 +124,19 @@ Die Tests verwenden feste Referenzfälle gegen die pure Calculator-Logik in `src
 Weight & Balance ist die führende Quelle für Beladung, Startkraftstoff, geplanten Verbrauch sowie daraus berechnete Start- und Landemasse. Takeoff und Landing können die jeweils passende Masse explizit aus dem persistenten Flugplan übernehmen. Anschließende lokale Änderungen in diesen Rechnern werden nicht in den Flugplan zurückgeschrieben.
 
 W&B zeigt die berechneten Massen mit einer Nachkommastelle. Bei der Übernahme in einen Performance-Rechner wird die Masse konservativ auf das nächste volle Kilogramm aufgerundet; lokale Massefelder arbeiten in Schritten von 1 kg.
+
+## Flugplatz- und Wetterdaten
+
+Der Takeoff-Rechner besitzt einen `Airport`-Modus mit provider-unabhängigen Mock-Daten. Die Modelle sind auf die späteren Schnittstellen ausgerichtet:
+
+- OpenAIP `/airports` und `/airports/{id}`: Suche, Position, Elevation, magnetische Deklination sowie richtungsbezogene Bahndaten mit True Heading, Oberfläche, Abmessungen, erklärten Distanzen und Schwellenhöhe.
+- Open-Meteo DWD ICON API: Temperatur, QNH, Windrichtung und Windstärke für gewählte Prognosezeitpunkte mit explizitem Modell `ICON-D2`.
+- NOAA WMM: datums- und positionsbezogene magnetische Deklination.
+
+OpenAIP liefert keine direkte Bahnneigung. Diese wird, sofern beide Schwellenhöhen verfügbar sind, aus Höhendifferenz und Bahnlänge berechnet. Wetterwind und Windkomponenten werden intern immer relativ zu True Heading berechnet.
+
+Offizielle Dokumentation:
+
+- [OpenAIP API](https://docs.openaip.net/) und [Airport-Antwortschema](https://api.core.openaip.net/api/schemas/response/airport/airport-schema.json) – die Core API verlangt eine API-Key- oder Bearer-Authentifizierung.
+- [Open-Meteo DWD ICON API](https://open-meteo.com/en/docs/dwd-api)
+- [NOAA/NCEI Geomagnetic Calculators](https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml)

@@ -21,8 +21,13 @@ describe("flight data models and mock providers", () => {
     const declination = getMockDeclination(airport, forecasts[0].validAt);
 
     expect(forecasts).toHaveLength(17);
+    expect(airport.source.provider).toBe("OpenAIP");
+    expect(airport.source.mock).toBe(true);
+    expect(airport.runways[0].toraM).toBe(airport.runways[0].todaM);
+    expect(forecasts[0].source.provider).toBe("Open-Meteo");
     expect(forecasts[0].source.model).toBe("ICON-D2");
-    expect(declination.source.model).toBe("NOAA WMM");
+    expect(declination.source.provider).toBe("NOAA");
+    expect(declination.source.model).toBe("WMM");
   });
 
   it("calculates magnetic headings, slope and wind components consistently", () => {

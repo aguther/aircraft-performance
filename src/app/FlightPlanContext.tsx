@@ -19,15 +19,25 @@ export type FlightPlanMasses = {
   updatedAt: string;
 };
 
+export type FlightPlanAirportSelection = {
+  airportId: string;
+  runwayId: string;
+  forecastId: string;
+  plannedAt: string;
+  updatedAt: string;
+};
+
 export type FlightPlan = {
   weightBalance: WeightBalancePlan;
   masses?: FlightPlanMasses;
+  departure?: FlightPlanAirportSelection;
 };
 
 type FlightPlanContextValue = {
   flightPlan: FlightPlan;
   updateWeightBalance: (change: Partial<WeightBalancePlan>) => void;
   publishMasses: (masses: Omit<FlightPlanMasses, "updatedAt">) => void;
+  updateDeparture: (departure: Omit<FlightPlanAirportSelection, "updatedAt">) => void;
 };
 
 const defaultFlightPlan: FlightPlan = {
@@ -69,6 +79,10 @@ export function FlightPlanProvider({ children }: { children: ReactNode }) {
     ...current,
     masses: { ...masses, updatedAt: new Date().toISOString() },
   })), []);
+  const updateDeparture = useCallback((departure: Omit<FlightPlanAirportSelection, "updatedAt">) => setFlightPlan((current) => ({
+    ...current,
+    departure: { ...departure, updatedAt: new Date().toISOString() },
+  })), []);
 
   useEffect(() => {
     try {
@@ -82,7 +96,8 @@ export function FlightPlanProvider({ children }: { children: ReactNode }) {
     flightPlan,
     updateWeightBalance,
     publishMasses,
-  }), [flightPlan, publishMasses, updateWeightBalance]);
+    updateDeparture,
+  }), [flightPlan, publishMasses, updateDeparture, updateWeightBalance]);
 
   return <FlightPlanContext.Provider value={value}>{children}</FlightPlanContext.Provider>;
 }

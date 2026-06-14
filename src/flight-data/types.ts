@@ -4,9 +4,10 @@ export type Coordinates = {
 };
 
 export type DataSource = {
-  provider: "OpenAIP" | "Open-Meteo" | "NOAA" | "Mock";
+  provider: "OpenAIP" | "Open-Meteo" | "NOAA";
   updatedAt: string;
   model?: string;
+  mock?: boolean;
 };
 
 export type RunwaySurface = "asphalt" | "concrete" | "grass" | "gravel" | "other";
@@ -19,6 +20,9 @@ export type RunwayDirection = {
   lengthM: number;
   widthM: number;
   toraM?: number;
+  todaM?: number;
+  asdaM?: number;
+  ldaM?: number;
   surface: RunwaySurface;
   thresholdElevationFt?: number;
   slopePercent?: number;
