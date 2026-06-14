@@ -14,6 +14,11 @@ describe("WeightBalancePage", () => {
     expect(markup).toContain("830.6");
     expect(markup).toContain("235.18");
     expect(markup).toContain("zentral gespeichert");
-    expect(markup).toContain("Weight and balance envelope");
+    expect(markup.match(/Weight and balance envelope/g)).toHaveLength(1);
+    expect(markup).toContain("Envelope · Start und Landung");
+    expect(markup).toContain("Beladung · Start bis Landung");
+    expect(markup).toContain("Gesamt · Start");
+    expect(markup).toContain("Gesamt · Landung");
+    expect(markup).not.toContain("<div class=\"card-title\">Bedingungen</div>");
   });
 });

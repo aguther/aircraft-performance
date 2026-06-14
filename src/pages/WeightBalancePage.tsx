@@ -1,23 +1,59 @@
 import { useEffect, useMemo } from "react";
-import { calculateWeightBalance } from "../aircraft/g115b/calculators";
+import { calculateWeightBalance, isPointInPolygon } from "../aircraft/g115b/calculators";
 import { g115bData } from "../aircraft/g115b/data";
 import { useFlightPlan } from "../app/FlightPlanContext";
-import { kilometersPerHourToKnots } from "../domain";
+import { interpolate1D, kilometersPerHourToKnots } from "../domain";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
 import { SliderField } from "../components/SliderField";
 
 type WeightBalanceResult = ReturnType<typeof calculateWeightBalance>;
 
-function EnvelopeChart({ result, label }: { result: WeightBalanceResult; label: string }) {
+function deriveLandingResult(startResult: WeightBalanceResult, plannedFuelBurnLiters: number): WeightBalanceResult {
+  const data = g115bData.weightBalance;
+  const burnedFuelLiters = Math.min(startResult.stations[4].massKg / data.fuelDensityKgPerLiter, Math.max(0, plannedFuelBurnLiters));
+  const burnedFuelMassKg = burnedFuelLiters * data.fuelDensityKgPerLiter;
+  const burnedFuelMomentKgM = burnedFuelMassKg * data.stations.fuel.armM;
+  const totalMassKg = startResult.totalMassKg - burnedFuelMassKg;
+  const totalMomentKgM = startResult.totalMomentKgM - burnedFuelMomentKgM;
+  const cgArmM = totalMomentKgM / totalMassKg;
+  const withinEnvelope = isPointInPolygon({ massKg: totalMassKg, momentKgM: totalMomentKgM }, data.envelope);
+  const fuelMassKg = startResult.fuelMassKg - burnedFuelMassKg;
+  const warnings = [];
+  if (!withinEnvelope) warnings.push({ text: "Landeschwerpunkt/Moment liegt außerhalb des Envelope.", danger: true });
+
+  const stallIdleFlaps40Kmh = interpolate1D(g115bData.stall.massBreakpoints, g115bData.stall.speedsKmh.idle.flaps40, totalMassKg);
+  return {
+    ...startResult,
+    warnings,
+    fuelMassKg,
+    totalMassKg,
+    totalMomentKgM,
+    cgArmM,
+    withinEnvelope,
+    stations: startResult.stations.map((station) => station.label === "Kraftstoff"
+      ? { ...station, massKg: fuelMassKg, momentKgM: fuelMassKg * station.armM }
+      : station),
+    speeds: {
+      rotateSpeedKmh: interpolate1D(g115bData.takeoff.rotateSpeedMassBreakpoints, g115bData.takeoff.rotateSpeedKmh, totalMassKg),
+      speedAt15mKmh: interpolate1D(g115bData.takeoff.rotateSpeedMassBreakpoints, g115bData.takeoff.speedAt15mKmh, totalMassKg),
+      approachSpeedKmh: interpolate1D(g115bData.landing.approachSpeedMassBreakpoints, g115bData.landing.approachSpeedKmh, totalMassKg),
+      stallIdleFlaps40Kmh,
+      referenceSpeedKmh: stallIdleFlaps40Kmh * 1.3,
+    },
+  };
+}
+
+function EnvelopeChart({ startResult, landingResult }: { startResult: WeightBalanceResult; landingResult: WeightBalanceResult }) {
   const envelope = g115bData.weightBalance.envelope;
+  const results = [startResult, landingResult];
   const minMoment =
-    Math.min(...envelope.map((point) => point.momentKgM), result.totalMomentKgM) - 8;
+    Math.min(...envelope.map((point) => point.momentKgM), ...results.map((result) => result.totalMomentKgM)) - 8;
   const maxMoment =
-    Math.max(...envelope.map((point) => point.momentKgM), result.totalMomentKgM) + 8;
+    Math.max(...envelope.map((point) => point.momentKgM), ...results.map((result) => result.totalMomentKgM)) + 8;
   const minMass =
-    Math.min(...envelope.map((point) => point.massKg), result.totalMassKg) - 14;
+    Math.min(...envelope.map((point) => point.massKg), ...results.map((result) => result.totalMassKg)) - 14;
   const maxMass =
-    Math.max(...envelope.map((point) => point.massKg), result.totalMassKg) + 14;
+    Math.max(...envelope.map((point) => point.massKg), ...results.map((result) => result.totalMassKg)) + 14;
   const width = 680;
   const height = 300;
   const padding = { top: 18, right: 18, bottom: 34, left: 58 };
@@ -36,7 +72,8 @@ function EnvelopeChart({ result, label }: { result: WeightBalanceResult; label: 
   return (
     <div className="wb-chart-wrap">
       <div className="wb-chart-axis-key">
-        <span>{label} · Masse [kg]</span>
+        <span>Masse [kg]</span>
+        <div className="wb-chart-legend"><span className="start">Start</span><span className="landing">Landung</span></div>
       </div>
       <svg
         className="wb-chart"
@@ -85,12 +122,22 @@ function EnvelopeChart({ result, label }: { result: WeightBalanceResult; label: 
             {tick}
           </text>
         ))}
-        <circle
-          className={`wb-current-point${result.withinEnvelope ? "" : " danger"}`}
-          cx={x(result.totalMomentKgM).toFixed(1)}
-          cy={y(result.totalMassKg).toFixed(1)}
-          r={6}
+        <line
+          className="wb-flight-line"
+          x1={x(startResult.totalMomentKgM)}
+          y1={y(startResult.totalMassKg)}
+          x2={x(landingResult.totalMomentKgM)}
+          y2={y(landingResult.totalMassKg)}
         />
+        {results.map((result, index) => (
+          <circle
+            className={`wb-current-point ${index === 0 ? "start" : "landing"}${result.withinEnvelope ? "" : " danger"}`}
+            cx={x(result.totalMomentKgM).toFixed(1)}
+            cy={y(result.totalMassKg).toFixed(1)}
+            r={7}
+            key={index}
+          />
+        ))}
       </svg>
       <div className="wb-chart-axis-footer">
         <span>Moment [kg m]</span>
@@ -99,7 +146,17 @@ function EnvelopeChart({ result, label }: { result: WeightBalanceResult; label: 
   );
 }
 
-function BreakdownTable({ result }: { result: WeightBalanceResult }) {
+function BreakdownTable({
+  startResult,
+  landingResult,
+  plannedFuelBurnLiters,
+}: {
+  startResult: WeightBalanceResult;
+  landingResult: WeightBalanceResult;
+  plannedFuelBurnLiters: number;
+}) {
+  const burnedFuelMassKg = startResult.fuelMassKg - landingResult.fuelMassKg;
+  const burnedFuelMomentKgM = startResult.totalMomentKgM - landingResult.totalMomentKgM;
   return (
     <table className="breakdown-table wb-breakdown">
       <thead>
@@ -111,7 +168,7 @@ function BreakdownTable({ result }: { result: WeightBalanceResult }) {
         </tr>
       </thead>
       <tbody>
-        {result.stations.map((station) => (
+        {startResult.stations.map((station) => (
           <tr key={station.label}>
             <td>{station.label}</td>
             <td>{station.massKg.toFixed(1)} kg</td>
@@ -120,10 +177,22 @@ function BreakdownTable({ result }: { result: WeightBalanceResult }) {
           </tr>
         ))}
         <tr className="wb-total-row">
-          <td>Gesamt</td>
-          <td>{result.totalMassKg.toFixed(1)} kg</td>
-          <td>{result.cgArmM.toFixed(4)} m</td>
-          <td>{result.totalMomentKgM.toFixed(2)} kg m</td>
+          <td>Gesamt · Start</td>
+          <td>{startResult.totalMassKg.toFixed(1)} kg</td>
+          <td>{startResult.cgArmM.toFixed(4)} m</td>
+          <td>{startResult.totalMomentKgM.toFixed(2)} kg m</td>
+        </tr>
+        <tr className="wb-burn-row">
+          <td>− Verbrauch · {plannedFuelBurnLiters.toFixed(1)} l</td>
+          <td>−{burnedFuelMassKg.toFixed(1)} kg</td>
+          <td>{g115bData.weightBalance.stations.fuel.armM.toFixed(4)} m</td>
+          <td>−{burnedFuelMomentKgM.toFixed(2)} kg m</td>
+        </tr>
+        <tr className="wb-total-row landing">
+          <td>Gesamt · Landung</td>
+          <td>{landingResult.totalMassKg.toFixed(1)} kg</td>
+          <td>{landingResult.cgArmM.toFixed(4)} m</td>
+          <td>{landingResult.totalMomentKgM.toFixed(2)} kg m</td>
         </tr>
       </tbody>
     </table>
@@ -164,14 +233,8 @@ export function WeightBalancePage() {
     [plan.registration, plan.pilotMassKg, plan.copilotMassKg, plan.baggageMassKg, plan.startFuelLiters],
   );
   const landingResult = useMemo(
-    () => calculateWeightBalance({
-      aircraftName: plan.registration,
-      pilotMassKg: plan.pilotMassKg,
-      copilotMassKg: plan.copilotMassKg,
-      baggageMassKg: plan.baggageMassKg,
-      fuelLiters: landingFuelLiters,
-    }),
-    [plan.registration, plan.pilotMassKg, plan.copilotMassKg, plan.baggageMassKg, landingFuelLiters],
+    () => deriveLandingResult(startResult, plan.plannedFuelBurnLiters),
+    [plan.plannedFuelBurnLiters, startResult],
   );
 
   useEffect(() => {
@@ -279,6 +342,10 @@ export function WeightBalancePage() {
                 danger={!landingResult.withinEnvelope}
               />
             </div>
+            <div className="conditions-grid wb-planning-conditions">
+              {startResult.conditions.map((condition) => <span key={condition}>{condition}</span>)}
+              <span>Landung = Start − geplanter Kraftstoffverbrauch</span>
+            </div>
             {plan.plannedFuelBurnLiters > plan.startFuelLiters ? (
               <div className="wb-inline-warnings">
                 <div className="wb-inline-warning danger">Geplanter Verbrauch überschreitet den Kraftstoff beim Start.</div>
@@ -298,11 +365,8 @@ export function WeightBalancePage() {
             ) : null}
           </div>
         </CalculatorCard>
-        <CalculatorCard title="Envelope · Start">
-          <EnvelopeChart result={startResult} label="Start" />
-        </CalculatorCard>
-        <CalculatorCard title="Envelope · Landung">
-          <EnvelopeChart result={landingResult} label="Landung" />
+        <CalculatorCard title="Envelope · Start und Landung">
+          <EnvelopeChart startResult={startResult} landingResult={landingResult} />
         </CalculatorCard>
         <CalculatorCard title="Geschwindigkeiten">
           <div className="speed-grid">
@@ -341,18 +405,8 @@ export function WeightBalancePage() {
             />
           </div>
         </CalculatorCard>
-        <CalculatorCard title="Beladung · Start">
-          <BreakdownTable result={startResult} />
-        </CalculatorCard>
-        <CalculatorCard title="Beladung · Landung">
-          <BreakdownTable result={landingResult} />
-        </CalculatorCard>
-        <CalculatorCard title="Bedingungen">
-          <div className="conditions-grid">
-            {startResult.conditions.map((condition) => (
-              <span key={condition}>{condition}</span>
-            ))}
-          </div>
+        <CalculatorCard title="Beladung · Start bis Landung">
+          <BreakdownTable startResult={startResult} landingResult={landingResult} plannedFuelBurnLiters={plan.plannedFuelBurnLiters} />
         </CalculatorCard>
       </main>
     </div>

@@ -948,6 +948,10 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   gap: 0.65rem;
 }
 
+.wb-planning-conditions {
+  margin-top: 0.1rem;
+}
+
 .wb-inline-warnings {
   display: flex;
   flex-direction: column;
@@ -1213,7 +1217,7 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 
 .wb-chart-axis-key {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 0.25rem;
   color: var(--text-dim);
@@ -1221,6 +1225,25 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.wb-chart-legend {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.wb-chart-legend span::before {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-right: 0.3rem;
+  border-radius: 50%;
+  background: var(--green);
+  content: "";
+}
+
+.wb-chart-legend .landing::before {
+  background: var(--cyan);
 }
 
 .wb-chart-axis-footer {
@@ -1265,6 +1288,16 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   stroke-width: 3;
 }
 
+.wb-current-point.landing {
+  fill: var(--cyan);
+}
+
+.wb-flight-line {
+  stroke: var(--text-sub);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+
 .wb-current-point.danger {
   fill: var(--red);
 }
@@ -1301,6 +1334,15 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   letter-spacing: 0.08em;
   text-align: right;
   text-transform: uppercase;
+}
+
+.wb-burn-row td {
+  padding-top: 0.6rem;
+  color: var(--warn-text);
+}
+
+.wb-total-row.landing td {
+  color: var(--cyan);
 }
 
 .wb-breakdown th:first-child {
