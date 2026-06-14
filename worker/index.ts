@@ -7,7 +7,7 @@ import {
 } from "../src/flight-data/openMeteo";
 import {
   findTafPeriod,
-  mergeModelWithTaf,
+  mergeBaseWithTaf,
   normalizeAwcMetar,
   type AwcMetar,
   type AwcTaf,
@@ -180,16 +180,21 @@ export async function handleApiRequest(request: Request, env: Env, context: Work
           } catch { /* fall through */ }
         }
 
-        // 2. TAF + model — forecast when planned time is within TAF validity
+        // 2. TAF + base — forecast when planned time is within TAF validity
+        // TAF provides wind; METAR (preferred) or model provides temperature and QNH
         if (!current && icaoCode && forecastHour) {
           try {
-            const tafData = await awcJson<AwcTaf[]>(`${AWC_BASE_URL}/taf?ids=${encodeURIComponent(icaoCode)}&format=json`);
-            const tafResult = findTafPeriod(tafData, plannedAt);
-            if (tafResult) {
-              // TAF provides wind; model provides temperature and QNH
-              const modelForecast = await fetchIconD2(baseParams, WEATHER_VARIABLES, forecastHour, airportId)
+            const [tafSettled, metarSettled] = await Promise.allSettled([
+              awcJson<AwcTaf[]>(`${AWC_BASE_URL}/taf?ids=${encodeURIComponent(icaoCode)}&format=json`),
+              awcJson<AwcMetar[]>(`${AWC_BASE_URL}/metar?ids=${encodeURIComponent(icaoCode)}&format=json&hours=2`),
+            ]);
+            const taf = tafSettled.status === "fulfilled" ? findTafPeriod(tafSettled.value, plannedAt) : null;
+            if (taf) {
+              const metarBase = metarSettled.status === "fulfilled" ? normalizeAwcMetar(metarSettled.value, airportId) : null;
+              const base = metarBase
+                ?? await fetchIconD2(baseParams, WEATHER_VARIABLES, forecastHour, airportId)
                 ?? await fetchEcmwf(baseParams, WEATHER_VARIABLES, forecastHour, airportId);
-              if (modelForecast) return json(mergeModelWithTaf(modelForecast, tafResult.period, tafResult.taf), 200, {});
+              if (base) return json(mergeBaseWithTaf(base, taf.period, taf.taf), 200, {});
             }
           } catch { /* fall through */ }
         }

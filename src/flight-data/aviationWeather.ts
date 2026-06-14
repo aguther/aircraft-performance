@@ -72,20 +72,21 @@ export function findTafPeriod(
   return { period, taf };
 }
 
-export function mergeModelWithTaf(
-  model: WeatherForecast,
+export function mergeBaseWithTaf(
+  base: WeatherForecast,
   period: AwcTafPeriod,
   taf: AwcTaf,
 ): WeatherForecast {
   return {
-    ...model,
+    ...base,
     id: `taf-${taf.icaoId.toLowerCase()}-${period.timeFrom}`,
-    windDirectionTrueDeg: typeof period.wdir === "number" ? period.wdir : model.windDirectionTrueDeg,
-    windSpeedKt: period.wspd ?? model.windSpeedKt,
+    validAt: parseAwcTime(period.timeFrom),
+    windDirectionTrueDeg: typeof period.wdir === "number" ? period.wdir : base.windDirectionTrueDeg,
+    windSpeedKt: period.wspd ?? base.windSpeedKt,
     windGustKt: period.wgst ?? undefined,
     source: {
       provider: "Aviation Weather Center",
-      model: `TAF · ${model.source.model}`,
+      model: `TAF · ${base.source.model}`,
       updatedAt: parseAwcTime(taf.issueTime),
     },
   };
