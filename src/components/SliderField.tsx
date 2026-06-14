@@ -27,8 +27,14 @@ export function SliderField({
 }: SliderFieldProps) {
   const decimals = String(step).includes(".") ? String(step).split(".")[1].length : 0;
   const displayValue = formatValue ?? ((currentValue: number) => currentValue.toFixed(decimals));
+  const [decimalInput, setDecimalInput] = useState(() => displayValue(value));
+
+  useEffect(() => {
+    setDecimalInput(displayValue(value));
+  }, [displayValue, value]);
+
   const updateValue = (rawValue: string) => {
-    const parsedValue = Number.parseFloat(rawValue);
+    const parsedValue = Number.parseFloat(rawValue.replace(",", "."));
     if (Number.isFinite(parsedValue)) onChange(parsedValue);
   };
 
@@ -51,21 +57,39 @@ export function SliderField({
         </span>
       </div>
       <div className="input-wrap" style={{ marginTop: 6 }}>
-        <input
-          type="number"
-          min={min}
-          max={inputMax}
-          step={step}
-          value={value}
-          onFocus={(event) => event.currentTarget.select()}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") event.currentTarget.blur();
-          }}
-          onChange={(event) => updateValue(event.target.value)}
-        />
+        {decimals > 0 ? (
+          <input
+            type="text"
+            inputMode="decimal"
+            value={decimalInput}
+            onFocus={(event) => event.currentTarget.select()}
+            onBlur={() => setDecimalInput(displayValue(value))}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.currentTarget.blur();
+            }}
+            onChange={(event) => {
+              setDecimalInput(event.target.value);
+              updateValue(event.target.value);
+            }}
+          />
+        ) : (
+          <input
+            type="number"
+            min={min}
+            max={inputMax}
+            step={step}
+            value={value}
+            onFocus={(event) => event.currentTarget.select()}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.currentTarget.blur();
+            }}
+            onChange={(event) => updateValue(event.target.value)}
+          />
+        )}
         <span className="unit">{unit}</span>
       </div>
       {hint ? <div className="hint">{hint}</div> : null}
     </div>
   );
 }
+import { useEffect, useState } from "react";

@@ -146,6 +146,18 @@ describe("calculator interactions", () => {
     });
   });
 
+  it("keeps the supported decimal precision in slope input", () => {
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".section-header" }).parentElement!;
+    const slopeField = within(runwaySection).getByText("Slope", { selector: ".field-label" }).parentElement!;
+    const slopeInput = slopeField.querySelector('input[inputmode="decimal"]')!;
+
+    expect(slopeInput.getAttribute("value")).toBe("0.0");
+    fireEvent.change(slopeInput, { target: { value: "1" } });
+    fireEvent.blur(slopeInput);
+    expect(slopeInput.getAttribute("value")).toBe("1.0");
+  });
+
   it("switches the common altitude input to direct density altitude", async () => {
     const user = userEvent.setup();
     render(<AltitudeInputHarness />);
