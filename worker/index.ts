@@ -5,6 +5,13 @@ import {
   type OpenMeteoCurrentResponse,
   type OpenMeteoHourlyResponse,
 } from "../src/flight-data/openMeteo";
+import {
+  findTafPeriod,
+  mergeModelWithTaf,
+  normalizeAwcMetar,
+  type AwcMetar,
+  type AwcTaf,
+} from "../src/flight-data/aviationWeather";
 
 type Env = {
   ASSETS: { fetch(request: Request): Promise<Response> };
@@ -18,6 +25,7 @@ type WorkerContext = {
 const OPENAIP_BASE_URL = "https://api.core.openaip.net/api";
 const OPEN_METEO_ICON_URL = "https://api.open-meteo.com/v1/dwd-icon";
 const OPEN_METEO_ECMWF_URL = "https://api.open-meteo.com/v1/ecmwf";
+const AWC_BASE_URL = "https://aviationweather.gov/api/data";
 const CACHE_CONTROL = "public, max-age=300, s-maxage=3600";
 
 function json(payload: unknown, status = 200, headers: HeadersInit = {}) {
@@ -61,6 +69,57 @@ async function openMeteoJson<T>(response: Response): Promise<T> {
   throw new Error(`Open-Meteo ist derzeit nicht erreichbar (${response.status}).`);
 }
 
+async function awcJson<T>(url: string): Promise<T> {
+  const response = await fetch(url, { headers: { Accept: "application/json" } });
+  if (response.ok) return response.json() as Promise<T>;
+  throw new Error(`Aviation Weather Center: HTTP ${response.status}`);
+}
+
+async function fetchIconD2(
+  baseParams: URLSearchParams,
+  weatherVars: string,
+  forecastHour: string | null,
+  airportId: string | undefined,
+) {
+  try {
+    const params = new URLSearchParams(baseParams);
+    params.set("models", "icon_d2");
+    if (forecastHour === null) {
+      params.set("current", weatherVars);
+    } else {
+      params.set("hourly", weatherVars);
+      params.set("start_hour", forecastHour);
+      params.set("end_hour", forecastHour);
+    }
+    const data = await openMeteoJson<OpenMeteoHourlyResponse & OpenMeteoCurrentResponse>(
+      await fetch(`${OPEN_METEO_ICON_URL}?${params}`, { headers: { Accept: "application/json" } }),
+    );
+    return forecastHour === null ? normalizeOpenMeteoCurrent(data, airportId) : normalizeOpenMeteoForecast(data, airportId);
+  } catch {
+    return null;
+  }
+}
+
+async function fetchEcmwf(
+  baseParams: URLSearchParams,
+  weatherVars: string,
+  ecmwfHour: string,
+  airportId: string | undefined,
+) {
+  try {
+    const params = new URLSearchParams(baseParams);
+    params.set("hourly", weatherVars);
+    params.set("start_hour", ecmwfHour);
+    params.set("end_hour", ecmwfHour);
+    const data = await openMeteoJson<OpenMeteoHourlyResponse>(
+      await fetch(`${OPEN_METEO_ECMWF_URL}?${params}`, { headers: { Accept: "application/json" } }),
+    );
+    return normalizeOpenMeteoForecast(data, airportId, undefined, "ECMWF");
+  } catch {
+    return null;
+  }
+}
+
 export function nearestForecastHour(value: string) {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return null;
@@ -91,6 +150,8 @@ export async function handleApiRequest(request: Request, env: Env, context: Work
       const plannedAt = url.searchParams.get("plannedAt") ?? "";
       const current = url.searchParams.get("current") === "true";
       const airportId = url.searchParams.get("airportId")?.slice(0, 64);
+      const rawIcao = (url.searchParams.get("icaoCode") ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
+      const icaoCode = rawIcao.length >= 3 ? rawIcao : undefined;
       const forecastHour = current ? null : nearestForecastHour(plannedAt);
       if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
         return json({ error: "Ungültige Koordinaten für die Wetterabfrage." }, 400);
@@ -110,43 +171,38 @@ export async function handleApiRequest(request: Request, env: Env, context: Work
           timezone: "GMT",
         });
 
-        // ICON-D2
-        const iconParams = new URLSearchParams(baseParams);
-        iconParams.set("models", "icon_d2");
-        if (current) {
-          iconParams.set("current", WEATHER_VARIABLES);
-        } else {
-          iconParams.set("hourly", WEATHER_VARIABLES);
-          iconParams.set("start_hour", forecastHour!);
-          iconParams.set("end_hour", forecastHour!);
+        // 1. METAR — current conditions for airports with ICAO code
+        if (current && icaoCode) {
+          try {
+            const metarData = await awcJson<AwcMetar[]>(`${AWC_BASE_URL}/metar?ids=${encodeURIComponent(icaoCode)}&format=json&hours=2`);
+            const metar = normalizeAwcMetar(metarData, airportId);
+            if (metar) return json(metar, 200, SHORT_CACHE);
+          } catch { /* fall through */ }
         }
-        let iconForecast = null;
-        try {
-          const iconData = await openMeteoJson<OpenMeteoHourlyResponse & OpenMeteoCurrentResponse>(
-            await fetch(`${OPEN_METEO_ICON_URL}?${iconParams}`, { headers: { Accept: "application/json" } }),
-          );
-          iconForecast = current ? normalizeOpenMeteoCurrent(iconData, airportId) : normalizeOpenMeteoForecast(iconData, airportId);
-        } catch {
-          // ICON-D2 nicht verfügbar für diesen Standort — Fallback auf ECMWF
+
+        // 2. TAF + model — forecast when planned time is within TAF validity
+        if (!current && icaoCode && forecastHour) {
+          try {
+            const tafData = await awcJson<AwcTaf[]>(`${AWC_BASE_URL}/taf?ids=${encodeURIComponent(icaoCode)}&format=json`);
+            const tafResult = findTafPeriod(tafData, plannedAt);
+            if (tafResult) {
+              // TAF provides wind; model provides temperature and QNH
+              const modelForecast = await fetchIconD2(baseParams, WEATHER_VARIABLES, forecastHour, airportId)
+                ?? await fetchEcmwf(baseParams, WEATHER_VARIABLES, forecastHour, airportId);
+              if (modelForecast) return json(mergeModelWithTaf(modelForecast, tafResult.period, tafResult.taf), 200, {});
+            }
+          } catch { /* fall through */ }
         }
+
+        // 3. ICON-D2
+        const iconForecast = await fetchIconD2(baseParams, WEATHER_VARIABLES, forecastHour, airportId);
         if (iconForecast) return json(iconForecast, 200, current ? SHORT_CACHE : {});
 
-        // Fallback: ECMWF (global coverage, up to 240 h)
+        // 4. ECMWF (global coverage, no current mode)
         const ecmwfHour = forecastHour ?? nearestForecastHour(new Date().toISOString());
         if (!ecmwfHour) return json({ error: "Keine Wetterdaten für die gewählte Zeit und Position verfügbar." }, 404);
-        try {
-          const ecmwfParams = new URLSearchParams(baseParams);
-          ecmwfParams.set("hourly", WEATHER_VARIABLES);
-          ecmwfParams.set("start_hour", ecmwfHour);
-          ecmwfParams.set("end_hour", ecmwfHour);
-          const ecmwfData = await openMeteoJson<OpenMeteoHourlyResponse>(
-            await fetch(`${OPEN_METEO_ECMWF_URL}?${ecmwfParams}`, { headers: { Accept: "application/json" } }),
-          );
-          const ecmwfForecast = normalizeOpenMeteoForecast(ecmwfData, airportId, undefined, "ECMWF");
-          if (ecmwfForecast) return json(ecmwfForecast, 200, current ? SHORT_CACHE : {});
-        } catch {
-          // fall through to 404
-        }
+        const ecmwfForecast = await fetchEcmwf(baseParams, WEATHER_VARIABLES, ecmwfHour, airportId);
+        if (ecmwfForecast) return json(ecmwfForecast, 200, current ? SHORT_CACHE : {});
 
         return json({ error: "Keine Wetterdaten für die gewählte Zeit und Position verfügbar." }, 404);
       });

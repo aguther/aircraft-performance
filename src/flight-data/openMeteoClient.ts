@@ -14,8 +14,7 @@ export function getOpenMeteoWeather(
   elevationFt: number,
   plannedAt: string,
   current: boolean,
-  airportId?: string,
-  signal?: AbortSignal,
+  options?: { airportId?: string; icaoCode?: string; signal?: AbortSignal },
 ) {
   const params = new URLSearchParams({
     latitude: String(latitude),
@@ -24,6 +23,7 @@ export function getOpenMeteoWeather(
     plannedAt,
     current: String(current),
   });
-  if (airportId) params.set("airportId", airportId);
-  return weatherGatewayRequest(`/api/weather?${params}`, signal);
+  if (options?.airportId) params.set("airportId", options.airportId);
+  if (options?.icaoCode) params.set("icaoCode", options.icaoCode);
+  return weatherGatewayRequest(`/api/weather?${params}`, options?.signal);
 }

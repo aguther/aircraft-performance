@@ -4,7 +4,7 @@ export type Coordinates = {
 };
 
 export type DataSource = {
-  provider: "OpenAIP" | "Open-Meteo";
+  provider: "OpenAIP" | "Open-Meteo" | "Aviation Weather Center";
   updatedAt: string;
   model?: string;
 };

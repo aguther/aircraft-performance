@@ -145,14 +145,13 @@ export function AirportRunwayInput({
       airport.elevationFt,
       utcDateTimeIso(plannedAt),
       weatherNow,
-      airport.id,
-      controller.signal,
+      { airportId: airport.id, icaoCode: airport.icaoCode, signal: controller.signal },
     )
       .then(setWeather)
       .catch((loadError) => {
         if (loadError instanceof DOMException && loadError.name === "AbortError") return;
         setWeather(null);
-        setWeatherError(loadError instanceof Error ? loadError.message : "ICON-D2-Wetterdaten konnten nicht geladen werden.");
+        setWeatherError(loadError instanceof Error ? loadError.message : "Wetterdaten konnten nicht geladen werden.");
       })
       .finally(() => setWeatherLoading(false));
     return () => controller.abort();
@@ -286,7 +285,16 @@ export function AirportRunwayInput({
           ) : <div className="airport-status error">OpenAIP liefert für diesen Flugplatz keine aktive Bahn.</div>}
           <div className="airport-sources">
             OpenAIP · Stand {new Date(airport.source.updatedAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })}
-            {weather ? <><br /><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · {weather.source.model} · {weatherNow ? "aktuell für" : "Prognose für"} {new Date(weather.validAt).toLocaleString("de-DE", { timeZone: "UTC", dateStyle: "short", timeStyle: "short" })} UTC</> : null}
+            {weather ? (
+              <>
+                <br />
+                {weather.source.provider === "Aviation Weather Center"
+                  ? <a href="https://aviationweather.gov/" target="_blank" rel="noreferrer">Aviation Weather Center</a>
+                  : <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a>
+                }
+                {" · "}{weather.source.model} · {weatherNow ? "aktuell für" : "Prognose für"} {new Date(weather.validAt).toLocaleString("de-DE", { timeZone: "UTC", dateStyle: "short", timeStyle: "short" })} UTC
+              </>
+            ) : null}
           </div>
           <div className="airport-imports">
             <label className="import-toggle airport-import-toggle">
