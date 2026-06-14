@@ -320,7 +320,7 @@ function ChartCard({ inputs, result, exportContext }: { inputs: LandingInputs; r
 
 export function LandingPage() {
   const { flightPlan } = useFlightPlan();
-  const [pressureAltitudeMode, setPressureAltitudeMode] = useState<PressureAltitudeMode>("qnh");
+  const [pressureAltitudeMode, setPressureAltitudeMode] = useState<PressureAltitudeMode>("airport");
   const [elevationFt, setElevationFt] = useState(0);
   const [qnhHpa, setQnhHpa] = useState(1013);
   const [directPressureAltitudeFt, setDirectPressureAltitudeFt] = useState(0);

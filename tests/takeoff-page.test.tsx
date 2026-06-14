@@ -14,7 +14,9 @@ describe("TakeoffPage", () => {
     expect(markup).toContain("grob115b-takeoff-chart.png");
     expect(markup).toContain("Rechenweg");
     expect(markup).toContain("Airport");
-    expect(markup).toContain("0.0 %");
+    expect(markup).toContain("airport-preview-unit");
+    expect(markup).toContain("hPa");
+    expect(markup).toContain("tailwind");
     expect(markup).toContain('step="1" value="920"');
   });
 });

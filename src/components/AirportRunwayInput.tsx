@@ -19,7 +19,28 @@ export type AirportRunwayValues = {
 type AirportRunwayOperation = "departure" | "arrival";
 
 function formatDirection(value: number) {
-  return `${Math.round(value).toString().padStart(3, "0")}°`;
+  return Math.round(value).toString().padStart(3, "0");
+}
+
+function AirportPreviewValue({
+  label,
+  value,
+  unit,
+  tone,
+}: {
+  label: string;
+  value: string | number;
+  unit?: string;
+  tone?: "headwind" | "tailwind" | "crosswind";
+}) {
+  return (
+    <div className={`airport-preview-item${tone ? ` ${tone}` : ""}`}>
+      <span className="airport-preview-label">{label}</span>
+      <strong className="airport-preview-value">
+        {value}{unit ? <span className="airport-preview-unit">{unit}</span> : null}
+      </strong>
+    </div>
+  );
 }
 
 export function AirportRunwayInput({
@@ -101,14 +122,19 @@ export function AirportRunwayInput({
         </select>
       </label>
       <div className="airport-preview">
-        <span>Elevation <strong>{airport.elevationFt} ft</strong></span>
-        <span>QNH <strong>{forecast.qnhHpa} hPa</strong></span>
-        <span>OAT <strong>{forecast.temperatureC} °C</strong></span>
-        <span>RWY true / mag <strong>{formatDirection(runway.trueHeadingDeg)} / {formatDirection(runway.magneticHeadingDeg)}</strong></span>
-        <span>Slope <strong>{(runway.slopePercent ?? 0).toFixed(1)}%</strong></span>
-        <span>Wind true <strong>{formatDirection(forecast.windDirectionTrueDeg)} / {forecast.windSpeedKt} kt</strong></span>
-        <span>Komponente <strong>{wind.headwindKt >= 0 ? `${wind.headwindKt.toFixed(1)} kt HW` : `${Math.abs(wind.headwindKt).toFixed(1)} kt TW`}</strong></span>
-        <span>Crosswind <strong>{Math.abs(wind.crosswindKt).toFixed(1)} kt</strong></span>
+        <AirportPreviewValue label="Elevation" value={airport.elevationFt} unit="ft" />
+        <AirportPreviewValue label="QNH" value={forecast.qnhHpa} unit="hPa" />
+        <AirportPreviewValue label="OAT" value={forecast.temperatureC} unit="°C" />
+        <AirportPreviewValue label="RWY true / mag" value={`${formatDirection(runway.trueHeadingDeg)}° / ${formatDirection(runway.magneticHeadingDeg)}°`} />
+        <AirportPreviewValue label="Slope" value={(runway.slopePercent ?? 0).toFixed(1)} unit="%" />
+        <AirportPreviewValue label="Wind true" value={`${formatDirection(forecast.windDirectionTrueDeg)}° / ${forecast.windSpeedKt}`} unit="kt" />
+        <AirportPreviewValue
+          label="Komponente"
+          value={Math.abs(wind.headwindKt).toFixed(1)}
+          unit={`kt ${wind.headwindKt >= 0 ? "HW" : "TW"}`}
+          tone={wind.headwindKt >= 0 ? "headwind" : "tailwind"}
+        />
+        <AirportPreviewValue label="Crosswind" value={Math.abs(wind.crosswindKt).toFixed(1)} unit="kt" tone="crosswind" />
       </div>
       <div className="airport-sources">
         Mock · {airport.source.provider} · {forecast.source.provider} {forecast.source.model} · {declination.source.provider} {declination.source.model} {declination.declinationDeg >= 0 ? "+" : ""}{declination.declinationDeg.toFixed(1)}°
