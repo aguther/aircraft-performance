@@ -1,8 +1,26 @@
 {
   "name": "g115b-performance-calculators",
   "private": true,
+  "type": "module",
   "scripts": {
-    "build": "node scripts/build-static.js",
-    "test": "node tests/run-tests.js"
+    "build": "vite build && node scripts/copy-legacy.cjs",
+    "dev": "vite",
+    "preview": "vite preview",
+    "test": "node tests/run-tests.cjs && vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.17.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.2",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8",
+    "wrangler": "^4.100.0"
   }
 }

@@ -38,7 +38,7 @@ Danach die App unter `http://localhost:8080` im Browser öffnen und von dort ins
 
 ## Deployment auf Cloudflare Workers
 
-Die Anwendung wird ohne externe Abhängigkeiten als statische Website gebaut. Der Build kopiert nur die auszuliefernden Dateien nach `dist`:
+Die Anwendung wird mit Vite gebaut. Der Build erzeugt die React-App und kopiert die noch nicht migrierten Rechnerseiten nach `dist`:
 
 ```powershell
 npm run build
@@ -59,6 +59,33 @@ Für das über GitHub verbundene Cloudflare-Projekt werden folgende Einstellunge
 `main` wird als Production Branch gewählt. Builds für Non-production Branches können aktiviert bleiben.
 
 Die Datei `_headers` ergänzt Sicherheits-Header für statische Antworten und verhindert langlebiges Browser-Caching von Service Worker und Web App Manifest. Spätere API-Zugriffe können direkt durch einen Worker ergänzt werden.
+
+---
+
+## React-Migration
+
+Die Startseite und gemeinsame App-Grundlage verwenden React, TypeScript und Vite. Die bestehenden Rechner bleiben während der schrittweisen Migration unter ihren bisherigen HTML-URLs erreichbar.
+
+- `src/app/`
+  Enthält zentrale Definitionen wie Aircraft Registry, Calculator Registry und Theme-Verhalten.
+- `src/components/`
+  Enthält gemeinsame React-Komponenten der App-Shell.
+- `src/pages/`
+  Enthält migrierte React-Seiten.
+- `scripts/copy-legacy.cjs`
+  Kopiert die noch nicht migrierten Rechner und ihre Assets nach dem Vite-Build in `dist`.
+
+Lokale Entwicklung:
+
+```powershell
+npm run dev
+```
+
+TypeScript-Prüfung:
+
+```powershell
+npm run typecheck
+```
 
 ---
 

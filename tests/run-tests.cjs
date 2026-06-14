@@ -1,6 +1,6 @@
 const assert = require("node:assert/strict");
 
-const { createG115BContext } = require("./helpers/load-g115b");
+const { createG115BContext } = require("./helpers/load-g115b.cjs");
 
 const { calculators, core, data } = createG115BContext();
 

@@ -5,13 +5,6 @@
     "allowJs": true,
     "noEmit": true
   },
-  "include": [
-    "app.js",
-    "js/**/*.js",
-    "tests/**/*.js",
-    "types/**/*.d.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["app.js", "js/**/*.js", "tests/**/*.cjs", "types/**/*.d.ts"],
+  "exclude": ["dist", "node_modules", "src"]
 }

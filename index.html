@@ -1,173 +1,38 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de" data-theme="light">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Grob 115B — Performance Calculators</title>
-  <meta name="theme-color" content="#005f8a">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="G115B Perf">
-  <script>
-    (function () {
-      var themePreference = "auto";
-      var resolvedTheme = "light";
-
-      try {
-        themePreference = localStorage.getItem("g115b-theme") || "auto";
-      } catch (_) {
-        themePreference = "auto";
-      }
-
-      if (themePreference === "dark") {
-        resolvedTheme = "dark";
-      } else if (
-        themePreference === "auto" &&
-        window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-      ) {
-        resolvedTheme = "dark";
-      }
-
-      document.documentElement.dataset.theme = resolvedTheme;
-      document.documentElement.dataset.themePreference = themePreference;
-      document.documentElement.style.colorScheme = resolvedTheme;
-
-      var metaThemeColor = document.querySelector('meta[name="theme-color"]');
-      if (metaThemeColor) {
-        metaThemeColor.setAttribute("content", resolvedTheme === "dark" ? "#08131d" : "#005f8a");
-      }
-    })();
-  </script>
-  <link rel="manifest" href="manifest.webmanifest?v=79">
-  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32-v2.png">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon-v2.png">
-  <link rel="stylesheet" href="css/theme.css?v=79">
-  <link rel="stylesheet" href="css/index.css?v=79">
-</head>
-
-<body>
-  <nav class="nav-bar">
-    <div class="nav-left nav-left-placeholder" aria-hidden="true">
-      <a class="nav-back" href="#"><span class="nav-back-arrow">←</span><span>Zurück</span></a>
-      <div class="nav-menu-wrap">
-        <button class="nav-menu-btn" type="button">
-          <span class="nav-back-arrow">☰</span><span>Rechner</span>
-        </button>
-      </div>
-    </div>
-    <div class="nav-center">
-      <div class="nav-logo">Grob 115B</div>
-      <div class="nav-title">Performance</div>
-    </div>
-    <div class="nav-right">
-      <button class="usage-notice-open" type="button" aria-label="Hinweis zur Nutzung">
-        <span class="usage-notice-open-icon" aria-hidden="true">i</span>
-        <span class="usage-notice-open-label">Hinweis</span>
-      </button>
-      <div class="theme-toggle" onclick="toggleTheme()">
-        <div class="toggle-track" id="tTrack">
-          <div class="toggle-thumb" id="tThumb"></div>
-        </div>
-        <span id="tLabel">Light</span>
-      </div>
-    </div>
-  </nav>
-
-  <main class="idx-shell">
-    <section class="idx-group">
-      <div class="idx-group-head">
-        <div class="idx-section">Flugplanung</div>
-        <div class="idx-group-copy">Rechner für Beladung, Flugleistung und Streckenplanung.</div>
-      </div>
-      <div class="idx-grid">
-        <a href="weight_balance.html" class="idx-card">
-          <div class="idx-icon">WB</div>
-          <div class="idx-left">
-            <div class="idx-tag">Beladung</div>
-            <div class="idx-title">Weight & Balance</div>
-            <div class="idx-desc">Schwerpunktlage, Moment und relevante IAS nach Beladung.</div>
-            <div class="idx-meta">POH 6.4 und Wägeberichte</div>
-          </div>
-          <div class="idx-arrow">→</div>
-        </a>
-        <a href="takeoff.html" class="idx-card">
-          <div class="idx-icon">TO</div>
-          <div class="idx-left">
-            <div class="idx-tag">Startstrecke</div>
-            <div class="idx-title">Take-Off</div>
-            <div class="idx-desc">Startrollstrecke und Startstrecke über Hindernis.</div>
-            <div class="idx-meta">POH 5.3.7</div>
-          </div>
-          <div class="idx-arrow">→</div>
-        </a>
-        <a href="climb.html" class="idx-card">
-          <div class="idx-icon">CLB</div>
-          <div class="idx-left">
-            <div class="idx-tag">Steigflug</div>
-            <div class="idx-title">Climb</div>
-            <div class="idx-desc">Zeit, Kraftstoff und Distanz zwischen zwei Höhen.</div>
-            <div class="idx-meta">POH 5.3.9</div>
-          </div>
-          <div class="idx-arrow">→</div>
-        </a>
-        <a href="cruise.html" class="idx-card">
-          <div class="idx-icon">CR</div>
-          <div class="idx-left">
-            <div class="idx-tag">Reiseflug</div>
-            <div class="idx-title">Cruise</div>
-            <div class="idx-desc">Drehzahl, Kraftstoffverbrauch und TAS.</div>
-            <div class="idx-meta">POH 5.3.10, 5.3.11, 5.3.12</div>
-          </div>
-          <div class="idx-arrow">→</div>
-        </a>
-        <a href="landing.html" class="idx-card">
-          <div class="idx-icon">LDG</div>
-          <div class="idx-left">
-            <div class="idx-tag">Landestrecke</div>
-            <div class="idx-title">Landing</div>
-            <div class="idx-desc">Landerollstrecke und Landestrecke über Hindernis.</div>
-            <div class="idx-meta">POH 5.3.15</div>
-          </div>
-          <div class="idx-arrow">→</div>
-        </a>
-      </div>
-    </section>
-
-    <section class="idx-group">
-      <div class="idx-group-head">
-        <div class="idx-section">Information & Referenz</div>
-        <div class="idx-group-copy">Ergänzende Leistungswerte ausserhalb der normalen Flugplanung.</div>
-      </div>
-      <div class="idx-grid">
-        <a href="stall.html" class="idx-card">
-          <div class="idx-icon">VS</div>
-          <div class="idx-left">
-            <div class="idx-tag">Überziehgeschwindigkeit</div>
-            <div class="idx-title">Stall</div>
-            <div class="idx-desc">VS0 und VS1 nach Masse, Klappen und Leistung.</div>
-            <div class="idx-meta">POH 5.3.4</div>
-          </div>
-          <div class="idx-arrow">→</div>
-        </a>
-        <a href="climb_rate.html" class="idx-card">
-          <div class="idx-icon">VY</div>
-          <div class="idx-left">
-            <div class="idx-tag">Steigleistung</div>
-            <div class="idx-title">Climb Rate</div>
-            <div class="idx-desc">Rate of Climb und VY nach Masse und Dichtehöhe.</div>
-            <div class="idx-meta">POH 5.3.8</div>
-          </div>
-          <div class="idx-arrow">→</div>
-        </a>
-      </div>
-    </section>
-  </main>
-
-  <script src="js/g115b-core.js?v=79"></script>
-  <script src="js/g115b-ui.js?v=79"></script>
-  <script src="app.js?v=79"></script>
-</body>
-
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Grob 115B — Performance Calculators</title>
+    <meta name="theme-color" content="#005f8a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="G115B Perf" />
+    <script>
+      (() => {
+        const preference =
+          localStorage.getItem("g115b-theme") || "auto";
+        const dark =
+          preference === "dark" ||
+          (preference === "auto" &&
+            matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+        document.documentElement.dataset.themePreference = preference;
+        document.documentElement.style.colorScheme = dark ? "dark" : "light";
+      })();
+    </script>
+    <link rel="manifest" id="app-manifest" />
+    <script>
+      document.getElementById("app-manifest").href = "/manifest.webmanifest";
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32-v2.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon-v2.png" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

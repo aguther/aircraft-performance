@@ -1,4 +1,4 @@
-const RELEASE = "79";
+const RELEASE = "80";
 const CACHE_PREFIX = "g115b-performance-v";
 const CACHE_NAME = `${CACHE_PREFIX}${RELEASE}`;
 const versioned = (path) => `${path}?v=${RELEASE}`;
@@ -12,6 +12,8 @@ const APP_SHELL = [
   "./climb.html",
   "./climb_rate.html",
   "./stall.html",
+  "./react/app.js",
+  "./react/style.css",
   versioned("./manifest.webmanifest"),
   versioned("./app.js"),
   versioned("./css/theme.css"),
