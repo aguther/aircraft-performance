@@ -93,14 +93,12 @@ npm run typecheck
 
 Die Rechenlogik ist jetzt bewusst von der HTML-Oberfläche getrennt:
 
-- `js/g115b-core.js`
-  Enthält die gemeinsamen Rechenhilfen wie Interpolation, Pressure Altitude, Density Altitude und Einheitenumrechnungen.
-- `js/performance-data.js`
-  Enthält die Tabellen und Datensätze der einzelnen Rechner in lesbarer Form.
-- `js/g115b-calculators.js`
-  Enthält die eigentlichen fachlichen Berechnungen als pure Funktionen ohne DOM-Zugriffe.
+- `src/domain/`
+  Enthält flugzeugunabhängige Rechenhilfen, Atmosphärenlogik, Geometrie und gemeinsame Typen.
+- `src/aircraft/g115b/`
+  Enthält die typisierten G115B-Performance-Daten und Calculator-Funktionen.
 - `js/pages/*.js`
-  Enthält pro Rechner nur noch den Seiten-Controller: Eingaben auslesen, Calculator aufrufen, Ergebnis rendern.
+  Enthält während der React-Migration weiterhin die Controller der bestehenden Rechnerseiten.
 - `css/theme.css`
   Enthält die zentralen Theme-Variablen sowie die gemeinsamen App-/Navigations-Styles.
 - `css/calculator.css`
@@ -113,10 +111,11 @@ Die DOM-Zugriffe sind auf die Page-Controller beschränkt, während die Berechnu
 
 ## Tests
 
-Die Rechenlogik kann automatisiert mit Node.js geprüft werden:
+Die Rechenlogik wird mit Vitest direkt gegen den TypeScript-Domain-Layer geprüft:
 
 ```powershell
 npm test
 ```
 
-Die Tests verwenden feste Referenzfälle gegen die pure Calculator-Logik in `js/g115b-calculators.js`.
+Die Tests verwenden feste Referenzfälle gegen die pure Calculator-Logik in `src/aircraft/g115b/calculators.ts`.
+Zusätzliche Paritätstests vergleichen repräsentative Ergebnisse mit den während der Migration weiterhin ausgelieferten Legacy-Rechnern.

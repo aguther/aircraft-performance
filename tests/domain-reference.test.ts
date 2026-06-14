@@ -1,15 +1,12 @@
-const assert = require("node:assert/strict");
+import assert from "node:assert/strict";
+import { test } from "vitest";
+import * as core from "../src/domain/core";
+import * as calculators from "../src/aircraft/g115b/calculators";
+import { g115bData as data } from "../src/aircraft/g115b/data";
 
-const { createG115BContext } = require("./helpers/load-g115b.cjs");
-
-const { calculators, core, data } = createG115BContext();
-
-const tests = [];
-
-function test(name, fn) {
-  tests.push({ name, fn });
+function expectNonNull<T>(value: T): asserts value is NonNullable<T> {
+  assert.notEqual(value, null);
 }
-
 test("density altitude uses ISA deviation formula consistently", () => {
   const atmosphere = core.densityAltitude(2000, 25);
 
@@ -94,7 +91,6 @@ test("landing calculator returns stable reference result", () => {
     pressureAltitudeFt: 2000,
     oatC: 20,
     massKg: 850,
-    slopePercent: 0,
     windKt: 0,
     safetyMarginPercent: 40,
   });
@@ -411,7 +407,7 @@ test("climb rate calculator warns above the chart limit", () => {
 });
 
 test("climb rate VY table follows the published reference values", () => {
-  const referenceRows = [
+  const referenceRows: Array<[number, number[]]> = [
     [750, [135, 119, 107]],
     [835, [143, 124, 115]],
     [920, [150, 131, 120]],
@@ -435,6 +431,7 @@ test("climb calculator rejects inverted altitude ranges", () => {
     destinationDensityAltitudeFt: 3000,
   });
 
+  expectNonNull(result.error);
   assert.equal(result.error.text, "Ziel-Dichtehöhe muss größer als Start-Dichtehöhe sein.");
   assert.equal(result.error.danger, true);
   assert.equal(result.climbTimeMinutes, null);
@@ -450,6 +447,10 @@ test("climb calculator returns stable delta values", () => {
     destinationDensityAltitudeFt: 8000,
   });
 
+  expectNonNull(result.climbTimeMinutes);
+  expectNonNull(result.climbFuelLiters);
+  expectNonNull(result.climbDistanceKm);
+  expectNonNull(result.climbDistanceNm);
   assert.equal(result.climbTimeMinutes.toFixed(1), "7.0");
   assert.equal(result.climbFuelLiters.toFixed(1), "4.9");
   assert.equal(result.climbDistanceKm.toFixed(1), "17.2");
@@ -462,6 +463,9 @@ test("climb calculator reproduces the POH chart example", () => {
     destinationDensityAltitudeFt: 8000,
   });
 
+  expectNonNull(result.climbTimeMinutes);
+  expectNonNull(result.climbFuelLiters);
+  expectNonNull(result.climbDistanceKm);
   assert.equal(result.climbTimeMinutes.toFixed(1), "6.0");
   assert.equal(result.climbFuelLiters.toFixed(1), "4.4");
   assert.equal(result.climbDistanceKm.toFixed(1), "14.8");
@@ -483,6 +487,9 @@ test("climb calculator follows the separately calibrated chart axes", () => {
     destinationDensityAltitudeFt: 18300,
   });
 
+  expectNonNull(result.climbTimeMinutes);
+  expectNonNull(result.climbFuelLiters);
+  expectNonNull(result.climbDistanceKm);
   assert.equal(result.climbTimeMinutes.toFixed(1), "40.0");
   assert.equal(result.climbFuelLiters.toFixed(1), "22.0");
   assert.equal(result.climbDistanceKm.toFixed(1), "100.0");
@@ -502,7 +509,7 @@ test("stall calculator returns stable IAS values", () => {
 });
 
 test("stall calculator follows all calibrated POH chart lines", () => {
-  const cases = [
+  const cases: Array<["leerlauf" | "vollast", 0 | 12 | 40, number, number]> = [
     ["vollast", 0, 750, 78.4],
     ["vollast", 0, 920, 86.9],
     ["vollast", 12, 750, 73.4],
@@ -558,22 +565,4 @@ test("weight and balance accepts envelope boundary points", () => {
   assert.equal(result.withinEnvelope, true);
 });
 
-let failures = 0;
 
-for (const { name, fn } of tests) {
-  try {
-    fn();
-    console.log(`PASS ${name}`);
-  } catch (error) {
-    failures += 1;
-    console.error(`FAIL ${name}`);
-    console.error(error.stack);
-  }
-}
-
-if (failures > 0) {
-  console.error(`\n${failures} test(s) failed.`);
-  process.exit(1);
-}
-
-console.log(`\n${tests.length} test(s) passed.`);
