@@ -9,7 +9,6 @@ const legacyFiles = [
   "app.js",
   "manifest.webmanifest",
   "service-worker.js",
-  "stall.html",
 ];
 
 for (const directory of legacyDirectories) {

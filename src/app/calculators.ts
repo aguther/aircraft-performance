@@ -77,7 +77,7 @@ export const calculatorRegistry: CalculatorDefinition[] = [
     description: "VS0 und VS1 nach Masse, Klappen und Leistung.",
     source: "POH 5.3.4",
     group: "reference",
-    runtime: "legacy",
+    runtime: "react",
   },
   {
     capability: "climbRate",
