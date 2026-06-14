@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
-import { defaultAircraft } from "./app/aircraft";
+import { useAircraft } from "./app/AircraftContext";
 import { useTheme } from "./app/useTheme";
 import { AppHeader } from "./components/AppHeader";
 import {
@@ -18,6 +18,7 @@ import { WeightBalancePage } from "./pages/WeightBalancePage";
 
 export function App() {
   const location = useLocation();
+  const { aircraft, availableAircraft, selectAircraft } = useAircraft();
   const { preference, resolvedTheme, toggleTheme } = useTheme();
   const [usageNoticeOpen, setUsageNoticeOpen] = useState(
     () => !hasAcceptedUsageNotice(),
@@ -61,13 +62,15 @@ export function App() {
                 : undefined;
 
   useEffect(() => {
-    document.title = `Grob 115B — ${pageTitle === "Performance" ? "Performance Calculators" : pageTitle}`;
-  }, [pageTitle]);
+    document.title = `${aircraft.shortName} — ${pageTitle === "Performance" ? "Performance Calculators" : pageTitle}`;
+  }, [aircraft.shortName, pageTitle]);
 
   return (
     <>
       <AppHeader
-        aircraftName={defaultAircraft.shortName}
+        aircraft={aircraft}
+        availableAircraft={availableAircraft}
+        onSelectAircraft={selectAircraft}
         pageTitle={pageTitle}
         currentCalculatorHref={currentCalculatorHref}
         showNavigation={Boolean(currentCalculatorHref)}
@@ -77,8 +80,8 @@ export function App() {
         onToggleTheme={toggleTheme}
       />
       <Routes>
-        <Route path="/" element={<HomePage aircraft={defaultAircraft} />} />
-        <Route path="/index.html" element={<HomePage aircraft={defaultAircraft} />} />
+        <Route path="/" element={<HomePage aircraft={aircraft} />} />
+        <Route path="/index.html" element={<HomePage aircraft={aircraft} />} />
         <Route path="/weight_balance.html" element={<WeightBalancePage />} />
         <Route path="/takeoff.html" element={<TakeoffPage />} />
         <Route path="/landing.html" element={<LandingPage />} />
@@ -86,7 +89,7 @@ export function App() {
         <Route path="/climb.html" element={<ClimbPage />} />
         <Route path="/climb_rate.html" element={<ClimbRatePage />} />
         <Route path="/stall.html" element={<StallPage />} />
-        <Route path="*" element={<HomePage aircraft={defaultAircraft} />} />
+        <Route path="*" element={<HomePage aircraft={aircraft} />} />
       </Routes>
       <UsageNotice
         open={usageNoticeOpen}

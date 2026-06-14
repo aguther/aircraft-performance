@@ -2,26 +2,31 @@ import type { ResolvedTheme, ThemePreference } from "../app/theme";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { calculatorRegistry } from "../app/calculators";
+import type { AircraftDefinition } from "../app/aircraft";
 
 type AppHeaderProps = {
-  aircraftName: string;
+  aircraft: AircraftDefinition;
+  availableAircraft: AircraftDefinition[];
   pageTitle: string;
   currentCalculatorHref?: string;
   showNavigation?: boolean;
   themePreference: ThemePreference;
   resolvedTheme: ResolvedTheme;
   onOpenUsageNotice: () => void;
+  onSelectAircraft: (aircraftId: string) => void;
   onToggleTheme: () => void;
 };
 
 export function AppHeader({
-  aircraftName,
+  aircraft,
+  availableAircraft,
   pageTitle,
   currentCalculatorHref,
   showNavigation = false,
   themePreference,
   resolvedTheme,
   onOpenUsageNotice,
+  onSelectAircraft,
   onToggleTheme,
 }: AppHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -67,7 +72,7 @@ export function AppHeader({
               <Link className="nav-dropdown-home" to="/" onClick={() => setMenuOpen(false)}>
                 Übersicht
               </Link>
-              {calculatorRegistry.map((calculator) => (
+              {calculatorRegistry.filter((calculator) => aircraft.capabilities.includes(calculator.capability)).map((calculator) => (
                 <Link
                   className={calculator.href === currentCalculatorHref ? "current" : undefined}
                   to={calculator.href}
@@ -82,7 +87,15 @@ export function AppHeader({
         ) : null}
       </div>
       <div className="nav-center">
-        <div className="nav-logo">{aircraftName}</div>
+        <select
+          className="nav-aircraft-select"
+          aria-label="Flugzeugtyp"
+          value={aircraft.id}
+          disabled={availableAircraft.length < 2}
+          onChange={(event) => onSelectAircraft(event.target.value)}
+        >
+          {availableAircraft.map((option) => <option value={option.id} key={option.id}>{option.shortName}</option>)}
+        </select>
         <div className="nav-title">{pageTitle}</div>
       </div>
       <div className="nav-right">

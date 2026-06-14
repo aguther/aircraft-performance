@@ -5,11 +5,14 @@ import "../css/theme.css";
 import "../css/index.css";
 import "../css/calculator.css";
 import { App } from "./App";
+import { AircraftProvider } from "./app/AircraftContext";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <AircraftProvider>
+        <App />
+      </AircraftProvider>
     </BrowserRouter>
   </StrictMode>,
 );

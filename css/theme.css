@@ -191,12 +191,23 @@ a {
   min-width: 0;
 }
 
-.nav-logo {
+.nav-aircraft-select {
+  width: auto;
+  border: 0;
+  outline: 0;
+  background: transparent;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--cyan);
+  text-align: center;
+  cursor: pointer;
+}
+
+.nav-aircraft-select:disabled {
+  cursor: default;
+  opacity: 1;
 }
 
 .nav-title {

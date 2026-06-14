@@ -4,11 +4,16 @@ import { useState } from "react";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
+import { AircraftProvider, useAircraft } from "../src/app/AircraftContext";
+import type { AircraftDefinition } from "../src/app/aircraft";
 import { AltitudeInput, type AltitudeInputValue } from "../src/components/AltitudeInput";
 import { ClimbPage } from "../src/pages/ClimbPage";
 import { StallPage } from "../src/pages/StallPage";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  window.localStorage.clear();
+});
 
 function AltitudeInputHarness() {
   const [value, setValue] = useState<AltitudeInputValue>({
@@ -23,7 +28,46 @@ function AltitudeInputHarness() {
   return <AltitudeInput value={value} onChange={setValue} />;
 }
 
+const testAircraft: AircraftDefinition[] = [
+  {
+    id: "first",
+    manufacturer: "Test",
+    model: "One",
+    shortName: "Test One",
+    registrations: [],
+    capabilities: ["weightBalance"],
+  },
+  {
+    id: "second",
+    manufacturer: "Test",
+    model: "Two",
+    shortName: "Test Two",
+    registrations: [],
+    capabilities: ["takeoff"],
+  },
+];
+
+function AircraftContextHarness() {
+  const { aircraft, availableAircraft, selectAircraft } = useAircraft();
+  return (
+    <>
+      <span>{aircraft.shortName}</span>
+      <button type="button" onClick={() => selectAircraft(availableAircraft[1].id)}>Nächstes Flugzeug</button>
+    </>
+  );
+}
+
 describe("calculator interactions", () => {
+  it("selects and persists the central aircraft", async () => {
+    const user = userEvent.setup();
+    render(<AircraftProvider availableAircraft={testAircraft}><AircraftContextHarness /></AircraftProvider>);
+
+    await user.click(screen.getByRole("button", { name: "Nächstes Flugzeug" }));
+
+    expect(screen.getByText("Test Two")).toBeTruthy();
+    expect(window.localStorage.getItem("performance-calculators-aircraft")).toBe("second");
+  });
+
   it("switches the common altitude input to direct density altitude", async () => {
     const user = userEvent.setup();
     render(<AltitudeInputHarness />);
