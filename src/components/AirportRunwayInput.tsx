@@ -18,6 +18,10 @@ export type AirportRunwayValues = {
 
 type AirportRunwayOperation = "departure" | "arrival";
 
+export function crosswindTone(crosswindKt: number) {
+  return Math.abs(crosswindKt) >= 10 ? "warn" : undefined;
+}
+
 function formatDirection(value: number) {
   return Math.round(value).toString().padStart(3, "0");
 }
@@ -31,12 +35,12 @@ function AirportPreviewValue({
   label: string;
   value: string | number;
   unit?: string;
-  tone?: "headwind" | "tailwind" | "crosswind";
+  tone?: "good" | "warn";
 }) {
   return (
-    <div className={`airport-preview-item${tone ? ` ${tone}` : ""}`}>
+    <div className="airport-preview-item">
       <span className="airport-preview-label">{label}</span>
-      <strong className="airport-preview-value">
+      <strong className={`airport-preview-value${tone ? ` ${tone}` : ""}`}>
         {value}{unit ? <span className="airport-preview-unit">{unit}</span> : null}
       </strong>
     </div>
@@ -132,9 +136,14 @@ export function AirportRunwayInput({
           label="Komponente"
           value={Math.abs(wind.headwindKt).toFixed(1)}
           unit={`kt ${wind.headwindKt >= 0 ? "HW" : "TW"}`}
-          tone={wind.headwindKt >= 0 ? "headwind" : "tailwind"}
+          tone={wind.headwindKt >= 0 ? "good" : "warn"}
         />
-        <AirportPreviewValue label="Crosswind" value={Math.abs(wind.crosswindKt).toFixed(1)} unit="kt" tone="crosswind" />
+        <AirportPreviewValue
+          label="Crosswind"
+          value={Math.abs(wind.crosswindKt).toFixed(1)}
+          unit="kt"
+          tone={crosswindTone(wind.crosswindKt)}
+        />
       </div>
       <div className="airport-sources">
         Mock · {airport.source.provider} · {forecast.source.provider} {forecast.source.model} · {declination.source.provider} {declination.source.model} {declination.declinationDeg >= 0 ? "+" : ""}{declination.declinationDeg.toFixed(1)}°

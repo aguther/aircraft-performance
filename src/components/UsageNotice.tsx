@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
+import { type SyntheticEvent, useEffect, useRef } from "react";
 import { buildInfo, formatBuildVersion } from "../app/buildInfo";
 
-const USAGE_NOTICE_STORAGE_KEY = "g115b-usage-notice-accepted";
+const USAGE_NOTICE_STORAGE_KEY = "g115b-usage-notice-v2-accepted";
 
 type UsageNoticeProps = {
   open: boolean;
@@ -28,24 +28,59 @@ export function UsageNotice({ open, onClose }: UsageNoticeProps) {
     onClose();
   }
 
+  function cancelNotice(event: SyntheticEvent<HTMLDialogElement>) {
+    if (!hasAcceptedUsageNotice()) {
+      event.preventDefault();
+      return;
+    }
+    onClose();
+  }
+
   return (
     <dialog
       ref={dialogRef}
       className="usage-notice"
       aria-labelledby="usageNoticeTitle"
       aria-describedby="usageNoticeText"
-      onCancel={onClose}
+      onCancel={cancelNotice}
     >
       <div className="usage-notice-panel">
         <div className="usage-notice-icon" aria-hidden="true">
           i
         </div>
         <div className="usage-notice-content">
-          <h2 id="usageNoticeTitle">Hinweis zur Nutzung</h2>
-          <p id="usageNoticeText">
-            Die Rechner unterstützen die Flugplanung. Maßgeblich bleiben das
-            zugelassene AFM/POH und die Entscheidung des Piloten.
+          <h2 id="usageNoticeTitle">Wichtiger Hinweis</h2>
+          <p className="usage-notice-intro" id="usageNoticeText">
+            Bitte lesen und bestätigen Sie vor der Nutzung
           </p>
+          <div className="usage-notice-sections">
+            <section>
+              <p>Diese Anwendung ist ein Hilfsmittel zur Unterstützung des Situationsbewusstseins des Piloten und dient ausschließlich der allgemeinen Orientierung.</p>
+            </section>
+            <section>
+              <h3>Keine Entscheidungsgrundlage</h3>
+              <p>Die Anwendung darf niemals als alleinige oder primäre Grundlage für fliegerische Entscheidungen verwendet werden. Für alle operativen Entscheidungen sind ausschließlich offizielle Dokumente (AFM/POH, AIP, NOTAM, aktuelle METARs/TAFs) maßgeblich.</p>
+            </section>
+            <section>
+              <h3>Keine Gewähr für Richtigkeit und Vollständigkeit</h3>
+              <p>Die bereitgestellten Berechnungen, Daten und Informationen erheben keinen Anspruch auf Richtigkeit, Vollständigkeit oder Aktualität. Berechnungsergebnisse können Abweichungen von den offiziellen Flughandbuch-Werten enthalten.</p>
+            </section>
+            <section>
+              <h3>Teilweise inoffizielle Datenquellen</h3>
+              <p>Flugplatzdaten, Wetterdaten und weitere Informationen werden teilweise aus inoffiziellen, nicht zertifizierten Quellen Dritter bezogen. Eine behördliche Prüfung oder Zertifizierung dieser Daten hat nicht stattgefunden.</p>
+            </section>
+            <section>
+              <h3>Verantwortung des Piloten</h3>
+              <p>Der verantwortliche Pilot bleibt gemäß § 3 LuftVO (bzw. Art. 8 VO (EU) 2018/1139) zu jeder Zeit allein verantwortlich für die sichere Durchführung des Fluges. Die Nutzung dieser Anwendung entbindet den Piloten in keiner Weise von dieser Verantwortung.</p>
+            </section>
+            <section>
+              <h3>Haftungsausschluss</h3>
+              <p>Der Entwickler übernimmt keinerlei Haftung für Schäden, die mittelbar oder unmittelbar durch die Nutzung oder das Vertrauen auf die Ausgaben dieser Anwendung entstehen.</p>
+            </section>
+            <section>
+              <p>Durch Tippen auf „Verstanden – Weiter zur App“ bestätigen Sie, dass Sie diesen Hinweis gelesen und verstanden haben.</p>
+            </section>
+          </div>
           <div
             className="usage-notice-version"
             title={`Commit ${buildInfo.fullCommit}${buildInfo.dirty ? " · lokal verändert" : ""} · Build ${buildInfo.builtAt}`}
@@ -57,7 +92,7 @@ export function UsageNotice({ open, onClose }: UsageNoticeProps) {
             type="button"
             onClick={acceptNotice}
           >
-            Verstanden
+            Verstanden – Weiter zur App
           </button>
         </div>
       </div>

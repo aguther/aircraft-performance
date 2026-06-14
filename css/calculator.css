@@ -652,30 +652,11 @@
   font-weight: 700;
 }
 
-.airport-preview-item.headwind {
-  border-color: color-mix(in srgb, var(--green) 42%, var(--border));
-  background: color-mix(in srgb, var(--green) 10%, var(--bg-card));
-}
-
-.airport-preview-item.headwind .airport-preview-value {
+.airport-preview-value.good {
   color: var(--green);
 }
 
-.airport-preview-item.tailwind {
-  border-color: color-mix(in srgb, var(--red) 48%, var(--border));
-  background: color-mix(in srgb, var(--red) 11%, var(--bg-card));
-}
-
-.airport-preview-item.tailwind .airport-preview-value {
-  color: var(--red);
-}
-
-.airport-preview-item.crosswind {
-  border-color: color-mix(in srgb, var(--amber) 44%, var(--border));
-  background: color-mix(in srgb, var(--amber) 9%, var(--bg-card));
-}
-
-.airport-preview-item.crosswind .airport-preview-value {
+.airport-preview-value.warn {
   color: var(--amber);
 }
 

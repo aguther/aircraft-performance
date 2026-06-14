@@ -16,7 +16,7 @@ describe("TakeoffPage", () => {
     expect(markup).toContain("Airport");
     expect(markup).toContain("airport-preview-unit");
     expect(markup).toContain("hPa");
-    expect(markup).toContain("tailwind");
+    expect(markup).toContain("warn");
     expect(markup).toContain('step="1" value="920"');
   });
 });

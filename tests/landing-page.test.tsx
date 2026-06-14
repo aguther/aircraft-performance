@@ -15,5 +15,6 @@ describe("LandingPage", () => {
     expect(markup).toContain("Airport");
     expect(markup).toContain("Geplante Landezeit / Prognose");
     expect(markup).toContain("airport-preview-unit");
+    expect(markup).toContain("airport-preview-value warn");
   });
 });

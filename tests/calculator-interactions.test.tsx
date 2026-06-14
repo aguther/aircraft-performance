@@ -9,6 +9,7 @@ import { AircraftProvider, useAircraft } from "../src/app/AircraftContext";
 import type { AircraftDefinition } from "../src/app/aircraft";
 import { FlightPlanProvider, useFlightPlan } from "../src/app/FlightPlanContext";
 import { AltitudeInput, type AltitudeInputValue } from "../src/components/AltitudeInput";
+import { crosswindTone } from "../src/components/AirportRunwayInput";
 import { ClimbPage } from "../src/pages/ClimbPage";
 import { StallPage } from "../src/pages/StallPage";
 import { WeightBalancePage } from "../src/pages/WeightBalancePage";
@@ -75,6 +76,13 @@ function FlightPlanContextHarness() {
 }
 
 describe("calculator interactions", () => {
+  it("warns for crosswind from 10 knots", () => {
+    expect(crosswindTone(9.9)).toBeUndefined();
+    expect(crosswindTone(-9.9)).toBeUndefined();
+    expect(crosswindTone(10)).toBe("warn");
+    expect(crosswindTone(-12)).toBe("warn");
+  });
+
   it("selects and persists the central aircraft", async () => {
     const user = userEvent.setup();
     render(<AircraftProvider availableAircraft={testAircraft}><AircraftContextHarness /></AircraftProvider>);
