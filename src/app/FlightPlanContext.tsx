@@ -27,10 +27,8 @@ export type FlightPlanAirportSelection = {
 };
 
 export type FlightPlanImports = {
-  departureAirport: boolean;
-  arrivalAirport: boolean;
-  departureWeather: boolean;
-  arrivalWeather: boolean;
+  departureImport: boolean;
+  arrivalImport: boolean;
   departureWeatherNow: boolean;
   arrivalWeatherNow: boolean;
   takeoffMass: boolean;
@@ -64,10 +62,8 @@ const defaultFlightPlan: FlightPlan = {
     plannedFuelBurnLiters: 0,
   },
   imports: {
-    departureAirport: false,
-    arrivalAirport: false,
-    departureWeather: false,
-    arrivalWeather: false,
+    departureImport: false,
+    arrivalImport: false,
     departureWeatherNow: false,
     arrivalWeatherNow: false,
     takeoffMass: false,

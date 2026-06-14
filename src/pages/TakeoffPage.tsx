@@ -345,8 +345,8 @@ export function TakeoffPage() {
     return () => document.body.classList.remove("runway-calculator");
   }, []);
   useEffect(() => {
-    if (flightPlan.imports.departureAirport) setPressureAltitudeMode("airport");
-  }, [flightPlan.imports.departureAirport]);
+    if (flightPlan.imports.departureImport) setPressureAltitudeMode("airport");
+  }, [flightPlan.imports.departureImport]);
 
   return (
     <div className="page-layout">
@@ -355,18 +355,16 @@ export function TakeoffPage() {
           <div className="section-header">Atmosphäre</div>
           <div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
             <button className={`mode-btn${pressureAltitudeMode === "airport" ? " active" : ""}`} type="button" onClick={() => setPressureAltitudeMode("airport")}>Airport</button>
-            <button className={`mode-btn${pressureAltitudeMode === "qnh" ? " active" : ""}`} type="button" disabled={flightPlan.imports.departureAirport} onClick={() => setPressureAltitudeMode("qnh")}>Elevation</button>
-            <button className={`mode-btn${pressureAltitudeMode === "direct" ? " active" : ""}`} type="button" disabled={flightPlan.imports.departureAirport} onClick={() => setPressureAltitudeMode("direct")}>Pressure Alt.</button>
+            <button className={`mode-btn${pressureAltitudeMode === "qnh" ? " active" : ""}`} type="button" disabled={flightPlan.imports.departureImport} onClick={() => setPressureAltitudeMode("qnh")}>Elevation</button>
+            <button className={`mode-btn${pressureAltitudeMode === "direct" ? " active" : ""}`} type="button" disabled={flightPlan.imports.departureImport} onClick={() => setPressureAltitudeMode("direct")}>Pressure Alt.</button>
           </div>
           {pressureAltitudeMode === "airport" ? (
             <>
               <AirportRunwayInput
                 operation="departure"
-                airportEnabled={flightPlan.imports.departureAirport}
-                weatherEnabled={flightPlan.imports.departureWeather}
+                enabled={flightPlan.imports.departureImport}
                 weatherNow={flightPlan.imports.departureWeatherNow}
-                onAirportEnabledChange={(enabled) => updateImports({ departureAirport: enabled })}
-                onWeatherEnabledChange={(enabled) => updateImports({ departureWeather: enabled })}
+                onEnabledChange={(value) => updateImports({ departureImport: value })}
                 onWeatherNowChange={(enabled) => updateImports({ departureWeatherNow: enabled })}
                 onApply={(values) => {
                   if (values.elevationFt != null) setElevationFt(values.elevationFt);
@@ -376,8 +374,8 @@ export function TakeoffPage() {
                 }}
               />
               <div className="pa-mode airport-manual-weather">
-                <SliderField label="QNH" unit="hPa" value={qnhHpa} min={950} max={1050} disabled={flightPlan.imports.departureWeather} onChange={setQnhHpa} />
-                <SliderField label="OAT" unit="°C" value={oatC} min={-20} max={40} disabled={flightPlan.imports.departureWeather} onChange={setOatC} />
+                <SliderField label="QNH" unit="hPa" value={qnhHpa} min={950} max={1050} disabled={flightPlan.imports.departureImport} onChange={setQnhHpa} />
+                <SliderField label="OAT" unit="°C" value={oatC} min={-20} max={40} disabled={flightPlan.imports.departureImport} onChange={setOatC} />
               </div>
             </>
           ) : pressureAltitudeMode === "qnh" ? (
@@ -412,7 +410,7 @@ export function TakeoffPage() {
         <div className="sidebar-section">
           <div className="section-header">Pistenbedingungen</div>
           <SliderField label="Slope" labelDetail="% · bergauf(+) bergab(−)" unit="%" value={slopePercent} min={-2} max={2} step={0.1} onChange={setSlopePercent} />
-          <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} disabled={flightPlan.imports.departureWeather} onChange={setWindKt} />
+          <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} disabled={flightPlan.imports.departureImport} onChange={setWindKt} />
         </div>
         <div className="sidebar-section">
           <div className="section-header">Betrieblicher Zuschlag</div>

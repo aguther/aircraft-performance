@@ -58,20 +58,16 @@ export function weatherValuesForRunway(weather: WeatherForecast, runway: RunwayD
 
 export function AirportRunwayInput({
   operation,
-  airportEnabled,
-  weatherEnabled,
+  enabled,
   weatherNow,
-  onAirportEnabledChange,
-  onWeatherEnabledChange,
+  onEnabledChange,
   onWeatherNowChange,
   onApply,
 }: {
   operation: AirportRunwayOperation;
-  airportEnabled: boolean;
-  weatherEnabled: boolean;
+  enabled: boolean;
   weatherNow: boolean;
-  onAirportEnabledChange: (enabled: boolean) => void;
-  onWeatherEnabledChange: (enabled: boolean) => void;
+  onEnabledChange: (enabled: boolean) => void;
   onWeatherNowChange: (enabled: boolean) => void;
   onApply: (values: AirportRunwayValues) => void;
 }) {
@@ -124,16 +120,16 @@ export function AirportRunwayInput({
   };
 
   useEffect(() => {
-    if (!airportEnabled || !airport || !runway || !plannedAt) return;
+    if (!enabled || !airport || !runway || !plannedAt) return;
     onApply({ elevationFt: airport.elevationFt });
     saveSelection(airport, runway, plannedAt);
-  }, [airport?.id, airportEnabled, plannedAt, runway?.id]);
+  }, [airport?.id, enabled, plannedAt, runway?.id]);
 
   useEffect(() => {
-    if (!weatherEnabled || !weatherValues) return;
+    if (!enabled || !weatherValues) return;
     onApply(weatherValues);
     if (airport && runway && plannedAt) saveSelection(airport, runway, plannedAt);
-  }, [weather?.id, weatherEnabled, runway?.id]);
+  }, [weather?.id, enabled, runway?.id]);
 
   useEffect(() => {
     if (!airport || !plannedAt) {
@@ -192,19 +188,14 @@ export function AirportRunwayInput({
     setRunwayId(selected?.runways[0]?.id ?? "");
   };
 
-  const toggleAirportImport = (nextEnabled: boolean) => {
-    onAirportEnabledChange(nextEnabled);
-    if (nextEnabled && airport && runway && plannedAt) {
-      onApply({ elevationFt: airport.elevationFt });
-      saveSelection(airport, runway, plannedAt);
-    }
-  };
-
-  const toggleWeatherImport = (nextEnabled: boolean) => {
-    onWeatherEnabledChange(nextEnabled);
-    if (nextEnabled && weatherValues) {
-      onApply(weatherValues);
-      if (airport && runway && plannedAt) saveSelection(airport, runway, plannedAt);
+  const toggleImport = (nextEnabled: boolean) => {
+    onEnabledChange(nextEnabled);
+    if (nextEnabled) {
+      if (airport && runway && plannedAt) {
+        onApply({ elevationFt: airport.elevationFt });
+        saveSelection(airport, runway, plannedAt);
+      }
+      if (weatherValues) onApply(weatherValues);
     }
   };
 
@@ -297,12 +288,8 @@ export function AirportRunwayInput({
           </div>
           <div className="airport-imports">
             <label className="import-toggle airport-import-toggle">
-              <input type="checkbox" checked={airportEnabled} disabled={!runway || !plannedAt} onChange={(event) => toggleAirportImport(event.target.checked)} />
-              <span>{airportEnabled ? "Flugplatzwerte übernommen" : "Flugplatzwerte übernehmen"}</span>
-            </label>
-            <label className="import-toggle airport-import-toggle">
-              <input type="checkbox" checked={weatherEnabled} disabled={!weather} onChange={(event) => toggleWeatherImport(event.target.checked)} />
-              <span>{weatherEnabled ? "Wetterwerte übernommen" : "Wetterwerte übernehmen"}</span>
+              <input type="checkbox" checked={enabled} disabled={!runway || !plannedAt} onChange={(event) => toggleImport(event.target.checked)} />
+              <span>{enabled ? "Werte übernommen" : "Werte übernehmen"}</span>
             </label>
           </div>
         </>

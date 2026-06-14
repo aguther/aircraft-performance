@@ -343,8 +343,8 @@ export function LandingPage() {
     return () => document.body.classList.remove("runway-calculator");
   }, []);
   useEffect(() => {
-    if (flightPlan.imports.arrivalAirport) setPressureAltitudeMode("airport");
-  }, [flightPlan.imports.arrivalAirport]);
+    if (flightPlan.imports.arrivalImport) setPressureAltitudeMode("airport");
+  }, [flightPlan.imports.arrivalImport]);
 
   return (
     <div className="page-layout">
@@ -353,18 +353,16 @@ export function LandingPage() {
           <div className="section-header">Atmosphäre</div>
           <div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
             <button className={`mode-btn${pressureAltitudeMode === "airport" ? " active" : ""}`} type="button" onClick={() => setPressureAltitudeMode("airport")}>Airport</button>
-            <button className={`mode-btn${pressureAltitudeMode === "qnh" ? " active" : ""}`} type="button" disabled={flightPlan.imports.arrivalAirport} onClick={() => setPressureAltitudeMode("qnh")}>Elevation</button>
-            <button className={`mode-btn${pressureAltitudeMode === "direct" ? " active" : ""}`} type="button" disabled={flightPlan.imports.arrivalAirport} onClick={() => setPressureAltitudeMode("direct")}>Pressure Alt.</button>
+            <button className={`mode-btn${pressureAltitudeMode === "qnh" ? " active" : ""}`} type="button" disabled={flightPlan.imports.arrivalImport} onClick={() => setPressureAltitudeMode("qnh")}>Elevation</button>
+            <button className={`mode-btn${pressureAltitudeMode === "direct" ? " active" : ""}`} type="button" disabled={flightPlan.imports.arrivalImport} onClick={() => setPressureAltitudeMode("direct")}>Pressure Alt.</button>
           </div>
           {pressureAltitudeMode === "airport" ? (
             <>
               <AirportRunwayInput
                 operation="arrival"
-                airportEnabled={flightPlan.imports.arrivalAirport}
-                weatherEnabled={flightPlan.imports.arrivalWeather}
+                enabled={flightPlan.imports.arrivalImport}
                 weatherNow={flightPlan.imports.arrivalWeatherNow}
-                onAirportEnabledChange={(enabled) => updateImports({ arrivalAirport: enabled })}
-                onWeatherEnabledChange={(enabled) => updateImports({ arrivalWeather: enabled })}
+                onEnabledChange={(value) => updateImports({ arrivalImport: value })}
                 onWeatherNowChange={(enabled) => updateImports({ arrivalWeatherNow: enabled })}
                 onApply={(values) => {
                   if (values.elevationFt != null) setElevationFt(values.elevationFt);
@@ -374,8 +372,8 @@ export function LandingPage() {
                 }}
               />
               <div className="pa-mode airport-manual-weather">
-                <SliderField label="QNH" unit="hPa" value={qnhHpa} min={950} max={1050} disabled={flightPlan.imports.arrivalWeather} onChange={setQnhHpa} />
-                <SliderField label="OAT" unit="°C" value={oatC} min={-20} max={40} disabled={flightPlan.imports.arrivalWeather} onChange={setOatC} />
+                <SliderField label="QNH" unit="hPa" value={qnhHpa} min={950} max={1050} disabled={flightPlan.imports.arrivalImport} onChange={setQnhHpa} />
+                <SliderField label="OAT" unit="°C" value={oatC} min={-20} max={40} disabled={flightPlan.imports.arrivalImport} onChange={setOatC} />
               </div>
             </>
           ) : pressureAltitudeMode === "qnh" ? (
@@ -409,7 +407,7 @@ export function LandingPage() {
         </div>
         <div className="sidebar-section">
           <div className="section-header">Pistenbedingungen</div>
-          <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} disabled={flightPlan.imports.arrivalWeather} onChange={setWindKt} />
+          <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} disabled={flightPlan.imports.arrivalImport} onChange={setWindKt} />
         </div>
         <div className="sidebar-section">
           <div className="section-header">Betrieblicher Zuschlag</div>
