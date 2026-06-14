@@ -1,40 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { calculateClimb } from "../aircraft/g115b/calculators";
 import { g115bData } from "../aircraft/g115b/data";
-import {
-  densityAltitude,
-  flightLevelToFeet,
-  interpolate1D,
-  pressureAltitudeFromQnh,
-} from "../domain";
+import { interpolate1D } from "../domain";
+import { AltitudeInput, type AltitudeInputValue, resolveAltitudeInput } from "../components/AltitudeInput";
 import { CalculatorCard, MetricItem } from "../components/CalculatorCard";
-import { NumberField } from "../components/NumberField";
-import { SliderField } from "../components/SliderField";
 
 type ClimbResult = ReturnType<typeof calculateClimb>;
-type LegMode = "alt" | "fl" | "da";
-type LegState = {
-  mode: LegMode;
-  altitudeFt: number;
-  flightLevel: number;
-  densityAltitudeFt: number;
-  oatC: number;
-  qnhHpa: number;
-};
+type LegState = AltitudeInputValue;
 type ChartPoint = readonly [number, number];
 
 const CHART = { width: 929, height: 1400, left: 170, top: 337, bottom: 879, fuelY: 824, maxDa: 20000 };
 const START_COLOR = "#e15a18";
 const DESTINATION_COLOR = "#008fc7";
 const CHART_SOURCE = "/assets/grob115b-climb-chart.png";
-
-function resolveDensityAltitude(leg: LegState) {
-  if (leg.mode === "da") return leg.densityAltitudeFt;
-  const pressureAltitudeFt = leg.mode === "alt"
-    ? pressureAltitudeFromQnh(leg.altitudeFt, leg.qnhHpa)
-    : flightLevelToFeet(leg.flightLevel);
-  return densityAltitude(pressureAltitudeFt, leg.oatC).densityAltitudeFt;
-}
 
 function describeLeg(leg: LegState) {
   if (leg.mode === "da") return `Dichtehöhe ${leg.densityAltitudeFt.toLocaleString("de-DE")} ft`;
@@ -43,21 +21,10 @@ function describeLeg(leg: LegState) {
 }
 
 function LegFields({ title, leg, onChange }: { title: string; leg: LegState; onChange: (leg: LegState) => void }) {
-  const set = (change: Partial<LegState>) => onChange({ ...leg, ...change });
-  const resolvedDensityAltitudeFt = resolveDensityAltitude(leg);
   return (
     <div className="sidebar-section">
       <div className="section-header">{title}</div>
-      <div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
-        {([["alt", "Altitude"], ["fl", "Flight Level"], ["da", "Density Alt."]] as const).map(([mode, label]) => (
-          <button className={`mode-btn${leg.mode === mode ? " active" : ""}`} type="button" onClick={() => set({ mode })} key={mode}>{label}</button>
-        ))}
-      </div>
-      {leg.mode === "alt" ? <div className="pa-mode"><NumberField label="Höhe" unit="ft" value={leg.altitudeFt} step={100} onChange={(altitudeFt) => set({ altitudeFt })} /><SliderField label="QNH" unit="hPa" value={leg.qnhHpa} min={950} max={1050} onChange={(qnhHpa) => set({ qnhHpa })} /></div> : null}
-      {leg.mode === "fl" ? <div className="pa-mode"><NumberField label="Flight Level" unit="FL" value={leg.flightLevel} step={5} onChange={(flightLevel) => set({ flightLevel })} /></div> : null}
-      {leg.mode === "da" ? <div className="pa-mode"><NumberField label="Density Altitude" unit="ft" value={leg.densityAltitudeFt} step={100} onChange={(densityAltitudeFt) => set({ densityAltitudeFt })} /></div> : null}
-      {leg.mode !== "da" ? <SliderField label="OAT" unit="°C" value={leg.oatC} min={-40} max={50} onChange={(oatC) => set({ oatC })} /> : null}
-      {leg.mode !== "da" ? <div className="derived-box"><div className="derived-label">Density Altitude</div><div className="derived-value">{resolvedDensityAltitudeFt.toLocaleString("de-DE")} ft</div></div> : null}
+      <AltitudeInput value={leg} onChange={onChange} />
     </div>
   );
 }
@@ -235,7 +202,10 @@ function ChartCard({ from, to, inputs, result }: { from: LegState; to: LegState;
 export function ClimbPage() {
   const [from, setFrom] = useState<LegState>({ mode: "alt", altitudeFt: 0, flightLevel: 0, densityAltitudeFt: 0, oatC: 15, qnhHpa: 1013 });
   const [to, setTo] = useState<LegState>({ mode: "alt", altitudeFt: 4500, flightLevel: 45, densityAltitudeFt: 4500, oatC: 6, qnhHpa: 1013 });
-  const inputs = useMemo(() => ({ departureDensityAltitudeFt: resolveDensityAltitude(from), destinationDensityAltitudeFt: resolveDensityAltitude(to) }), [from, to]);
+  const inputs = useMemo(() => ({
+    departureDensityAltitudeFt: resolveAltitudeInput(from).densityAltitudeFt,
+    destinationDensityAltitudeFt: resolveAltitudeInput(to).densityAltitudeFt,
+  }), [from, to]);
   const result = useMemo(() => calculateClimb(inputs), [inputs]);
   const valid = !result.error;
 

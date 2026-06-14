@@ -10,6 +10,7 @@ import {
   round,
 } from "../domain";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
+import { CalculatorContextCard } from "../components/CalculatorContextCard";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
 
@@ -74,61 +75,6 @@ function createChartPoints(inputs: TakeoffInputs, result: TakeoffResult): ChartP
     [1047, chartRollY(result.groundRollByWindMeters)],
     [1227, chartDistanceY(result.takeoffDistanceWithoutMarginMeters)],
   ];
-}
-
-function ContextCard({ result }: { result: TakeoffResult }) {
-  const isaClass =
-    Math.abs(result.atmosphere.isaDeviationC) < 0.1
-      ? ""
-      : result.atmosphere.isaDeviationC > 0
-        ? " warn"
-        : " good";
-
-  return (
-    <CalculatorCard title="Kontext">
-      <div className="context-card-body">
-        <div className="context-card-block">
-          <div className="context-divider">Atmosphäre</div>
-          <div className="atmos-grid">
-            <div className="atmos-item">
-              <div className="atmos-item-label">Density Altitude</div>
-              <div className={`atmos-item-value${result.atmosphere.densityAltitudeFt > 5000 ? " warn" : ""}`}>
-                {result.atmosphere.densityAltitudeFt.toLocaleString("de-DE")} <span>ft</span>
-              </div>
-            </div>
-            <div className="atmos-item">
-              <div className="atmos-item-label">ISA-Abweichung</div>
-              <div className={`atmos-item-value${isaClass}`}>
-                {formatSigned(result.atmosphere.isaDeviationC, 1)} <span>°C</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="context-card-block context-warning-block">
-          <div className="context-divider">Warnungen</div>
-          <div className="context-warning-slot">
-            {result.warnings.length ? (
-              <div className="warnings">
-                {result.warnings.map((warning) => (
-                  <div className={`warn-item${warning.danger ? " danger" : ""}`} key={warning.text}>
-                    {warning.text}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="context-warning-empty">Keine Warnungen.</div>
-            )}
-          </div>
-        </div>
-        <div className="context-card-block">
-          <div className="context-divider">Bedingungen</div>
-          <div className="conditions-grid">
-            {result.conditions.map((condition) => <span key={condition}>{condition}</span>)}
-          </div>
-        </div>
-      </div>
-    </CalculatorCard>
-  );
 }
 
 function PipelineCard({ inputs, result }: { inputs: TakeoffInputs; result: TakeoffResult }) {
@@ -437,7 +383,7 @@ export function TakeoffPage() {
         </div>
       </aside>
       <main className="results">
-        <ContextCard result={result} />
+        <CalculatorContextCard atmosphere={result.atmosphere} warnings={result.warnings} conditions={result.conditions} />
         <PipelineCard inputs={inputs} result={result} />
         <CalculatorCard title="Ergebnis">
           <div className="result-grid">
