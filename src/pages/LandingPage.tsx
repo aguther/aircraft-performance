@@ -379,7 +379,7 @@ export function LandingPage() {
             currentMassKg={massKg}
             onImport={setMassKg}
           />
-          <SliderField label="Masse" labelDetail="kg · MTOW 920" unit="kg" value={massKg} min={700} max={920} step={5} onChange={setMassKg} />
+          <SliderField label="Masse" labelDetail="kg · MTOW 920" unit="kg" value={massKg} min={700} max={920} onChange={setMassKg} />
         </div>
         <div className="sidebar-section">
           <div className="section-header">Pistenbedingungen</div>

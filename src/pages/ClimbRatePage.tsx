@@ -32,7 +32,7 @@ export function ClimbRatePage() {
         </div>
         <div className="sidebar-section">
           <div className="section-header">Flugzeug</div>
-          <SliderField label="Masse" unit="kg" value={massKg} min={750} max={920} inputMax={920} step={5} onChange={setMassKg} />
+          <SliderField label="Masse" unit="kg" value={massKg} min={750} max={920} inputMax={920} onChange={setMassKg} />
         </div>
       </aside>
       <main className="results">

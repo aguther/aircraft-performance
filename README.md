@@ -122,3 +122,5 @@ npm test
 Die Tests verwenden feste Referenzfälle gegen die pure Calculator-Logik in `src/aircraft/g115b/calculators.ts`, Rendering-Tests für alle Rechnerseiten sowie jsdom-Interaktionstests für wichtige UI-Abläufe.
 
 Weight & Balance ist die führende Quelle für Beladung, Startkraftstoff, geplanten Verbrauch sowie daraus berechnete Start- und Landemasse. Takeoff und Landing können die jeweils passende Masse explizit aus dem persistenten Flugplan übernehmen. Anschließende lokale Änderungen in diesen Rechnern werden nicht in den Flugplan zurückgeschrieben.
+
+W&B zeigt die berechneten Massen mit einer Nachkommastelle. Bei der Übernahme in einen Performance-Rechner wird die Masse konservativ auf das nächste volle Kilogramm aufgerundet; lokale Massefelder arbeiten in Schritten von 1 kg.

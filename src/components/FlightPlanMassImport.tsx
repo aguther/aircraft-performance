@@ -25,17 +25,18 @@ export function FlightPlanMassImport({
     );
   }
 
-  const alreadyImported = Math.abs(currentMassKg - massKg) < 0.05;
+  const importedMassKg = Math.ceil(massKg);
+  const alreadyImported = currentMassKg === importedMassKg;
   return (
     <div className="flight-plan-import">
       <div>
         <div className="flight-plan-import-label">{label}</div>
         <div className="flight-plan-import-value">{massKg.toFixed(1)} kg</div>
         <div className="flight-plan-import-copy">
-          {fuelLiters.toFixed(1)} l Kraftstoff · W&B {new Date(updatedAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })}
+          Übernahme konservativ als {importedMassKg} kg · {fuelLiters.toFixed(1)} l Kraftstoff · W&B {new Date(updatedAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })}
         </div>
       </div>
-      <button type="button" disabled={alreadyImported} onClick={() => onImport(massKg)}>
+      <button type="button" disabled={alreadyImported} onClick={() => onImport(Math.ceil(massKg))}>
         {alreadyImported ? "Übernommen" : "Masse übernehmen"}
       </button>
     </div>

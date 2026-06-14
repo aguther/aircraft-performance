@@ -121,7 +121,7 @@ describe("calculator interactions", () => {
         plannedFuelBurnLiters: 30,
       },
       masses: {
-        startMassKg: 850,
+        startMassKg: 850.3,
         landingMassKg: 828.4,
         startFuelLiters: 60,
         landingFuelLiters: 30,
@@ -131,16 +131,18 @@ describe("calculator interactions", () => {
     const user = userEvent.setup();
     render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
 
+    expect(screen.getByText("850.3 kg")).toBeTruthy();
+    expect(screen.getByText(/Übernahme konservativ als 851 kg/)).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Masse übernehmen" }));
     const massField = screen.getByText("Masse", { selector: ".field-label" }).parentElement!;
     const massInput = massField.querySelector('input[type="number"]')!;
-    expect(massInput.getAttribute("value")).toBe("850");
+    expect(massInput.getAttribute("value")).toBe("851");
 
     fireEvent.change(massInput, { target: { value: "840" } });
 
     await waitFor(() => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
-      expect(storedPlan.masses.startMassKg).toBe(850);
+      expect(storedPlan.masses.startMassKg).toBe(850.3);
     });
   });
 

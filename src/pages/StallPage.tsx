@@ -152,7 +152,7 @@ export function StallPage() {
   return (
     <div className="page-layout">
       <aside className="sidebar">
-        <div className="sidebar-section"><div className="section-header">Flugzeug</div><SliderField label="Flugmasse" unit="kg" value={massKg} min={750} max={920} step={5} hint="MTOW 920 kg · Minimalgewicht ca. 750 kg" onChange={setMassKg} /></div>
+        <div className="sidebar-section"><div className="section-header">Flugzeug</div><SliderField label="Flugmasse" unit="kg" value={massKg} min={750} max={920} hint="MTOW 920 kg · Minimalgewicht ca. 750 kg" onChange={setMassKg} /></div>
         <div className="sidebar-section"><div className="section-header">Triebwerk</div><div className="field"><div className="field-label">Leistungsstellung</div><div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr" }}>{(["leerlauf", "vollast"] as const).map((mode) => <button className={`mode-btn${powerMode === mode ? " active" : ""}`} type="button" onClick={() => setPowerMode(mode)} key={mode}>{mode === "leerlauf" ? "Leerlauf" : "Vollast"}</button>)}</div><div className="hint">Leerlauf = kritischer Fall für Landung<br />Vollast = Durchstartbedingung</div></div></div>
         <div className="sidebar-section"><div className="section-header">Klappenstellung</div><div className="field"><div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>{([0, 12, 40] as const).map((flaps) => <button className={`mode-btn${flapsDegrees === flaps ? " active" : ""}`} type="button" onClick={() => setFlapsDegrees(flaps)} key={flaps}>{flaps}°</button>)}</div><div className="hint">40° = Landung (VSO) · 0° = Reiseflug (VS1)</div></div></div>
       </aside>

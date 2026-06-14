@@ -381,11 +381,11 @@ export function TakeoffPage() {
             currentMassKg={massKg}
             onImport={setMassKg}
           />
-          <SliderField label="Masse" labelDetail="kg · MTOW 920" unit="kg" value={massKg} min={750} max={920} step={5} onChange={setMassKg} />
+          <SliderField label="Masse" labelDetail="kg · MTOW 920" unit="kg" value={massKg} min={750} max={920} onChange={setMassKg} />
         </div>
         <div className="sidebar-section">
           <div className="section-header">Pistenbedingungen</div>
-          <SliderField label="Slope" labelDetail="% · bergauf(+) bergab(−)" unit="%" value={slopePercent} min={-2} max={2} step={0.1} formatValue={(value) => value.toFixed(1)} onChange={setSlopePercent} />
+          <SliderField label="Slope" labelDetail="% · bergauf(+) bergab(−)" unit="%" value={slopePercent} min={-2} max={2} step={0.1} onChange={setSlopePercent} />
           <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} onChange={setWindKt} />
         </div>
         <div className="sidebar-section">

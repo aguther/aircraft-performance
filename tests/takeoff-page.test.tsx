@@ -13,5 +13,7 @@ describe("TakeoffPage", () => {
     expect(markup).toContain("Grafische Nachvollziehbarkeit");
     expect(markup).toContain("grob115b-takeoff-chart.png");
     expect(markup).toContain("Rechenweg");
+    expect(markup).toContain("0.0 %");
+    expect(markup).toContain('step="1" value="920"');
   });
 });

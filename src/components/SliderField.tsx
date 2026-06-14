@@ -16,7 +16,7 @@ export function SliderField({
   label,
   unit,
   labelDetail = unit,
-  formatValue = String,
+  formatValue,
   value,
   min,
   max,
@@ -25,6 +25,8 @@ export function SliderField({
   hint,
   onChange,
 }: SliderFieldProps) {
+  const decimals = String(step).includes(".") ? String(step).split(".")[1].length : 0;
+  const displayValue = formatValue ?? ((currentValue: number) => currentValue.toFixed(decimals));
   const updateValue = (rawValue: string) => {
     const parsedValue = Number.parseFloat(rawValue);
     if (Number.isFinite(parsedValue)) onChange(parsedValue);
@@ -45,7 +47,7 @@ export function SliderField({
           onChange={(event) => updateValue(event.target.value)}
         />
         <span className="slider-val">
-          {formatValue(value)} {unit}
+          {displayValue(value)} {unit}
         </span>
       </div>
       <div className="input-wrap" style={{ marginTop: 6 }}>
