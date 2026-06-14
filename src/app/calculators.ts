@@ -66,7 +66,7 @@ export const calculatorRegistry: CalculatorDefinition[] = [
     description: "Landerollstrecke und Landestrecke über Hindernis.",
     source: "POH 5.3.15",
     group: "planning",
-    runtime: "legacy",
+    runtime: "react",
   },
   {
     capability: "stall",

@@ -10,7 +10,6 @@ const legacyFiles = [
   "climb.html",
   "climb_rate.html",
   "cruise.html",
-  "landing.html",
   "manifest.webmanifest",
   "service-worker.js",
   "stall.html",

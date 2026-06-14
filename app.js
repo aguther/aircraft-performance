@@ -1,5 +1,5 @@
 (() => {
-  const RELEASE = "82";
+  const RELEASE = "83";
 
   if (!("serviceWorker" in navigator)) {
     return;
