@@ -36,6 +36,32 @@ Danach die App unter `http://localhost:8080` im Browser öffnen und von dort ins
 
 ---
 
+## Deployment auf Cloudflare Workers
+
+Die Anwendung wird ohne externe Abhängigkeiten als statische Website gebaut. Der Build kopiert nur die auszuliefernden Dateien nach `dist`:
+
+```powershell
+npm run build
+```
+
+Cloudflare verwendet für neue Git-Deployments den gemeinsamen Workers-Dialog. Die statische Website wird dabei über Workers Static Assets ausgeliefert. `wrangler.jsonc` legt `dist` als auszulieferndes Verzeichnis fest.
+
+Für das über GitHub verbundene Cloudflare-Projekt werden folgende Einstellungen verwendet:
+
+| Einstellung | Wert |
+| --- | --- |
+| Project name | `performance-calculators` |
+| Build command | `npm run build` |
+| Deploy command | `npx wrangler deploy` |
+| Non-production branch deploy command | `npx wrangler versions upload` |
+| Path | `/` |
+
+`main` wird als Production Branch gewählt. Builds für Non-production Branches können aktiviert bleiben.
+
+Die Datei `_headers` ergänzt Sicherheits-Header für statische Antworten und verhindert langlebiges Browser-Caching von Service Worker und Web App Manifest. Spätere API-Zugriffe können direkt durch einen Worker ergänzt werden.
+
+---
+
 ## Code-Struktur
 
 Die Rechenlogik ist jetzt bewusst von der HTML-Oberfläche getrennt:

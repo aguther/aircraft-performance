@@ -2,6 +2,7 @@
   "name": "g115b-performance-calculators",
   "private": true,
   "scripts": {
+    "build": "node scripts/build-static.js",
     "test": "node tests/run-tests.js"
   }
 }
