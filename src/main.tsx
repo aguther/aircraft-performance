@@ -6,12 +6,15 @@ import "../css/index.css";
 import "../css/calculator.css";
 import { App } from "./App";
 import { AircraftProvider } from "./app/AircraftContext";
+import { FlightPlanProvider } from "./app/FlightPlanContext";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <AircraftProvider>
-        <App />
+        <FlightPlanProvider>
+          <App />
+        </FlightPlanProvider>
       </AircraftProvider>
     </BrowserRouter>
   </StrictMode>,

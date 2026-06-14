@@ -6,6 +6,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { AircraftProvider, useAircraft } from "../src/app/AircraftContext";
 import type { AircraftDefinition } from "../src/app/aircraft";
+import { FlightPlanProvider, useFlightPlan } from "../src/app/FlightPlanContext";
 import { AltitudeInput, type AltitudeInputValue } from "../src/components/AltitudeInput";
 import { ClimbPage } from "../src/pages/ClimbPage";
 import { StallPage } from "../src/pages/StallPage";
@@ -57,6 +58,18 @@ function AircraftContextHarness() {
   );
 }
 
+function FlightPlanContextHarness() {
+  const { flightPlan, updateWeightBalance, publishMasses } = useFlightPlan();
+  return (
+    <>
+      <span>{flightPlan.weightBalance.pilotMassKg} kg</span>
+      <span>{flightPlan.masses?.startMassKg ?? "Keine Masse"}</span>
+      <button type="button" onClick={() => updateWeightBalance({ pilotMassKg: 90 })}>Pilot ändern</button>
+      <button type="button" onClick={() => publishMasses({ startMassKg: 850, landingMassKg: 820, startFuelLiters: 60, landingFuelLiters: 18 })}>Massen veröffentlichen</button>
+    </>
+  );
+}
+
 describe("calculator interactions", () => {
   it("selects and persists the central aircraft", async () => {
     const user = userEvent.setup();
@@ -66,6 +79,18 @@ describe("calculator interactions", () => {
 
     expect(screen.getByText("Test Two")).toBeTruthy();
     expect(window.localStorage.getItem("performance-calculators-aircraft")).toBe("second");
+  });
+
+  it("stores the central flight plan and published masses", async () => {
+    const user = userEvent.setup();
+    render(<FlightPlanProvider><FlightPlanContextHarness /></FlightPlanProvider>);
+
+    await user.click(screen.getByRole("button", { name: "Pilot ändern" }));
+    await user.click(screen.getByRole("button", { name: "Massen veröffentlichen" }));
+
+    expect(screen.getByText("90 kg")).toBeTruthy();
+    expect(screen.getByText("850")).toBeTruthy();
+    expect(window.localStorage.getItem("performance-calculators-flight-plan")).toContain('"landingMassKg":820');
   });
 
   it("switches the common altitude input to direct density altitude", async () => {
