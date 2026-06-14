@@ -1,4 +1,4 @@
-import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 const FLIGHT_PLAN_STORAGE_KEY = "performance-calculators-flight-plan";
 
@@ -47,7 +47,13 @@ function loadFlightPlan(): FlightPlan {
   if (typeof window === "undefined") return defaultFlightPlan;
   try {
     const stored = window.localStorage.getItem(FLIGHT_PLAN_STORAGE_KEY);
-    return stored ? { ...defaultFlightPlan, ...JSON.parse(stored) as FlightPlan } : defaultFlightPlan;
+    if (!stored) return defaultFlightPlan;
+    const parsed = JSON.parse(stored) as Partial<FlightPlan>;
+    return {
+      ...defaultFlightPlan,
+      ...parsed,
+      weightBalance: { ...defaultFlightPlan.weightBalance, ...parsed.weightBalance },
+    };
   } catch {
     return defaultFlightPlan;
   }
@@ -55,6 +61,14 @@ function loadFlightPlan(): FlightPlan {
 
 export function FlightPlanProvider({ children }: { children: ReactNode }) {
   const [flightPlan, setFlightPlan] = useState(loadFlightPlan);
+  const updateWeightBalance = useCallback((change: Partial<WeightBalancePlan>) => setFlightPlan((current) => ({
+    ...current,
+    weightBalance: { ...current.weightBalance, ...change },
+  })), []);
+  const publishMasses = useCallback((masses: Omit<FlightPlanMasses, "updatedAt">) => setFlightPlan((current) => ({
+    ...current,
+    masses: { ...masses, updatedAt: new Date().toISOString() },
+  })), []);
 
   useEffect(() => {
     try {
@@ -66,15 +80,9 @@ export function FlightPlanProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<FlightPlanContextValue>(() => ({
     flightPlan,
-    updateWeightBalance: (change) => setFlightPlan((current) => ({
-      ...current,
-      weightBalance: { ...current.weightBalance, ...change },
-    })),
-    publishMasses: (masses) => setFlightPlan((current) => ({
-      ...current,
-      masses: { ...masses, updatedAt: new Date().toISOString() },
-    })),
-  }), [flightPlan]);
+    updateWeightBalance,
+    publishMasses,
+  }), [flightPlan, publishMasses, updateWeightBalance]);
 
   return <FlightPlanContext.Provider value={value}>{children}</FlightPlanContext.Provider>;
 }

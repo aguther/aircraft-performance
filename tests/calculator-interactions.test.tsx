@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { useState } from "react";
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { AircraftProvider, useAircraft } from "../src/app/AircraftContext";
@@ -10,6 +10,7 @@ import { FlightPlanProvider, useFlightPlan } from "../src/app/FlightPlanContext"
 import { AltitudeInput, type AltitudeInputValue } from "../src/components/AltitudeInput";
 import { ClimbPage } from "../src/pages/ClimbPage";
 import { StallPage } from "../src/pages/StallPage";
+import { WeightBalancePage } from "../src/pages/WeightBalancePage";
 
 afterEach(() => {
   cleanup();
@@ -91,6 +92,20 @@ describe("calculator interactions", () => {
     expect(screen.getByText("90 kg")).toBeTruthy();
     expect(screen.getByText("850")).toBeTruthy();
     expect(window.localStorage.getItem("performance-calculators-flight-plan")).toContain('"landingMassKg":820');
+  });
+
+  it("publishes a lower landing mass after planned fuel burn", async () => {
+    render(<FlightPlanProvider><WeightBalancePage /></FlightPlanProvider>);
+    const burnField = screen.getByText("Geplanter Verbrauch", { selector: ".field-label" }).parentElement!;
+    const burnInput = burnField.querySelector('input[type="number"]')!;
+
+    fireEvent.change(burnInput, { target: { value: "30" } });
+
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.masses.startMassKg).toBeGreaterThan(storedPlan.masses.landingMassKg);
+      expect(storedPlan.masses.landingFuelLiters).toBe(77);
+    });
   });
 
   it("switches the common altitude input to direct density altitude", async () => {

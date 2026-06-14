@@ -1,19 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { calculateWeightBalance } from "../aircraft/g115b/calculators";
 import { g115bData } from "../aircraft/g115b/data";
+import { useFlightPlan } from "../app/FlightPlanContext";
 import { kilometersPerHourToKnots } from "../domain";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
 import { SliderField } from "../components/SliderField";
 
 type WeightBalanceResult = ReturnType<typeof calculateWeightBalance>;
 
-const DEFAULT_AIRCRAFT = "D-EBFT";
-const DEFAULT_PILOT_MASS_KG = 85;
-const DEFAULT_COPILOT_MASS_KG = 0;
-const DEFAULT_BAGGAGE_MASS_KG = 0;
-const DEFAULT_FUEL_LITERS = 107;
-
-function EnvelopeChart({ result }: { result: WeightBalanceResult }) {
+function EnvelopeChart({ result, label }: { result: WeightBalanceResult; label: string }) {
   const envelope = g115bData.weightBalance.envelope;
   const minMoment =
     Math.min(...envelope.map((point) => point.momentKgM), result.totalMomentKgM) - 8;
@@ -41,7 +36,7 @@ function EnvelopeChart({ result }: { result: WeightBalanceResult }) {
   return (
     <div className="wb-chart-wrap">
       <div className="wb-chart-axis-key">
-        <span>Masse [kg]</span>
+        <span>{label} · Masse [kg]</span>
       </div>
       <svg
         className="wb-chart"
@@ -154,23 +149,39 @@ function SpeedMetric({
 }
 
 export function WeightBalancePage() {
-  const [aircraftName, setAircraftName] = useState(DEFAULT_AIRCRAFT);
-  const [pilotMassKg, setPilotMassKg] = useState(DEFAULT_PILOT_MASS_KG);
-  const [copilotMassKg, setCopilotMassKg] = useState(DEFAULT_COPILOT_MASS_KG);
-  const [baggageMassKg, setBaggageMassKg] = useState(DEFAULT_BAGGAGE_MASS_KG);
-  const [fuelLiters, setFuelLiters] = useState(DEFAULT_FUEL_LITERS);
-
-  const result = useMemo(
+  const { flightPlan, updateWeightBalance, publishMasses } = useFlightPlan();
+  const plan = flightPlan.weightBalance;
+  const landingFuelLiters = Math.max(0, plan.startFuelLiters - plan.plannedFuelBurnLiters);
+  const startResult = useMemo(
     () =>
       calculateWeightBalance({
-        aircraftName,
-        pilotMassKg,
-        copilotMassKg,
-        baggageMassKg,
-        fuelLiters,
+        aircraftName: plan.registration,
+        pilotMassKg: plan.pilotMassKg,
+        copilotMassKg: plan.copilotMassKg,
+        baggageMassKg: plan.baggageMassKg,
+        fuelLiters: plan.startFuelLiters,
       }),
-    [aircraftName, pilotMassKg, copilotMassKg, baggageMassKg, fuelLiters],
+    [plan.registration, plan.pilotMassKg, plan.copilotMassKg, plan.baggageMassKg, plan.startFuelLiters],
   );
+  const landingResult = useMemo(
+    () => calculateWeightBalance({
+      aircraftName: plan.registration,
+      pilotMassKg: plan.pilotMassKg,
+      copilotMassKg: plan.copilotMassKg,
+      baggageMassKg: plan.baggageMassKg,
+      fuelLiters: landingFuelLiters,
+    }),
+    [plan.registration, plan.pilotMassKg, plan.copilotMassKg, plan.baggageMassKg, landingFuelLiters],
+  );
+
+  useEffect(() => {
+    publishMasses({
+      startMassKg: startResult.totalMassKg,
+      landingMassKg: landingResult.totalMassKg,
+      startFuelLiters: plan.startFuelLiters,
+      landingFuelLiters,
+    });
+  }, [landingFuelLiters, landingResult.totalMassKg, plan.startFuelLiters, publishMasses, startResult.totalMassKg]);
 
   return (
     <div className="page-layout">
@@ -185,10 +196,10 @@ export function WeightBalancePage() {
           >
             {g115bData.weightBalance.emptyAircraft.map((aircraft) => (
               <button
-                className={`mode-btn${aircraft.name === aircraftName ? " active" : ""}`}
+                className={`mode-btn${aircraft.name === plan.registration ? " active" : ""}`}
                 type="button"
                 key={aircraft.name}
-                onClick={() => setAircraftName(aircraft.name)}
+                onClick={() => updateWeightBalance({ registration: aircraft.name })}
               >
                 {aircraft.name}
               </button>
@@ -200,68 +211,85 @@ export function WeightBalancePage() {
           <SliderField
             label="Pilot"
             unit="kg"
-            value={pilotMassKg}
+            value={plan.pilotMassKg}
             min={0}
             max={130}
             inputMax={150}
-            onChange={setPilotMassKg}
+            onChange={(pilotMassKg) => updateWeightBalance({ pilotMassKg })}
           />
           <SliderField
             label="Co-Pilot"
             unit="kg"
-            value={copilotMassKg}
+            value={plan.copilotMassKg}
             min={0}
             max={130}
             inputMax={150}
-            onChange={setCopilotMassKg}
+            onChange={(copilotMassKg) => updateWeightBalance({ copilotMassKg })}
           />
           <SliderField
             label="Gepäck"
             unit="kg"
-            value={baggageMassKg}
+            value={plan.baggageMassKg}
             min={0}
             max={20}
-            onChange={setBaggageMassKg}
+            onChange={(baggageMassKg) => updateWeightBalance({ baggageMassKg })}
           />
           <SliderField
-            label="Kraftstoff"
+            label="Kraftstoff beim Start"
             unit="l"
-            value={fuelLiters}
+            value={plan.startFuelLiters}
             min={0}
             max={107}
             inputMax={130}
             hint="Kraftstoffmasse mit 0,72 kg/l."
-            onChange={setFuelLiters}
+            onChange={(startFuelLiters) => updateWeightBalance({ startFuelLiters })}
+          />
+          <SliderField
+            label="Geplanter Verbrauch"
+            unit="l"
+            value={plan.plannedFuelBurnLiters}
+            min={0}
+            max={107}
+            inputMax={130}
+            hint={`Verbleibend bei Landung: ${landingFuelLiters.toFixed(1)} l`}
+            onChange={(plannedFuelBurnLiters) => updateWeightBalance({ plannedFuelBurnLiters })}
           />
         </div>
       </aside>
       <main className="results">
-        <CalculatorCard title="Weight & Balance">
+        <CalculatorCard title="Flugplanung">
           <div className="wb-summary">
             <div className="result-grid">
               <MetricItem
-                label="Masse"
-                value={result.totalMassKg.toFixed(1)}
+                label="Startmasse"
+                value={startResult.totalMassKg.toFixed(1)}
                 unit="kg"
                 subtext={
-                  result.withinEnvelope ? "Innerhalb Envelope" : "Ausserhalb Envelope"
+                  startResult.withinEnvelope ? `${plan.startFuelLiters.toFixed(1)} l Kraftstoff · zentral gespeichert` : "Ausserhalb Envelope"
                 }
-                danger={!result.withinEnvelope}
+                danger={!startResult.withinEnvelope}
               />
               <MetricItem
-                label="Moment"
-                value={result.totalMomentKgM.toFixed(2)}
-                unit="kg m"
-                subtext={`Arm ${result.cgArmM.toFixed(4)} m`}
-                danger={!result.withinEnvelope}
+                label="Landemasse"
+                value={landingResult.totalMassKg.toFixed(1)}
+                unit="kg"
+                subtext={
+                  landingResult.withinEnvelope ? `${landingFuelLiters.toFixed(1)} l Kraftstoff · zentral gespeichert` : "Ausserhalb Envelope"
+                }
+                danger={!landingResult.withinEnvelope}
               />
             </div>
-            {result.warnings.length > 0 ? (
+            {plan.plannedFuelBurnLiters > plan.startFuelLiters ? (
               <div className="wb-inline-warnings">
-                {result.warnings.map((warning) => (
+                <div className="wb-inline-warning danger">Geplanter Verbrauch überschreitet den Kraftstoff beim Start.</div>
+              </div>
+            ) : null}
+            {[...startResult.warnings, ...landingResult.warnings].length > 0 ? (
+              <div className="wb-inline-warnings">
+                {[...startResult.warnings, ...landingResult.warnings].map((warning, index) => (
                   <div
                     className={`wb-inline-warning${warning.danger ? " danger" : ""}`}
-                    key={warning.text}
+                    key={`${warning.text}-${index}`}
                   >
                     {warning.text}
                   </div>
@@ -270,8 +298,11 @@ export function WeightBalancePage() {
             ) : null}
           </div>
         </CalculatorCard>
-        <CalculatorCard title="Envelope">
-          <EnvelopeChart result={result} />
+        <CalculatorCard title="Envelope · Start">
+          <EnvelopeChart result={startResult} label="Start" />
+        </CalculatorCard>
+        <CalculatorCard title="Envelope · Landung">
+          <EnvelopeChart result={landingResult} label="Landung" />
         </CalculatorCard>
         <CalculatorCard title="Geschwindigkeiten">
           <div className="speed-grid">
@@ -281,16 +312,16 @@ export function WeightBalancePage() {
                   <SpeedSymbol index="R" /> · Rotate
                 </span>
               }
-              speedKmh={result.speeds.rotateSpeedKmh}
+              speedKmh={startResult.speeds.rotateSpeedKmh}
             />
-            <SpeedMetric label="in 15 m Höhe" speedKmh={result.speeds.speedAt15mKmh} />
+            <SpeedMetric label="in 15 m Höhe" speedKmh={startResult.speeds.speedAt15mKmh} />
             <SpeedMetric
               label={
                 <span>
                   <SpeedSymbol index="APP" /> · Approach
                 </span>
               }
-              speedKmh={result.speeds.approachSpeedKmh}
+              speedKmh={landingResult.speeds.approachSpeedKmh}
             />
             <SpeedMetric
               label={
@@ -298,7 +329,7 @@ export function WeightBalancePage() {
                   <SpeedSymbol index="REF" /> · 1.3 × <SpeedSymbol index="S0" />
                 </span>
               }
-              speedKmh={result.speeds.referenceSpeedKmh}
+              speedKmh={landingResult.speeds.referenceSpeedKmh}
             />
             <SpeedMetric
               label={
@@ -306,16 +337,19 @@ export function WeightBalancePage() {
                   <SpeedSymbol index="S0" /> · Leerlauf 40°
                 </span>
               }
-              speedKmh={result.speeds.stallIdleFlaps40Kmh}
+              speedKmh={landingResult.speeds.stallIdleFlaps40Kmh}
             />
           </div>
         </CalculatorCard>
-        <CalculatorCard title="Beladung">
-          <BreakdownTable result={result} />
+        <CalculatorCard title="Beladung · Start">
+          <BreakdownTable result={startResult} />
+        </CalculatorCard>
+        <CalculatorCard title="Beladung · Landung">
+          <BreakdownTable result={landingResult} />
         </CalculatorCard>
         <CalculatorCard title="Bedingungen">
           <div className="conditions-grid">
-            {result.conditions.map((condition) => (
+            {startResult.conditions.map((condition) => (
               <span key={condition}>{condition}</span>
             ))}
           </div>
