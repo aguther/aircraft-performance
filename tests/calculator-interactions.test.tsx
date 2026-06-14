@@ -13,6 +13,7 @@ import { ClimbPage } from "../src/pages/ClimbPage";
 import { StallPage } from "../src/pages/StallPage";
 import { WeightBalancePage } from "../src/pages/WeightBalancePage";
 import { TakeoffPage } from "../src/pages/TakeoffPage";
+import { LandingPage } from "../src/pages/LandingPage";
 
 afterEach(() => {
   cleanup();
@@ -177,6 +178,30 @@ describe("calculator interactions", () => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
       expect(storedPlan.departure.airportId).toBe("mock-edfe");
       expect(storedPlan.departure.runwayId).toBe("edfe-08");
+    });
+  });
+
+  it("applies destination airport, runway and ICON-D2 mock data to landing", async () => {
+    const user = userEvent.setup();
+    render(<MemoryRouter><FlightPlanProvider><LandingPage /></FlightPlanProvider></MemoryRouter>);
+
+    await user.click(screen.getByRole("button", { name: "Airport" }));
+    expect(screen.getByText("Landebahn")).toBeTruthy();
+    expect(screen.getByText("Geplante Landezeit / Prognose")).toBeTruthy();
+    expect(screen.getByText(/Mock · OpenAIP · Open-Meteo ICON-D2 · NOAA WMM/)).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Werte übernehmen" }));
+    await user.click(screen.getByRole("button", { name: "Elevation" }));
+
+    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;
+    expect(within(atmosphereSection).getByDisplayValue("384")).toBeTruthy();
+    expect(within(atmosphereSection).getAllByDisplayValue("1016")).toHaveLength(2);
+    expect(within(atmosphereSection).getAllByDisplayValue("23")).toHaveLength(2);
+    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".section-header" }).parentElement!;
+    expect(within(runwaySection).getAllByDisplayValue("-9")).toHaveLength(2);
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.arrival.airportId).toBe("mock-edfe");
+      expect(storedPlan.arrival.runwayId).toBe("edfe-08");
     });
   });
 

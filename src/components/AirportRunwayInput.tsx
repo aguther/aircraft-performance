@@ -8,7 +8,7 @@ import {
   searchMockAirports,
 } from "../flight-data";
 
-export type AirportTakeoffValues = {
+export type AirportRunwayValues = {
   elevationFt: number;
   qnhHpa: number;
   oatC: number;
@@ -16,19 +16,28 @@ export type AirportTakeoffValues = {
   windKt: number;
 };
 
+type AirportRunwayOperation = "departure" | "arrival";
+
 function formatDirection(value: number) {
   return `${Math.round(value).toString().padStart(3, "0")}°`;
 }
 
-export function AirportTakeoffInput({ onApply }: { onApply: (values: AirportTakeoffValues) => void }) {
-  const { flightPlan, updateDeparture } = useFlightPlan();
+export function AirportRunwayInput({
+  operation,
+  onApply,
+}: {
+  operation: AirportRunwayOperation;
+  onApply: (values: AirportRunwayValues) => void;
+}) {
+  const { flightPlan, updateArrival, updateDeparture } = useFlightPlan();
+  const savedSelection = operation === "departure" ? flightPlan.departure : flightPlan.arrival;
   const [search, setSearch] = useState("");
-  const [airportId, setAirportId] = useState(flightPlan.departure?.airportId ?? mockAirports[0].id);
+  const [airportId, setAirportId] = useState(savedSelection?.airportId ?? mockAirports[0].id);
   const airportResults = useMemo(() => searchMockAirports(search), [search]);
   const airport = mockAirports.find((candidate) => candidate.id === airportId) ?? mockAirports[0];
-  const [runwayId, setRunwayId] = useState(flightPlan.departure?.runwayId ?? airport.runways[0].id);
+  const [runwayId, setRunwayId] = useState(savedSelection?.runwayId ?? airport.runways[0].id);
   const forecasts = useMemo(() => getMockWeatherForecasts(airport.id), [airport.id]);
-  const [forecastId, setForecastId] = useState(flightPlan.departure?.forecastId ?? forecasts[0].id);
+  const [forecastId, setForecastId] = useState(savedSelection?.forecastId ?? forecasts[0].id);
   const runway = airport.runways.find((candidate) => candidate.id === runwayId) ?? airport.runways[0];
   const forecast = forecasts.find((candidate) => candidate.id === forecastId) ?? forecasts[0];
   const declination = getMockDeclination(airport, forecast.validAt);
@@ -57,12 +66,14 @@ export function AirportTakeoffInput({ onApply }: { onApply: (values: AirportTake
       slopePercent: runway.slopePercent ?? 0,
       windKt: Math.floor(wind.headwindKt),
     });
-    updateDeparture({
+    const selection = {
       airportId: airport.id,
       runwayId: runway.id,
       forecastId: forecast.id,
       plannedAt: forecast.validAt,
-    });
+    };
+    if (operation === "departure") updateDeparture(selection);
+    else updateArrival(selection);
   };
 
   return (
@@ -78,13 +89,13 @@ export function AirportTakeoffInput({ onApply }: { onApply: (values: AirportTake
         </select>
       </label>
       <label className="airport-field">
-        <span>Startbahn</span>
+        <span>{operation === "departure" ? "Startbahn" : "Landebahn"}</span>
         <select value={runway.id} onChange={(event) => setRunwayId(event.target.value)}>
           {airport.runways.map((candidate) => <option value={candidate.id} key={candidate.id}>RWY {candidate.designator} · {candidate.lengthM} m · {candidate.surface}</option>)}
         </select>
       </label>
       <label className="airport-field">
-        <span>Geplante Startzeit / Prognose</span>
+        <span>Geplante {operation === "departure" ? "Startzeit" : "Landezeit"} / Prognose</span>
         <select value={forecast.id} onChange={(event) => setForecastId(event.target.value)}>
           {forecasts.map((candidate) => <option value={candidate.id} key={candidate.id}>{new Date(candidate.validAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })}</option>)}
         </select>

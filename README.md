@@ -127,13 +127,15 @@ W&B zeigt die berechneten Massen mit einer Nachkommastelle. Bei der Übernahme i
 
 ## Flugplatz- und Wetterdaten
 
-Der Takeoff-Rechner besitzt einen `Airport`-Modus mit provider-unabhängigen Mock-Daten. Die Modelle sind auf die späteren Schnittstellen ausgerichtet:
+Die Takeoff- und Landing-Rechner besitzen einen `Airport`-Modus mit provider-unabhängigen Mock-Daten. Start- und Zielplatz werden mit gewählter Bahn und Prognosezeit getrennt in der zentralen Flugplanung gespeichert. Die Modelle sind auf die späteren Schnittstellen ausgerichtet:
 
 - OpenAIP `/airports` und `/airports/{id}`: Suche, Position, Elevation, magnetische Deklination sowie richtungsbezogene Bahndaten mit True Heading, Oberfläche, Abmessungen, erklärten Distanzen und Schwellenhöhe.
 - Open-Meteo DWD ICON API: Temperatur, QNH, Windrichtung und Windstärke für gewählte Prognosezeitpunkte mit explizitem Modell `ICON-D2`.
 - NOAA WMM: datums- und positionsbezogene magnetische Deklination.
 
 OpenAIP liefert keine direkte Bahnneigung. Diese wird, sofern beide Schwellenhöhen verfügbar sind, aus Höhendifferenz und Bahnlänge berechnet. Wetterwind und Windkomponenten werden intern immer relativ zu True Heading berechnet.
+
+Beim Takeoff werden Elevation, QNH, OAT, Windkomponente und Bahnneigung übernommen. Beim Landing werden Elevation, QNH, OAT und Windkomponente übernommen; die Bahnneigung bleibt dort eine Information, da sie im aktuellen Landestreckenmodell nicht berücksichtigt wird.
 
 Offizielle Dokumentation:
 

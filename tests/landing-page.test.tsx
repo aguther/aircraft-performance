@@ -12,5 +12,6 @@ describe("LandingPage", () => {
     expect(markup).toContain("Landing Distance · Landestrecke über 15 m");
     expect(markup).toContain("grob115b-landing-chart.png");
     expect(markup).toContain("Anfluggeschwindigkeiten");
+    expect(markup).toContain("Airport");
   });
 });

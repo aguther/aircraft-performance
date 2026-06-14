@@ -11,7 +11,7 @@ import {
   round,
 } from "../domain";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
-import { AirportTakeoffInput } from "../components/AirportTakeoffInput";
+import { AirportRunwayInput } from "../components/AirportRunwayInput";
 import { CalculatorContextCard } from "../components/CalculatorContextCard";
 import { FlightPlanMassImport } from "../components/FlightPlanMassImport";
 import { NumberField } from "../components/NumberField";
@@ -356,7 +356,7 @@ export function TakeoffPage() {
             <button className={`mode-btn${pressureAltitudeMode === "direct" ? " active" : ""}`} type="button" onClick={() => setPressureAltitudeMode("direct")}>Pressure Alt.</button>
           </div>
           {pressureAltitudeMode === "airport" ? (
-            <AirportTakeoffInput onApply={(values) => {
+            <AirportRunwayInput operation="departure" onApply={(values) => {
               setElevationFt(values.elevationFt);
               setQnhHpa(values.qnhHpa);
               setOatC(values.oatC);
