@@ -126,7 +126,7 @@ export async function handleApiRequest(request: Request, env: Env, context: Work
         const iconForecast = current ? normalizeOpenMeteoCurrent(iconData, airportId) : normalizeOpenMeteoForecast(iconData, airportId);
         if (iconForecast) return json(iconForecast, 200, current ? SHORT_CACHE : {});
 
-        // Fallback: ECMWF IFS (global coverage, up to 240 h)
+        // Fallback: ECMWF (global coverage, up to 240 h)
         const ecmwfHour = forecastHour ?? nearestForecastHour(new Date().toISOString());
         if (!ecmwfHour) return json({ error: "Keine Wetterdaten für die gewählte Zeit und Position verfügbar." }, 404);
         try {
@@ -137,7 +137,7 @@ export async function handleApiRequest(request: Request, env: Env, context: Work
           const ecmwfData = await openMeteoJson<OpenMeteoHourlyResponse>(
             await fetch(`${OPEN_METEO_ECMWF_URL}?${ecmwfParams}`, { headers: { Accept: "application/json" } }),
           );
-          const ecmwfForecast = normalizeOpenMeteoForecast(ecmwfData, airportId, undefined, "ECMWF IFS");
+          const ecmwfForecast = normalizeOpenMeteoForecast(ecmwfData, airportId, undefined, "ECMWF");
           if (ecmwfForecast) return json(ecmwfForecast, 200, current ? SHORT_CACHE : {});
         } catch {
           // fall through to 404
