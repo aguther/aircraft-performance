@@ -1,4 +1,4 @@
-const RELEASE = "80";
+const RELEASE = "81";
 const CACHE_PREFIX = "g115b-performance-v";
 const CACHE_NAME = `${CACHE_PREFIX}${RELEASE}`;
 const versioned = (path) => `${path}?v=${RELEASE}`;
@@ -7,7 +7,6 @@ const APP_SHELL = [
   "./index.html",
   "./takeoff.html",
   "./landing.html",
-  "./weight_balance.html",
   "./cruise.html",
   "./climb.html",
   "./climb_rate.html",
@@ -25,7 +24,6 @@ const APP_SHELL = [
   versioned("./js/performance-data.js"),
   versioned("./js/pages/takeoff-page.js"),
   versioned("./js/pages/landing-page.js"),
-  versioned("./js/pages/weight-balance-page.js"),
   versioned("./js/pages/cruise-page.js"),
   versioned("./js/pages/climb-page.js"),
   versioned("./js/pages/climb-rate-page.js"),

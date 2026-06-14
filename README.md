@@ -64,7 +64,7 @@ Die Datei `_headers` ergänzt Sicherheits-Header für statische Antworten und ve
 
 ## React-Migration
 
-Die Startseite und gemeinsame App-Grundlage verwenden React, TypeScript und Vite. Die bestehenden Rechner bleiben während der schrittweisen Migration unter ihren bisherigen HTML-URLs erreichbar.
+Die Startseite, gemeinsame App-Grundlage und Weight-&-Balance-Seite verwenden React, TypeScript und Vite. Die noch nicht migrierten Rechner bleiben während der schrittweisen Migration unter ihren bisherigen HTML-URLs erreichbar.
 
 - `src/app/`
   Enthält zentrale Definitionen wie Aircraft Registry, Calculator Registry und Theme-Verhalten.

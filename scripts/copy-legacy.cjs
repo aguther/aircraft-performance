@@ -15,7 +15,6 @@ const legacyFiles = [
   "service-worker.js",
   "stall.html",
   "takeoff.html",
-  "weight_balance.html",
 ];
 
 for (const directory of legacyDirectories) {
@@ -29,4 +28,3 @@ for (const file of legacyFiles) {
 }
 
 console.log("Legacy calculator pages copied to dist.");
-

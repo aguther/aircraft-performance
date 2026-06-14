@@ -1,4 +1,5 @@
 import type { AircraftDefinition } from "../app/aircraft";
+import { Link } from "react-router-dom";
 import {
   calculatorRegistry,
   type CalculatorDefinition,
@@ -26,8 +27,9 @@ function CalculatorGroup({
         <div className="idx-group-copy">{description}</div>
       </div>
       <div className="idx-grid">
-        {calculators.map((calculator) => (
-          <a className="idx-card" href={calculator.href} key={calculator.href}>
+        {calculators.map((calculator) => {
+          const content = (
+            <>
             <div className="idx-icon">{calculator.icon}</div>
             <div className="idx-left">
               <div className="idx-tag">{calculator.tag}</div>
@@ -36,8 +38,19 @@ function CalculatorGroup({
               <div className="idx-meta">{calculator.source}</div>
             </div>
             <div className="idx-arrow">→</div>
-          </a>
-        ))}
+            </>
+          );
+
+          return calculator.runtime === "react" ? (
+            <Link className="idx-card" to={calculator.href} key={calculator.href}>
+              {content}
+            </Link>
+          ) : (
+            <a className="idx-card" href={calculator.href} key={calculator.href}>
+              {content}
+            </a>
+          );
+        })}
       </div>
     </section>
   );
@@ -67,4 +80,3 @@ export function HomePage({ aircraft }: HomePageProps) {
     </main>
   );
 }
-
