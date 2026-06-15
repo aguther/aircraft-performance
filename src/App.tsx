@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import { useAircraft } from "./app/AircraftContext";
 import { useFlightPlan } from "./app/FlightPlanContext";
 import { useTheme } from "./app/useTheme";
@@ -16,10 +16,10 @@ import { LandingPage } from "./pages/LandingPage";
 import { StallPage } from "./pages/StallPage";
 import { TakeoffPage } from "./pages/TakeoffPage";
 import { WeightBalancePage } from "./pages/WeightBalancePage";
+import { SettingsPage } from "./pages/SettingsPage";
 
 export function App() {
   const location = useLocation();
-  const navigate = useNavigate();
   const { aircraft, availableAircraft, selectAircraft } = useAircraft();
   const { resetFlightPlan } = useFlightPlan();
   const { preference, resolvedTheme, toggleTheme } = useTheme();
@@ -33,6 +33,7 @@ export function App() {
   const isClimb = location.pathname === "/climb.html";
   const isClimbRate = location.pathname === "/climb_rate.html";
   const isStall = location.pathname === "/stall.html";
+  const isSettings = location.pathname === "/settings.html";
   const pageTitle = isWeightBalance
     ? "Weight & Balance"
     : isTakeoff
@@ -46,7 +47,9 @@ export function App() {
             : isClimbRate
               ? "Climb Rate"
               : isStall
-                ? "Stall"
+              ? "Stall"
+              : isSettings
+                ? "Einstellungen"
                 : "Performance";
   const currentCalculatorHref = isWeightBalance
     ? "/weight_balance.html"
@@ -61,8 +64,10 @@ export function App() {
             : isClimbRate
               ? "/climb_rate.html"
               : isStall
-                ? "/stall.html"
-                : undefined;
+              ? "/stall.html"
+              : isSettings
+                ? "/settings.html"
+                : "/";
 
   useEffect(() => {
     document.title = `${aircraft.shortName} — ${pageTitle === "Performance" ? "Performance Calculators" : pageTitle}`;
@@ -75,15 +80,8 @@ export function App() {
         availableAircraft={availableAircraft}
         onSelectAircraft={selectAircraft}
         pageTitle={pageTitle}
-        currentCalculatorHref={currentCalculatorHref}
-        themePreference={preference}
-        resolvedTheme={resolvedTheme}
+        currentNavigationHref={currentCalculatorHref}
         onOpenUsageNotice={() => setUsageNoticeOpen(true)}
-        onResetFlightPlan={() => {
-          resetFlightPlan();
-          navigate("/");
-        }}
-        onToggleTheme={toggleTheme}
       />
       <Routes>
         <Route path="/" element={<HomePage aircraft={aircraft} />} />
@@ -95,6 +93,7 @@ export function App() {
         <Route path="/climb.html" element={<ClimbPage />} />
         <Route path="/climb_rate.html" element={<ClimbRatePage />} />
         <Route path="/stall.html" element={<StallPage />} />
+        <Route path="/settings.html" element={<SettingsPage preference={preference} resolvedTheme={resolvedTheme} onResetFlightPlan={resetFlightPlan} onToggleTheme={toggleTheme} />} />
         <Route path="*" element={<HomePage aircraft={aircraft} />} />
       </Routes>
       <UsageNotice

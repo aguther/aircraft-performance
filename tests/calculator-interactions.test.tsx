@@ -16,6 +16,8 @@ import { StallPage } from "../src/pages/StallPage";
 import { WeightBalancePage } from "../src/pages/WeightBalancePage";
 import { TakeoffPage } from "../src/pages/TakeoffPage";
 import { LandingPage } from "../src/pages/LandingPage";
+import { AppHeader } from "../src/components/AppHeader";
+import { defaultAircraft } from "../src/app/aircraft";
 
 afterEach(() => {
   cleanup();
@@ -79,6 +81,25 @@ function FlightPlanContextHarness() {
 }
 
 describe("calculator interactions", () => {
+  it("keeps the important notice separate from the settings tab", () => {
+    render(
+      <MemoryRouter>
+        <AppHeader
+          aircraft={defaultAircraft}
+          availableAircraft={[defaultAircraft]}
+          pageTitle="Takeoff"
+          currentNavigationHref="/takeoff.html"
+          onOpenUsageNotice={() => undefined}
+          onSelectAircraft={() => undefined}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("button", { name: "Hinweis zur Nutzung" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Einstellungen" })).toBeTruthy();
+    expect(screen.queryByText("Nutzungshinweis erneut anzeigen")).toBeNull();
+  });
+
   it("stores planned airport times explicitly as UTC", () => {
     expect(utcDateTimeValue("2026-06-14T18:30:00.000Z")).toBe("2026-06-14T18:30");
     expect(utcDateTimeIso("2026-06-14T18:30")).toBe("2026-06-14T18:30:00.000Z");

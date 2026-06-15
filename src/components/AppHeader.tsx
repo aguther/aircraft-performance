@@ -1,5 +1,5 @@
-import type { ResolvedTheme, ThemePreference } from "../app/theme";
-import { useEffect, useRef, useState } from "react";
+import { Info, LayoutGrid, Settings } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { calculatorRegistry } from "../app/calculators";
 import type { AircraftDefinition } from "../app/aircraft";
@@ -9,45 +9,25 @@ type AppHeaderProps = {
   aircraft: AircraftDefinition;
   availableAircraft: AircraftDefinition[];
   pageTitle: string;
-  currentCalculatorHref?: string;
-  themePreference: ThemePreference;
-  resolvedTheme: ResolvedTheme;
+  currentNavigationHref?: string;
   onOpenUsageNotice: () => void;
-  onResetFlightPlan: () => void;
   onSelectAircraft: (aircraftId: string) => void;
-  onToggleTheme: () => void;
 };
 
 export function AppHeader({
   aircraft,
   availableAircraft,
   pageTitle,
-  currentCalculatorHref,
-  themePreference,
-  resolvedTheme,
+  currentNavigationHref,
   onOpenUsageNotice,
-  onResetFlightPlan,
   onSelectAircraft,
-  onToggleTheme,
 }: AppHeaderProps) {
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const settingsRef = useRef<HTMLDivElement>(null);
-  const themeLabel = themePreference === "auto" ? "Auto" : resolvedTheme === "dark" ? "Dunkel" : "Hell";
   const availableCalculators = calculatorRegistry.filter((calculator) => aircraft.capabilities.includes(calculator.capability));
+  const navigationRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const closeSettings = (event: MouseEvent) => {
-      if (!settingsRef.current?.contains(event.target as Node)) setSettingsOpen(false);
-    };
-    document.addEventListener("click", closeSettings);
-    return () => document.removeEventListener("click", closeSettings);
-  }, []);
-
-  const resetFlightPlan = () => {
-    if (!window.confirm("Neue Flugplanung starten? Alle gespeicherten Eingaben, Flugplätze und übernommenen Werte werden zurückgesetzt.")) return;
-    onResetFlightPlan();
-    setSettingsOpen(false);
-  };
+    navigationRef.current?.querySelector(".calculator-tab.current")?.scrollIntoView?.({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [currentNavigationHref]);
 
   return (
     <header className="app-shell-header">
@@ -71,37 +51,27 @@ export function AppHeader({
           </select>
           <div className="nav-title">{pageTitle}</div>
         </div>
-        <div className="app-actions" ref={settingsRef}>
+        <div className="app-actions">
           <button className="app-icon-button" type="button" aria-label="Hinweis zur Nutzung" onClick={onOpenUsageNotice}>
-            <span className="usage-notice-open-icon" aria-hidden="true">i</span>
+            <Info aria-hidden="true" />
           </button>
-          <button className={`app-icon-button settings-button${settingsOpen ? " active" : ""}`} type="button" aria-label="Einstellungen" aria-expanded={settingsOpen} onClick={() => setSettingsOpen((current) => !current)}>
-            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm8 4l2-1-2-4-2 .5-1.5-1L16 4h-4l-.5 2.5-1.5 1L8 7 6 11l2 1v2l-2 1 2 4 2-.5 1.5 1L12 22h4l.5-2.5 1.5-1 2 .5 2-4-2-1z" /></svg>
-          </button>
-          <div className={`settings-panel${settingsOpen ? " open" : ""}`}>
-            <div className="settings-panel-title">Einstellungen</div>
-            <button className="settings-row" type="button" onClick={onToggleTheme}>
-              <span><strong>Darstellung</strong><small>Farbschema der Anwendung</small></span>
-              <span className="settings-value">{themeLabel}</span>
-            </button>
-            <button className="settings-row settings-row-danger" type="button" onClick={resetFlightPlan}>
-              <span><strong>Neue Flugplanung</strong><small>Alle Planungsdaten zurücksetzen</small></span>
-              <span className="settings-chevron">↻</span>
-            </button>
-          </div>
         </div>
       </div>
-      <nav className="calculator-tabs" aria-label="Rechner">
-        <Link className={`calculator-tab calculator-tab-home${currentCalculatorHref ? "" : " current"}`} to="/">
-          <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1" /><rect x="14" y="4" width="6" height="6" rx="1" /><rect x="4" y="14" width="6" height="6" rx="1" /><rect x="14" y="14" width="6" height="6" rx="1" /></svg>
+      <nav className="calculator-tabs" aria-label="Rechner" ref={navigationRef}>
+        <Link className={`calculator-tab${currentNavigationHref === "/" ? " current" : ""}`} to="/">
+          <LayoutGrid aria-hidden="true" />
           <span>Übersicht</span>
         </Link>
         {availableCalculators.map((calculator) => (
-          <Link className={`calculator-tab${calculator.href === currentCalculatorHref ? " current" : ""}`} to={calculator.href} key={calculator.href}>
+          <Link className={`calculator-tab${calculator.href === currentNavigationHref ? " current" : ""}`} to={calculator.href} key={calculator.href}>
             <CalculatorIcon capability={calculator.capability} />
             <span>{calculator.navTitle}</span>
           </Link>
         ))}
+        <Link className={`calculator-tab${currentNavigationHref === "/settings.html" ? " current" : ""}`} to="/settings.html">
+          <Settings aria-hidden="true" />
+          <span>Einstellungen</span>
+        </Link>
       </nav>
     </header>
   );
