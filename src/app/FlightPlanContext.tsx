@@ -50,6 +50,7 @@ type FlightPlanContextValue = {
   updateDeparture: (departure: Omit<FlightPlanAirportSelection, "updatedAt">) => void;
   updateArrival: (arrival: Omit<FlightPlanAirportSelection, "updatedAt">) => void;
   updateImports: (change: Partial<FlightPlanImports>) => void;
+  resetFlightPlan: () => void;
 };
 
 const defaultFlightPlan: FlightPlan = {
@@ -112,6 +113,7 @@ export function FlightPlanProvider({ children }: { children: ReactNode }) {
     ...current,
     imports: { ...current.imports, ...change },
   })), []);
+  const resetFlightPlan = useCallback(() => setFlightPlan(defaultFlightPlan), []);
 
   useEffect(() => {
     try {
@@ -128,7 +130,8 @@ export function FlightPlanProvider({ children }: { children: ReactNode }) {
     updateDeparture,
     updateArrival,
     updateImports,
-  }), [flightPlan, publishMasses, updateArrival, updateDeparture, updateImports, updateWeightBalance]);
+    resetFlightPlan,
+  }), [flightPlan, publishMasses, resetFlightPlan, updateArrival, updateDeparture, updateImports, updateWeightBalance]);
 
   return <FlightPlanContext.Provider value={value}>{children}</FlightPlanContext.Provider>;
 }

@@ -66,13 +66,14 @@ function AircraftContextHarness() {
 }
 
 function FlightPlanContextHarness() {
-  const { flightPlan, updateWeightBalance, publishMasses } = useFlightPlan();
+  const { flightPlan, updateWeightBalance, publishMasses, resetFlightPlan } = useFlightPlan();
   return (
     <>
       <span>{flightPlan.weightBalance.pilotMassKg} kg</span>
       <span>{flightPlan.masses?.startMassKg ?? "Keine Masse"}</span>
       <button type="button" onClick={() => updateWeightBalance({ pilotMassKg: 90 })}>Pilot ändern</button>
       <button type="button" onClick={() => publishMasses({ startMassKg: 850, landingMassKg: 820, startFuelLiters: 60, landingFuelLiters: 18 })}>Massen veröffentlichen</button>
+      <button type="button" onClick={resetFlightPlan}>Neue Flugplanung</button>
     </>
   );
 }
@@ -103,6 +104,19 @@ describe("calculator interactions", () => {
     expect(screen.getByText("90 kg")).toBeTruthy();
     expect(screen.getByText("850")).toBeTruthy();
     expect(window.localStorage.getItem("performance-calculators-flight-plan")).toContain('"landingMassKg":820');
+  });
+
+  it("resets all central flight planning data", async () => {
+    const user = userEvent.setup();
+    render(<FlightPlanProvider><FlightPlanContextHarness /></FlightPlanProvider>);
+
+    await user.click(screen.getByRole("button", { name: "Pilot ändern" }));
+    await user.click(screen.getByRole("button", { name: "Massen veröffentlichen" }));
+    await user.click(screen.getByRole("button", { name: "Neue Flugplanung" }));
+
+    expect(screen.getByText("85 kg")).toBeTruthy();
+    expect(screen.getByText("Keine Masse")).toBeTruthy();
+    await waitFor(() => expect(window.localStorage.getItem("performance-calculators-flight-plan")).not.toContain('"masses"'));
   });
 
   it("publishes a lower landing mass after planned fuel burn", async () => {

@@ -6,13 +6,13 @@
   align-content: start;
   width: min(1720px, 100%);
   margin: 0 auto;
-  min-height: calc(100vh - 58px);
+  min-height: calc(100vh - 109px);
 }
 
 .sidebar {
   position: sticky;
-  top: 58px;
-  max-height: calc(100vh - 58px);
+  top: 109px;
+  max-height: calc(100vh - 109px);
   overflow-y: auto;
   background: var(--bg-soft);
   border-right: 1px solid var(--border);
@@ -20,7 +20,7 @@
 }
 
 .results {
-  min-height: calc(100vh - 58px);
+  min-height: calc(100vh - 109px);
   padding: 1rem 1.15rem 1.25rem;
   display: flex;
   flex-direction: column;
@@ -31,11 +31,11 @@
 @supports (min-height: 100dvh) {
   .page-layout,
   .results {
-    min-height: calc(100dvh - 58px);
+    min-height: calc(100dvh - 109px);
   }
 
   .sidebar {
-    max-height: calc(100dvh - 58px);
+    max-height: calc(100dvh - 109px);
   }
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useAircraft } from "./app/AircraftContext";
+import { useFlightPlan } from "./app/FlightPlanContext";
 import { useTheme } from "./app/useTheme";
 import { AppHeader } from "./components/AppHeader";
 import {
@@ -18,7 +19,9 @@ import { WeightBalancePage } from "./pages/WeightBalancePage";
 
 export function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { aircraft, availableAircraft, selectAircraft } = useAircraft();
+  const { resetFlightPlan } = useFlightPlan();
   const { preference, resolvedTheme, toggleTheme } = useTheme();
   const [usageNoticeOpen, setUsageNoticeOpen] = useState(
     () => !hasAcceptedUsageNotice(),
@@ -73,10 +76,13 @@ export function App() {
         onSelectAircraft={selectAircraft}
         pageTitle={pageTitle}
         currentCalculatorHref={currentCalculatorHref}
-        showNavigation={Boolean(currentCalculatorHref)}
         themePreference={preference}
         resolvedTheme={resolvedTheme}
         onOpenUsageNotice={() => setUsageNoticeOpen(true)}
+        onResetFlightPlan={() => {
+          resetFlightPlan();
+          navigate("/");
+        }}
         onToggleTheme={toggleTheme}
       />
       <Routes>
