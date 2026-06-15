@@ -191,7 +191,8 @@ export function AirportRunwayInput({
       setWeather(null);
       setAirport(selected);
       setRunwayId(selected?.runways[0]?.id ?? "");
-      if (!selected) setError("Kein passender Flugplatz gefunden.");
+      if (selected) setSearch("");
+      else setError("Kein passender Flugplatz gefunden.");
     } catch (searchError) {
       setResults([]);
       setAirport(null);
@@ -225,7 +226,15 @@ export function AirportRunwayInput({
       <form className="airport-search" onSubmit={submitSearch}>
         <label className="airport-field">
           <span>Flugplatzsuche</span>
-          <input type="search" value={search} minLength={2} required placeholder="ICAO oder Name" onChange={(event) => setSearch(event.target.value)} />
+          <input
+            type="search"
+            value={search}
+            minLength={2}
+            required
+            autoCapitalize="characters"
+            placeholder="ICAO oder Name"
+            onChange={(event) => setSearch(event.target.value.toLocaleUpperCase("de-DE"))}
+          />
         </label>
         <button type="submit" disabled={loading}>{loading ? "Lädt…" : "Suchen"}</button>
       </form>

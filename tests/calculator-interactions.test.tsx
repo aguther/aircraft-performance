@@ -235,9 +235,12 @@ describe("calculator interactions", () => {
     const user = userEvent.setup();
     render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
 
-    await user.type(screen.getByRole("searchbox", { name: "Flugplatzsuche" }), "EDFE");
+    const searchInput = screen.getByRole("searchbox", { name: "Flugplatzsuche" });
+    await user.type(searchInput, "edfe");
+    expect(searchInput.getAttribute("value")).toBe("EDFE");
     await user.click(screen.getByRole("button", { name: "Suchen" }));
     expect(await screen.findByText(/OpenAIP · Stand/)).toBeTruthy();
+    expect(searchInput.getAttribute("value")).toBe("");
     expect(await screen.findByText(/ICON-D2-Prognose/)).toBeTruthy();
     expect(screen.getByText("HW")).toBeTruthy();
     expect(screen.getByText("XW")).toBeTruthy();
