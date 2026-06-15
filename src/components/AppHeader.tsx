@@ -84,10 +84,6 @@ export function AppHeader({
               <span><strong>Darstellung</strong><small>Farbschema der Anwendung</small></span>
               <span className="settings-value">{themeLabel}</span>
             </button>
-            <button className="settings-row" type="button" onClick={onOpenUsageNotice}>
-              <span><strong>Wichtiger Hinweis</strong><small>Nutzungshinweis erneut anzeigen</small></span>
-              <span className="settings-chevron">›</span>
-            </button>
             <button className="settings-row settings-row-danger" type="button" onClick={resetFlightPlan}>
               <span><strong>Neue Flugplanung</strong><small>Alle Planungsdaten zurücksetzen</small></span>
               <span className="settings-chevron">↻</span>
@@ -97,13 +93,13 @@ export function AppHeader({
       </div>
       <nav className="calculator-tabs" aria-label="Rechner">
         <Link className={`calculator-tab calculator-tab-home${currentCalculatorHref ? "" : " current"}`} to="/">
-          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 10.5L12 4l8 6.5V20h-6v-6h-4v6H4z" /></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1" /><rect x="14" y="4" width="6" height="6" rx="1" /><rect x="4" y="14" width="6" height="6" rx="1" /><rect x="14" y="14" width="6" height="6" rx="1" /></svg>
           <span>Übersicht</span>
         </Link>
         {availableCalculators.map((calculator) => (
           <Link className={`calculator-tab${calculator.href === currentCalculatorHref ? " current" : ""}`} to={calculator.href} key={calculator.href}>
             <CalculatorIcon capability={calculator.capability} />
-            <span>{calculator.title}</span>
+            <span>{calculator.navTitle}</span>
           </Link>
         ))}
       </nav>

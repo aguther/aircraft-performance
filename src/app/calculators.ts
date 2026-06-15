@@ -4,6 +4,7 @@ export type CalculatorDefinition = {
   capability: AircraftCapability;
   href: string;
   icon: string;
+  navTitle: string;
   tag: string;
   title: string;
   description: string;
@@ -16,6 +17,7 @@ export const calculatorRegistry: CalculatorDefinition[] = [
     capability: "weightBalance",
     href: "/weight_balance.html",
     icon: "WB",
+    navTitle: "W&B",
     tag: "Beladung",
     title: "Weight & Balance",
     description: "Schwerpunktlage, Moment und relevante IAS nach Beladung.",
@@ -26,6 +28,7 @@ export const calculatorRegistry: CalculatorDefinition[] = [
     capability: "takeoff",
     href: "/takeoff.html",
     icon: "TO",
+    navTitle: "Takeoff",
     tag: "Startstrecke",
     title: "Take-Off",
     description: "Startrollstrecke und Startstrecke über Hindernis.",
@@ -36,6 +39,7 @@ export const calculatorRegistry: CalculatorDefinition[] = [
     capability: "climb",
     href: "/climb.html",
     icon: "CLB",
+    navTitle: "Climb",
     tag: "Steigflug",
     title: "Climb",
     description: "Zeit, Kraftstoff und Distanz zwischen zwei Höhen.",
@@ -46,6 +50,7 @@ export const calculatorRegistry: CalculatorDefinition[] = [
     capability: "cruise",
     href: "/cruise.html",
     icon: "CR",
+    navTitle: "Cruise",
     tag: "Reiseflug",
     title: "Cruise",
     description: "Drehzahl, Kraftstoffverbrauch und TAS.",
@@ -56,6 +61,7 @@ export const calculatorRegistry: CalculatorDefinition[] = [
     capability: "landing",
     href: "/landing.html",
     icon: "LDG",
+    navTitle: "Landing",
     tag: "Landestrecke",
     title: "Landing",
     description: "Landerollstrecke und Landestrecke über Hindernis.",
@@ -66,6 +72,7 @@ export const calculatorRegistry: CalculatorDefinition[] = [
     capability: "stall",
     href: "/stall.html",
     icon: "VS",
+    navTitle: "Stall",
     tag: "Überziehgeschwindigkeit",
     title: "Stall",
     description: "VS0 und VS1 nach Masse, Klappen und Leistung.",
@@ -76,6 +83,7 @@ export const calculatorRegistry: CalculatorDefinition[] = [
     capability: "climbRate",
     href: "/climb_rate.html",
     icon: "VY",
+    navTitle: "Climb Rate",
     tag: "Steigleistung",
     title: "Climb Rate",
     description: "Rate of Climb und VY nach Masse und Dichtehöhe.",
