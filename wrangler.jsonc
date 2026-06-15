@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "performance",
+  "name": "aircraft-performance",
   "compatibility_date": "2026-06-14",
   "main": "worker/index.ts",
   "assets": {
