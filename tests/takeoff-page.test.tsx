@@ -10,7 +10,7 @@ describe("TakeoffPage", () => {
 
     expect(markup).toContain("Ground Roll · Startrollstrecke");
     expect(markup).toContain("Takeoff Distance · Startstrecke über 15 m");
-    expect(markup).toContain("Grafische Nachvollziehbarkeit");
+    expect(markup).toContain("Nachvollziehbarkeit");
     expect(markup).toContain("grob115b-takeoff-chart.png");
     expect(markup).toContain("Rechenweg");
     expect(markup).toContain("Airport");

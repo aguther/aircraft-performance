@@ -234,17 +234,17 @@ describe("calculator interactions", () => {
     expect(slopeInput.getAttribute("value")).toBe("1.0");
   });
 
-  it("keeps takeoff calculation details collapsed until requested", async () => {
+  it("switches between takeoff chart and compact calculation path", async () => {
     const user = userEvent.setup();
     render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
 
-    const calculationPath = screen.getByText("Rechenweg", { selector: ".calculator-details-card .card-title" }).closest("details")!;
-    const chart = screen.getByText("Grafische Nachvollziehbarkeit", { selector: ".calculator-details-card .card-title" }).closest("details")!;
-    expect(calculationPath.hasAttribute("open")).toBe(false);
-    expect(chart.hasAttribute("open")).toBe(false);
+    expect(screen.getByRole("tab", { name: "Diagramm" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByAltText("Originales Flughandbuchdiagramm Bild 5.3.7 Startstrecke")).toBeTruthy();
 
-    await user.click(calculationPath.querySelector("summary")!);
-    expect(calculationPath.hasAttribute("open")).toBe(true);
+    await user.click(screen.getByRole("tab", { name: "Rechenweg" }));
+    expect(screen.getByRole("tab", { name: "Rechenweg" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByText("Schritt 1 - Atmosphäre")).toBeTruthy();
+    expect(screen.queryByAltText("Originales Flughandbuchdiagramm Bild 5.3.7 Startstrecke")).toBeNull();
   });
 
   const airport: Airport = {

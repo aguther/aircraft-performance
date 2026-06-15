@@ -14,7 +14,6 @@ import {
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
 import { AirportRunwayInput } from "../components/AirportRunwayInput";
 import { CalculatorContextCard } from "../components/CalculatorContextCard";
-import { CalculatorDetailsCard } from "../components/CalculatorDetailsCard";
 import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { FlightPlanMassImport } from "../components/FlightPlanMassImport";
 import { NumberField } from "../components/NumberField";
@@ -84,7 +83,7 @@ function createChartPoints(inputs: TakeoffInputs, result: TakeoffResult): ChartP
   ];
 }
 
-function PipelineCard({ inputs, result }: { inputs: TakeoffInputs; result: TakeoffResult }) {
+function CalculationPath({ inputs, result }: { inputs: TakeoffInputs; result: TakeoffResult }) {
   const steps = [
     { name: "Schritt 1 - Atmosphäre", detail: `PA ${inputs.pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT ${inputs.oatC} °C`, value: `${round(result.groundRollByAtmosphereMeters)} m` },
     { name: "Schritt 2 - Masse", detail: `${round(result.groundRollByAtmosphereMeters)} m · ${inputs.massKg} kg`, value: `${round(result.groundRollByMassMeters)} m` },
@@ -95,23 +94,18 @@ function PipelineCard({ inputs, result }: { inputs: TakeoffInputs; result: Takeo
   ];
 
   return (
-    <CalculatorDetailsCard title="Rechenweg" description="Schrittweise Herleitung der berechneten Strecken">
-      <div className="pipeline">
-        {steps.map((step, index) => (
-          <div className="step" key={step.name}>
-            <div className="step-rail">
-              <div className={`step-dot${index === steps.length - 1 ? " active" : ""}`} />
-              {index < steps.length - 1 ? <div className="step-line" /> : null}
-            </div>
-            <div className="step-body">
-              <div className="step-name">{step.name}</div>
-              <div className="step-detail">{step.detail}</div>
-            </div>
-            <div className="step-val">{step.value}</div>
+    <div className="calculation-path-grid">
+      {steps.map((step, index) => (
+        <div className={`calculation-path-row${index === steps.length - 1 ? " final" : ""}`} key={step.name}>
+          <span className="calculation-path-index">{index + 1}</span>
+          <div>
+            <div className="step-name">{step.name}</div>
+            <div className="step-detail">{step.detail}</div>
           </div>
-        ))}
-      </div>
-    </CalculatorDetailsCard>
+          <div className="step-val">{step.value}</div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -268,7 +262,8 @@ async function exportChartImage(inputs: TakeoffInputs, result: TakeoffResult, ex
   window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 }
 
-function ChartCard({ inputs, result, exportContext }: { inputs: TakeoffInputs; result: TakeoffResult; exportContext: ExportContext }) {
+function TraceabilityCard({ inputs, result, exportContext }: { inputs: TakeoffInputs; result: TakeoffResult; exportContext: ExportContext }) {
+  const [view, setView] = useState<"chart" | "path">("chart");
   const [overlayVisible, setOverlayVisible] = useState(true);
   const [exporting, setExporting] = useState(false);
   const points = createChartPoints(inputs, result);
@@ -286,36 +281,52 @@ function ChartCard({ inputs, result, exportContext }: { inputs: TakeoffInputs; r
   };
 
   return (
-    <CalculatorDetailsCard title="Grafische Nachvollziehbarkeit" description="Rechenweg im originalen Flughandbuchdiagramm" wide>
-      <div className="takeoff-chart-header">
-        <div className="takeoff-chart-actions">
-          <label className="takeoff-chart-toggle">
-            <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
-            <span>Rechenweg</span>
-          </label>
-          <button className="takeoff-chart-download" type="button" disabled={exporting} onClick={exportImage}>
-            {exporting ? "Erzeuge PNG…" : "Als Bild speichern"}
-          </button>
+    <section className="card takeoff-chart-card traceability-card">
+      <div className="traceability-header">
+        <div>
+          <div className="card-title">Nachvollziehbarkeit</div>
+          <div className="traceability-description">
+            {view === "chart" ? "Rechenweg im originalen Flughandbuchdiagramm" : "Schrittweise Herleitung der berechneten Strecken"}
+          </div>
+        </div>
+        <div className="traceability-tabs" role="tablist" aria-label="Nachvollziehbarkeit">
+          <button className={view === "chart" ? "active" : ""} type="button" role="tab" aria-selected={view === "chart"} onClick={() => setView("chart")}>Diagramm</button>
+          <button className={view === "path" ? "active" : ""} type="button" role="tab" aria-selected={view === "path"} onClick={() => setView("path")}>Rechenweg</button>
         </div>
       </div>
-      <div className="takeoff-chart-scroll">
-        <div className={`takeoff-chart-stage${overlayVisible ? "" : " overlay-hidden"}`}>
-          <img className="takeoff-chart-image" src={CHART_SOURCE} alt="Originales Flughandbuchdiagramm Bild 5.3.7 Startstrecke" width="1516" height="1038" />
-          <svg className="takeoff-chart-overlay" viewBox="0 0 1516 1038" aria-label="Grafischer Rechenweg im originalen Startstreckendiagramm">
-            <polyline className="takeoff-chart-path" points={points.map((point) => point.join(",")).join(" ")} />
-            {points.slice(1).map(([x, y], index) => <circle className="takeoff-chart-point" cx={x} cy={y} r="5" key={`${index}-${x}-${y}`} />)}
-            <circle className="takeoff-chart-final-point" cx={finalDistancePoint[0]} cy={finalDistancePoint[1]} r="5" />
-          </svg>
-        </div>
-      </div>
-      <div className="takeoff-chart-legend">
-        <span className="takeoff-chart-key">Unbezuschlagter Weg im Originaldiagramm</span>
-        <span>Rollstrecke: {round(result.groundRollByWindMeters)} m</span>
-        <span>Startstrecke über 15 m: {round(result.takeoffDistanceWithoutMarginMeters)} m</span>
-        <span>Zuschlag: +{round(result.groundRollMarginMeters)} m</span>
-        <span className="takeoff-chart-margin-key">Startstrecke über 15 m inkl. Zuschlag: {result.takeoffDistanceMeters} m</span>
-      </div>
-    </CalculatorDetailsCard>
+      {view === "path" ? <CalculationPath inputs={inputs} result={result} /> : (
+        <>
+          <div className="takeoff-chart-header">
+            <div className="takeoff-chart-actions">
+              <label className="takeoff-chart-toggle">
+                <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
+                <span>Rechenweg</span>
+              </label>
+              <button className="takeoff-chart-download" type="button" disabled={exporting} onClick={exportImage}>
+                {exporting ? "Erzeuge PNG…" : "Als Bild speichern"}
+              </button>
+            </div>
+          </div>
+          <div className="takeoff-chart-scroll">
+            <div className={`takeoff-chart-stage${overlayVisible ? "" : " overlay-hidden"}`}>
+              <img className="takeoff-chart-image" src={CHART_SOURCE} alt="Originales Flughandbuchdiagramm Bild 5.3.7 Startstrecke" width="1516" height="1038" />
+              <svg className="takeoff-chart-overlay" viewBox="0 0 1516 1038" aria-label="Grafischer Rechenweg im originalen Startstreckendiagramm">
+                <polyline className="takeoff-chart-path" points={points.map((point) => point.join(",")).join(" ")} />
+                {points.slice(1).map(([x, y], index) => <circle className="takeoff-chart-point" cx={x} cy={y} r="5" key={`${index}-${x}-${y}`} />)}
+                <circle className="takeoff-chart-final-point" cx={finalDistancePoint[0]} cy={finalDistancePoint[1]} r="5" />
+              </svg>
+            </div>
+          </div>
+          <div className="takeoff-chart-legend">
+            <span className="takeoff-chart-key">Unbezuschlagter Weg im Originaldiagramm</span>
+            <span>Rollstrecke: {round(result.groundRollByWindMeters)} m</span>
+            <span>Startstrecke über 15 m: {round(result.takeoffDistanceWithoutMarginMeters)} m</span>
+            <span>Zuschlag: +{round(result.groundRollMarginMeters)} m</span>
+            <span className="takeoff-chart-margin-key">Startstrecke über 15 m inkl. Zuschlag: {result.takeoffDistanceMeters} m</span>
+          </div>
+        </>
+      )}
+    </section>
   );
 }
 
@@ -447,8 +458,7 @@ export function TakeoffPage() {
             <MetricItem label="in 15 m Höhe" value={kilometersPerHourToKnots(result.speedAt15mKmh).toFixed(1)} unit="kt" speedType="IAS" subtext={`${result.speedAt15mKmh.toFixed(0)} km/h`} />
           </div>
         </CalculatorCard>
-        <PipelineCard inputs={inputs} result={result} />
-        <ChartCard inputs={inputs} result={result} exportContext={{ pressureAltitudeMode, elevationFt, qnhHpa }} />
+        <TraceabilityCard inputs={inputs} result={result} exportContext={{ pressureAltitudeMode, elevationFt, qnhHpa }} />
       </main>
     </div>
   );
