@@ -193,6 +193,7 @@ describe("calculator interactions", () => {
 
     expect(screen.getByText("850.3 kg")).toBeTruthy();
     expect(screen.getByText(/Übernahme konservativ als 851 kg/)).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: /Flugzeug & Betrieb/ }));
     await user.click(screen.getByRole("checkbox", { name: "Masse übernehmen" }));
     const massField = screen.getByText("Masse", { selector: ".field-label" }).parentElement!;
     const massInput = massField.querySelector('input[type="number"]')!;
@@ -205,6 +206,7 @@ describe("calculator interactions", () => {
     });
     view.unmount();
     render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+    await user.click(screen.getByRole("button", { name: /Flugzeug & Betrieb/ }));
     expect(screen.getByRole("checkbox", { name: "Masse übernommen" }).hasAttribute("checked")).toBe(true);
     const restoredMassField = screen.getByText("Masse", { selector: ".field-label" }).parentElement!;
     const restoredMassInput = restoredMassField.querySelector('input[type="number"]')!;
@@ -318,6 +320,7 @@ describe("calculator interactions", () => {
     const qnhField = within(atmosphereSection).getByText("QNH", { selector: ".field-label" }).parentElement!;
     expect(qnhField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(true);
     const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    await user.click(within(runwaySection).getByRole("button", { name: /Pistenbedingungen/ }));
     const windField = within(runwaySection).getByText("Wind", { selector: ".field-label" }).parentElement!;
     expect(windField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(true);
     await user.click(screen.getByRole("checkbox", { name: "Werte übernommen" }));
@@ -379,6 +382,23 @@ describe("calculator interactions", () => {
 
     expect(screen.getByText("Ground Roll · Startrollstrecke").parentElement?.classList.contains("danger")).toBe(true);
     expect(screen.getByText("Takeoff Distance · Startstrecke über 15 m").parentElement?.classList.contains("warn")).toBe(true);
+  });
+
+  it("expands compact takeoff input sections and keeps their summary current", async () => {
+    const user = userEvent.setup();
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    const aircraftButton = screen.getByRole("button", { name: /Flugzeug & Betrieb/ });
+    expect(aircraftButton.getAttribute("aria-expanded")).toBe("false");
+    expect(aircraftButton.textContent).toContain("920 kg · Zuschlag 15%");
+
+    await user.click(aircraftButton);
+    expect(aircraftButton.getAttribute("aria-expanded")).toBe("true");
+    const aircraftSection = aircraftButton.closest(".calculator-input-section")!;
+    fireEvent.change(aircraftSection.querySelector('input[type="number"][value="920"]')!, { target: { value: "880" } });
+    await user.click(aircraftButton);
+
+    expect(aircraftButton.textContent).toContain("880 kg · Zuschlag 15%");
   });
 
   it("colors landing result distances when LDA is exceeded", async () => {

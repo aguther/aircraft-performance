@@ -382,7 +382,12 @@ export function TakeoffPage() {
   return (
     <div className="page-layout compact-calculator-layout">
       <aside className="sidebar compact-input-panel">
-        <CalculatorInputSection icon={<CloudSun aria-hidden="true" />} title="Atmosphäre" description="Flugplatz, Höhe und Wetter">
+        <CalculatorInputSection
+          icon={<CloudSun aria-hidden="true" />}
+          title="Atmosphäre"
+          description="Flugplatz, Höhe und Wetter"
+          summary={`${pressureAltitudeMode === "airport" ? "Airport" : pressureAltitudeMode === "qnh" ? "Elevation" : "Pressure Alt."} · PA ${pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT ${oatC} °C`}
+        >
           <div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
             <button className={`mode-btn${pressureAltitudeMode === "airport" ? " active" : ""}`} type="button" onClick={() => setPressureAltitudeMode("airport")}>Airport</button>
             <button className={`mode-btn${pressureAltitudeMode === "qnh" ? " active" : ""}`} type="button" disabled={flightPlan.imports.departureImport} onClick={() => setPressureAltitudeMode("qnh")}>Elevation</button>
@@ -425,7 +430,13 @@ export function TakeoffPage() {
           )}
           {pressureAltitudeMode !== "airport" ? <div style={{ marginTop: "1.25rem" }}><SliderField label="OAT" unit="°C" value={oatC} min={-20} max={40} onChange={setOatC} /></div> : null}
         </CalculatorInputSection>
-        <CalculatorInputSection icon={<Plane aria-hidden="true" />} title="Flugzeug & Betrieb" description="Masse und betrieblicher Zuschlag">
+        <CalculatorInputSection
+          icon={<Plane aria-hidden="true" />}
+          title="Flugzeug & Betrieb"
+          description="Masse und betrieblicher Zuschlag"
+          summary={`${massKg} kg · Zuschlag ${safetyMarginPercent}%`}
+          defaultOpen={false}
+        >
           <FlightPlanMassImport
             label="Startmasse aus Flugplanung"
             massKg={flightPlan.masses?.startMassKg}
@@ -438,7 +449,13 @@ export function TakeoffPage() {
           <SliderField label="Masse" labelDetail="kg · MTOW 920" unit="kg" value={massKg} min={750} max={920} disabled={flightPlan.imports.takeoffMass} onChange={setMassKg} />
           <SliderField label="Zuschlag" unit="%" value={safetyMarginPercent} min={0} max={50} inputMax={100} hint="Grasbahn trocken kurzgeschoren: +15% · Hohes Gras/Schnee: mehr · Hartbelag trocken: 0%" onChange={setSafetyMarginPercent} />
         </CalculatorInputSection>
-        <CalculatorInputSection icon={<Road aria-hidden="true" />} title="Pistenbedingungen" description="Neigung und Windkomponente">
+        <CalculatorInputSection
+          icon={<Road aria-hidden="true" />}
+          title="Pistenbedingungen"
+          description="Neigung und Windkomponente"
+          summary={`${formatSlopeLabel(slopePercent)} · ${formatWindLabel(windKt)}`}
+          defaultOpen={false}
+        >
           <SliderField label="Slope" labelDetail="% · bergauf(+) bergab(−)" unit="%" value={slopePercent} min={-2} max={2} step={0.1} onChange={setSlopePercent} />
           <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} disabled={flightPlan.imports.departureImport} onChange={setWindKt} />
         </CalculatorInputSection>
