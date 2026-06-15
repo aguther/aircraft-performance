@@ -288,32 +288,6 @@ a {
   stroke-width: 1.8;
 }
 
-.calculator-icon-combined {
-  position: relative;
-  display: block;
-  width: 20px;
-  height: 20px;
-}
-
-.calculator-icon-combined svg {
-  position: absolute;
-}
-
-.calculator-icon-combined svg:first-child {
-  top: 5px;
-  left: 0;
-  width: 16px;
-  height: 16px;
-  transform: rotate(-18deg);
-}
-
-.calculator-icon-combined svg:last-child {
-  top: -1px;
-  right: -2px;
-  width: 12px;
-  height: 12px;
-}
-
 .nav-bar {
   position: sticky;
   top: 0;

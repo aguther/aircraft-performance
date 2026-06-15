@@ -1,30 +1,22 @@
 import {
-  ArrowUpRight,
   ChartNoAxesCombined,
   Gauge,
-  Plane,
   PlaneLanding,
   PlaneTakeoff,
+  Snail,
+  TrendingUp,
   Weight,
 } from "lucide-react";
 import type { AircraftCapability } from "../app/aircraft";
 
 export function CalculatorIcon({ capability }: { capability: AircraftCapability }) {
-  if (capability === "climb") {
-    return (
-      <span className="calculator-icon-combined" aria-hidden="true">
-        <Plane />
-        <ArrowUpRight />
-      </span>
-    );
-  }
-
   const icons = {
     weightBalance: Weight,
     takeoff: PlaneTakeoff,
-    cruise: Plane,
+    climb: TrendingUp,
+    cruise: Gauge,
     landing: PlaneLanding,
-    stall: Gauge,
+    stall: Snail,
     climbRate: ChartNoAxesCombined,
   };
   const Icon = icons[capability];
