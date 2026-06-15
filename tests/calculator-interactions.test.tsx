@@ -224,7 +224,7 @@ describe("calculator interactions", () => {
 
   it("keeps the supported decimal precision in slope input", () => {
     render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
-    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".section-header" }).parentElement!;
+    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
     const slopeField = within(runwaySection).getByText("Slope", { selector: ".field-label" }).parentElement!;
     const slopeInput = slopeField.querySelector('input[inputmode="decimal"]')!;
 
@@ -301,10 +301,10 @@ describe("calculator interactions", () => {
     expect(screen.getByText("Geplante Startzeit · UTC · 24 h")).toBeTruthy();
     await user.click(screen.getByRole("checkbox", { name: "Werte übernehmen" }));
     expect(screen.getByRole("button", { name: "Elevation" }).hasAttribute("disabled")).toBe(true);
-    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;
+    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
     const qnhField = within(atmosphereSection).getByText("QNH", { selector: ".field-label" }).parentElement!;
     expect(qnhField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(true);
-    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".section-header" }).parentElement!;
+    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
     const windField = within(runwaySection).getByText("Wind", { selector: ".field-label" }).parentElement!;
     expect(windField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(true);
     await user.click(screen.getByRole("checkbox", { name: "Werte übernommen" }));

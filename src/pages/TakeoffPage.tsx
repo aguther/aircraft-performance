@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { CloudSun, Gauge, Plane, Ruler } from "lucide-react";
 import { calculateTakeoff } from "../aircraft/g115b/calculators";
 import type { TakeoffInputs } from "../aircraft/g115b/types";
 import { useFlightPlan } from "../app/FlightPlanContext";
@@ -13,6 +14,7 @@ import {
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
 import { AirportRunwayInput } from "../components/AirportRunwayInput";
 import { CalculatorContextCard } from "../components/CalculatorContextCard";
+import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { FlightPlanMassImport } from "../components/FlightPlanMassImport";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
@@ -365,10 +367,9 @@ export function TakeoffPage() {
   }, [flightPlan.imports.departureImport]);
 
   return (
-    <div className="page-layout">
-      <aside className="sidebar">
-        <div className="sidebar-section">
-          <div className="section-header">Atmosphäre</div>
+    <div className="page-layout compact-calculator-layout">
+      <aside className="sidebar compact-input-panel">
+        <CalculatorInputSection icon={<CloudSun aria-hidden="true" />} title="Atmosphäre" description="Flugplatz, Höhe und Wetter">
           <div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
             <button className={`mode-btn${pressureAltitudeMode === "airport" ? " active" : ""}`} type="button" onClick={() => setPressureAltitudeMode("airport")}>Airport</button>
             <button className={`mode-btn${pressureAltitudeMode === "qnh" ? " active" : ""}`} type="button" disabled={flightPlan.imports.departureImport} onClick={() => setPressureAltitudeMode("qnh")}>Elevation</button>
@@ -410,9 +411,8 @@ export function TakeoffPage() {
             </div>
           )}
           {pressureAltitudeMode !== "airport" ? <div style={{ marginTop: "1.25rem" }}><SliderField label="OAT" unit="°C" value={oatC} min={-20} max={40} onChange={setOatC} /></div> : null}
-        </div>
-        <div className="sidebar-section">
-          <div className="section-header">Flugzeug</div>
+        </CalculatorInputSection>
+        <CalculatorInputSection icon={<Plane aria-hidden="true" />} title="Flugzeug & Betrieb" description="Masse und betrieblicher Zuschlag">
           <FlightPlanMassImport
             label="Startmasse aus Flugplanung"
             massKg={flightPlan.masses?.startMassKg}
@@ -423,32 +423,31 @@ export function TakeoffPage() {
             onImport={setMassKg}
           />
           <SliderField label="Masse" labelDetail="kg · MTOW 920" unit="kg" value={massKg} min={750} max={920} disabled={flightPlan.imports.takeoffMass} onChange={setMassKg} />
-        </div>
-        <div className="sidebar-section">
-          <div className="section-header">Pistenbedingungen</div>
+          <SliderField label="Zuschlag" unit="%" value={safetyMarginPercent} min={0} max={50} inputMax={100} hint="Grasbahn trocken kurzgeschoren: +15% · Hohes Gras/Schnee: mehr · Hartbelag trocken: 0%" onChange={setSafetyMarginPercent} />
+        </CalculatorInputSection>
+        <CalculatorInputSection icon={<Ruler aria-hidden="true" />} title="Pistenbedingungen" description="Neigung und Windkomponente">
           <SliderField label="Slope" labelDetail="% · bergauf(+) bergab(−)" unit="%" value={slopePercent} min={-2} max={2} step={0.1} onChange={setSlopePercent} />
           <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} disabled={flightPlan.imports.departureImport} onChange={setWindKt} />
-        </div>
-        <div className="sidebar-section">
-          <div className="section-header">Betrieblicher Zuschlag</div>
-          <SliderField label="Zuschlag" unit="%" value={safetyMarginPercent} min={0} max={50} inputMax={100} hint="Grasbahn trocken kurzgeschoren: +15% · Hohes Gras/Schnee: mehr · Hartbelag trocken: 0%" onChange={setSafetyMarginPercent} />
-        </div>
+        </CalculatorInputSection>
       </aside>
       <main className="results">
-        <CalculatorContextCard atmosphere={result.atmosphere} warnings={warnings} conditions={result.conditions} />
-        <PipelineCard inputs={inputs} result={result} />
-        <CalculatorCard title="Ergebnis">
+        <CalculatorCard title="Startleistung">
+          <div className="takeoff-summary-heading">
+            <Gauge aria-hidden="true" />
+            <span>Berechnete Strecken und Geschwindigkeiten</span>
+          </div>
           <div className="result-grid">
             <MetricItem label="Ground Roll · Startrollstrecke" value={String(result.groundRollMeters)} unit="m" danger={groundRollExceedsTora} />
             <MetricItem label="Takeoff Distance · Startstrecke über 15 m" value={String(result.takeoffDistanceMeters)} unit="m" warn={takeoffDistanceExceedsLimit} />
           </div>
-        </CalculatorCard>
-        <CalculatorCard title="Geschwindigkeiten">
+          <div className="takeoff-summary-divider">Geschwindigkeiten</div>
           <div className="speed-grid">
             <MetricItem label={<span><SpeedSymbol index="R" /> · Rotate</span>} value={kilometersPerHourToKnots(result.rotateSpeedKmh).toFixed(1)} unit="kt" speedType="IAS" subtext={`${result.rotateSpeedKmh.toFixed(0)} km/h`} />
             <MetricItem label="in 15 m Höhe" value={kilometersPerHourToKnots(result.speedAt15mKmh).toFixed(1)} unit="kt" speedType="IAS" subtext={`${result.speedAt15mKmh.toFixed(0)} km/h`} />
           </div>
         </CalculatorCard>
+        <CalculatorContextCard atmosphere={result.atmosphere} warnings={warnings} conditions={result.conditions} />
+        <PipelineCard inputs={inputs} result={result} />
         <ChartCard inputs={inputs} result={result} exportContext={{ pressureAltitudeMode, elevationFt, qnhHpa }} />
       </main>
     </div>
