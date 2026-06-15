@@ -346,6 +346,11 @@ export function LandingPage() {
     ],
     [pressureAltitudeMode, result, selectedRunway],
   );
+  const availableLdaM = pressureAltitudeMode === "airport" && selectedRunway
+    ? selectedRunway.ldaM ?? selectedRunway.lengthM
+    : undefined;
+  const landingRollExceedsLda = availableLdaM != null && result.landingRollMeters > availableLdaM;
+  const landingDistanceExceedsLda = availableLdaM != null && result.landingDistanceMeters > availableLdaM;
 
   useEffect(() => {
     document.body.classList.add("runway-calculator");
@@ -429,8 +434,8 @@ export function LandingPage() {
         <PipelineCard inputs={inputs} result={result} />
         <CalculatorCard title="Ergebnis">
           <div className="result-grid">
-            <MetricItem label="Landing Roll · Landerollstrecke" value={String(result.landingRollMeters)} unit="m" />
-            <MetricItem label="Landing Distance · Landestrecke über 15 m" value={String(result.landingDistanceMeters)} unit="m" />
+            <MetricItem label="Landing Roll · Landerollstrecke" value={String(result.landingRollMeters)} unit="m" danger={landingRollExceedsLda} />
+            <MetricItem label="Landing Distance · Landestrecke über 15 m" value={String(result.landingDistanceMeters)} unit="m" danger={landingDistanceExceedsLda} />
           </div>
         </CalculatorCard>
         <CalculatorCard title="Anfluggeschwindigkeiten">

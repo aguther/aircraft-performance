@@ -348,6 +348,13 @@ export function TakeoffPage() {
     ],
     [pressureAltitudeMode, result, selectedRunway],
   );
+  const availableToraM = pressureAltitudeMode === "airport" && selectedRunway
+    ? selectedRunway.toraM ?? selectedRunway.lengthM
+    : undefined;
+  const availableTodaM = pressureAltitudeMode === "airport" ? selectedRunway?.todaM : undefined;
+  const groundRollExceedsTora = availableToraM != null && result.groundRollMeters > availableToraM;
+  const takeoffDistanceExceedsLimit = (availableToraM != null && result.takeoffDistanceMeters > availableToraM)
+    || (availableTodaM != null && result.takeoffDistanceMeters > availableTodaM);
 
   useEffect(() => {
     document.body.classList.add("runway-calculator");
@@ -432,8 +439,8 @@ export function TakeoffPage() {
         <PipelineCard inputs={inputs} result={result} />
         <CalculatorCard title="Ergebnis">
           <div className="result-grid">
-            <MetricItem label="Ground Roll · Startrollstrecke" value={String(result.groundRollMeters)} unit="m" />
-            <MetricItem label="Takeoff Distance · Startstrecke über 15 m" value={String(result.takeoffDistanceMeters)} unit="m" />
+            <MetricItem label="Ground Roll · Startrollstrecke" value={String(result.groundRollMeters)} unit="m" danger={groundRollExceedsTora} />
+            <MetricItem label="Takeoff Distance · Startstrecke über 15 m" value={String(result.takeoffDistanceMeters)} unit="m" warn={takeoffDistanceExceedsLimit} />
           </div>
         </CalculatorCard>
         <CalculatorCard title="Geschwindigkeiten">

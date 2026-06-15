@@ -24,6 +24,7 @@ type MetricItemProps = {
   unit: string;
   subtext?: string;
   speedType?: "IAS" | "TAS";
+  warn?: boolean;
   danger?: boolean;
 };
 
@@ -33,10 +34,11 @@ export function MetricItem({
   unit,
   subtext,
   speedType,
+  warn = false,
   danger = false,
 }: MetricItemProps) {
   return (
-    <div className={`result-item${danger ? " danger" : ""}`}>
+    <div className={`result-item${danger ? " danger" : warn ? " warn" : ""}`}>
       <div className="result-item-label">{label}</div>
       <div className="result-item-value">
         {value} <span>{unit}</span>

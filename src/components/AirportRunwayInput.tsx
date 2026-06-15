@@ -307,10 +307,11 @@ export function AirportRunwayInput({
                   <div className="airport-wind-main">
                     <span className="airport-preview-label">Wind true</span>
                     <strong className="airport-preview-value">
-                      {weather ? `${formatDirection(weather.windDirectionTrueDeg)}° / ${weather.windSpeedKt.toFixed(1)}` : "–"}
+                      {weather
+                        ? `${formatDirection(weather.windDirectionTrueDeg)}° / ${weather.windSpeedKt.toFixed(1)}${weather.windGustKt != null ? ` G ${weather.windGustKt.toFixed(1)}` : ""}`
+                        : "–"}
                       {weather ? <span className="airport-preview-unit">kt</span> : null}
                     </strong>
-                    {weather?.windGustKt != null ? <span className="airport-wind-gust">G {weather.windGustKt.toFixed(1)} <span>kt</span></span> : null}
                   </div>
                   <div className="airport-wind-components">
                     <div>

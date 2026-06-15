@@ -214,11 +214,11 @@ describe("calculator interactions", () => {
     source: { provider: "Open-Meteo" as const, model: "ICON-D2", updatedAt: "2026-06-14T18:45:00.000Z" },
   };
 
-  function stubAirportSearch() {
+  function stubAirportSearch(selectedAirport = airport) {
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.includes("/api/weather?")) return Response.json(weather);
-      return Response.json(url.includes("/api/airports?") ? { items: [airport], totalCount: 1 } : airport);
+      return Response.json(url.includes("/api/airports?") ? { items: [selectedAirport], totalCount: 1 } : selectedAirport);
     }));
   }
 
@@ -241,6 +241,7 @@ describe("calculator interactions", () => {
     expect(await screen.findByText(/ICON-D2-Prognose/)).toBeTruthy();
     expect(screen.getByText("HW")).toBeTruthy();
     expect(screen.getByText("XW")).toBeTruthy();
+    expect(screen.getByText(/082° \/ 7.8 G 12.4/)).toBeTruthy();
     expect(screen.getByText("TORA")).toBeTruthy();
     expect(screen.getByText("TODA")).toBeTruthy();
     expect(screen.getByText("Geplante Startzeit · UTC · 24 h")).toBeTruthy();
@@ -295,6 +296,38 @@ describe("calculator interactions", () => {
       expect(storedPlan.arrival.airportId).toBe("open-aip-edfe");
       expect(storedPlan.arrival.runwayId).toBe("edfe-08");
     });
+  });
+
+  it("colors takeoff result distances when runway limits are exceeded", async () => {
+    stubAirportSearch({
+      ...airport,
+      runways: [{ ...airport.runways[0], lengthM: 100, toraM: 100, todaM: 100 }],
+    });
+    const user = userEvent.setup();
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    await user.type(screen.getByRole("searchbox", { name: "Flugplatzsuche" }), "EDFE");
+    await user.click(screen.getByRole("button", { name: "Suchen" }));
+    await screen.findByText(/OpenAIP · Stand/);
+
+    expect(screen.getByText("Ground Roll · Startrollstrecke").parentElement?.classList.contains("danger")).toBe(true);
+    expect(screen.getByText("Takeoff Distance · Startstrecke über 15 m").parentElement?.classList.contains("warn")).toBe(true);
+  });
+
+  it("colors landing result distances when LDA is exceeded", async () => {
+    stubAirportSearch({
+      ...airport,
+      runways: [{ ...airport.runways[0], lengthM: 100, ldaM: 100 }],
+    });
+    const user = userEvent.setup();
+    render(<MemoryRouter><FlightPlanProvider><LandingPage /></FlightPlanProvider></MemoryRouter>);
+
+    await user.type(screen.getByRole("searchbox", { name: "Flugplatzsuche" }), "EDFE");
+    await user.click(screen.getByRole("button", { name: "Suchen" }));
+    await screen.findByText(/OpenAIP · Stand/);
+
+    expect(screen.getByText("Landing Roll · Landerollstrecke").parentElement?.classList.contains("danger")).toBe(true);
+    expect(screen.getByText("Landing Distance · Landestrecke über 15 m").parentElement?.classList.contains("danger")).toBe(true);
   });
 
   it("switches the common altitude input to direct density altitude", async () => {
