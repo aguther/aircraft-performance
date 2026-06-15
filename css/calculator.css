@@ -53,12 +53,66 @@
 .takeoff-chart-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 1rem;
 }
 
 .takeoff-chart-header .card-title {
   margin-bottom: 0;
+}
+
+.calculator-details-card {
+  padding: 0;
+}
+
+.calculator-details-card > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.8rem 0.9rem;
+  list-style: none;
+  cursor: pointer;
+}
+
+.calculator-details-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+.calculator-details-card > summary > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.calculator-details-card > summary .card-title {
+  margin-bottom: 0;
+}
+
+.calculator-details-card > summary small {
+  color: var(--text-dim);
+  font-size: 10px;
+}
+
+.calculator-details-card > summary > svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  color: var(--cyan);
+  transition: transform 160ms ease;
+}
+
+.calculator-details-card[open] > summary > svg {
+  transform: rotate(180deg);
+}
+
+.calculator-details-card[open] > summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.calculator-details-body {
+  padding: 0.85rem 0.9rem 0.9rem;
 }
 
 .takeoff-chart-actions {

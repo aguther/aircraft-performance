@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CloudSun, Gauge, Plane, Ruler } from "lucide-react";
+import { CloudSun, Gauge, Plane, Road } from "lucide-react";
 import { calculateTakeoff } from "../aircraft/g115b/calculators";
 import type { TakeoffInputs } from "../aircraft/g115b/types";
 import { useFlightPlan } from "../app/FlightPlanContext";
@@ -14,6 +14,7 @@ import {
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
 import { AirportRunwayInput } from "../components/AirportRunwayInput";
 import { CalculatorContextCard } from "../components/CalculatorContextCard";
+import { CalculatorDetailsCard } from "../components/CalculatorDetailsCard";
 import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { FlightPlanMassImport } from "../components/FlightPlanMassImport";
 import { NumberField } from "../components/NumberField";
@@ -94,7 +95,7 @@ function PipelineCard({ inputs, result }: { inputs: TakeoffInputs; result: Takeo
   ];
 
   return (
-    <CalculatorCard title="Rechenweg">
+    <CalculatorDetailsCard title="Rechenweg" description="Schrittweise Herleitung der berechneten Strecken">
       <div className="pipeline">
         {steps.map((step, index) => (
           <div className="step" key={step.name}>
@@ -110,7 +111,7 @@ function PipelineCard({ inputs, result }: { inputs: TakeoffInputs; result: Takeo
           </div>
         ))}
       </div>
-    </CalculatorCard>
+    </CalculatorDetailsCard>
   );
 }
 
@@ -285,9 +286,8 @@ function ChartCard({ inputs, result, exportContext }: { inputs: TakeoffInputs; r
   };
 
   return (
-    <section className="card takeoff-chart-card">
+    <CalculatorDetailsCard title="Grafische Nachvollziehbarkeit" description="Rechenweg im originalen Flughandbuchdiagramm" wide>
       <div className="takeoff-chart-header">
-        <div className="card-title">Grafische Nachvollziehbarkeit</div>
         <div className="takeoff-chart-actions">
           <label className="takeoff-chart-toggle">
             <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
@@ -315,7 +315,7 @@ function ChartCard({ inputs, result, exportContext }: { inputs: TakeoffInputs; r
         <span>Zuschlag: +{round(result.groundRollMarginMeters)} m</span>
         <span className="takeoff-chart-margin-key">Startstrecke über 15 m inkl. Zuschlag: {result.takeoffDistanceMeters} m</span>
       </div>
-    </section>
+    </CalculatorDetailsCard>
   );
 }
 
@@ -425,12 +425,13 @@ export function TakeoffPage() {
           <SliderField label="Masse" labelDetail="kg · MTOW 920" unit="kg" value={massKg} min={750} max={920} disabled={flightPlan.imports.takeoffMass} onChange={setMassKg} />
           <SliderField label="Zuschlag" unit="%" value={safetyMarginPercent} min={0} max={50} inputMax={100} hint="Grasbahn trocken kurzgeschoren: +15% · Hohes Gras/Schnee: mehr · Hartbelag trocken: 0%" onChange={setSafetyMarginPercent} />
         </CalculatorInputSection>
-        <CalculatorInputSection icon={<Ruler aria-hidden="true" />} title="Pistenbedingungen" description="Neigung und Windkomponente">
+        <CalculatorInputSection icon={<Road aria-hidden="true" />} title="Pistenbedingungen" description="Neigung und Windkomponente">
           <SliderField label="Slope" labelDetail="% · bergauf(+) bergab(−)" unit="%" value={slopePercent} min={-2} max={2} step={0.1} onChange={setSlopePercent} />
           <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} disabled={flightPlan.imports.departureImport} onChange={setWindKt} />
         </CalculatorInputSection>
       </aside>
       <main className="results">
+        <CalculatorContextCard atmosphere={result.atmosphere} warnings={warnings} conditions={result.conditions} />
         <CalculatorCard title="Startleistung">
           <div className="takeoff-summary-heading">
             <Gauge aria-hidden="true" />
@@ -446,7 +447,6 @@ export function TakeoffPage() {
             <MetricItem label="in 15 m Höhe" value={kilometersPerHourToKnots(result.speedAt15mKmh).toFixed(1)} unit="kt" speedType="IAS" subtext={`${result.speedAt15mKmh.toFixed(0)} km/h`} />
           </div>
         </CalculatorCard>
-        <CalculatorContextCard atmosphere={result.atmosphere} warnings={warnings} conditions={result.conditions} />
         <PipelineCard inputs={inputs} result={result} />
         <ChartCard inputs={inputs} result={result} exportContext={{ pressureAltitudeMode, elevationFt, qnhHpa }} />
       </main>

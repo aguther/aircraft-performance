@@ -234,6 +234,19 @@ describe("calculator interactions", () => {
     expect(slopeInput.getAttribute("value")).toBe("1.0");
   });
 
+  it("keeps takeoff calculation details collapsed until requested", async () => {
+    const user = userEvent.setup();
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    const calculationPath = screen.getByText("Rechenweg", { selector: ".calculator-details-card .card-title" }).closest("details")!;
+    const chart = screen.getByText("Grafische Nachvollziehbarkeit", { selector: ".calculator-details-card .card-title" }).closest("details")!;
+    expect(calculationPath.hasAttribute("open")).toBe(false);
+    expect(chart.hasAttribute("open")).toBe(false);
+
+    await user.click(calculationPath.querySelector("summary")!);
+    expect(calculationPath.hasAttribute("open")).toBe(true);
+  });
+
   const airport: Airport = {
     id: "open-aip-edfe",
     name: "Frankfurt-Egelsbach",
