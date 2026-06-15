@@ -224,6 +224,56 @@
   font-size: 10px;
 }
 
+.settings-theme-row {
+  cursor: default;
+}
+
+.settings-theme-row:hover {
+  background: transparent;
+}
+
+.settings-theme-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem;
+  padding: 0.2rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.settings-theme-options button {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.65rem;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.settings-theme-options button:hover {
+  color: var(--text);
+  background: var(--bg-active);
+}
+
+.settings-theme-options button.active {
+  color: var(--cyan);
+  background: var(--bg-active);
+}
+
+.settings-theme-options svg {
+  width: 15px;
+  height: 15px;
+}
+
 .settings-page-row-danger strong,
 .settings-page-row-danger b,
 .settings-page-row-danger > svg {
@@ -241,6 +291,14 @@
 
   .settings-page {
     padding: 1rem;
+  }
+
+  .settings-theme-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .settings-theme-options {
+    grid-column: 1 / -1;
   }
 }
 

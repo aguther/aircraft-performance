@@ -18,6 +18,7 @@ import { TakeoffPage } from "../src/pages/TakeoffPage";
 import { LandingPage } from "../src/pages/LandingPage";
 import { AppHeader } from "../src/components/AppHeader";
 import { defaultAircraft } from "../src/app/aircraft";
+import { SettingsPage } from "../src/pages/SettingsPage";
 
 afterEach(() => {
   cleanup();
@@ -81,6 +82,21 @@ function FlightPlanContextHarness() {
 }
 
 describe("calculator interactions", () => {
+  it("selects the theme directly in settings", async () => {
+    const user = userEvent.setup();
+    const onSelectTheme = vi.fn();
+    render(
+      <MemoryRouter>
+        <SettingsPage preference="auto" onResetFlightPlan={vi.fn()} onSelectTheme={onSelectTheme} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("button", { name: "Automatisch" }).getAttribute("aria-pressed")).toBe("true");
+    await user.click(screen.getByRole("button", { name: "Dunkel" }));
+
+    expect(onSelectTheme).toHaveBeenCalledWith("dark");
+  });
+
   it("keeps the important notice separate from the settings tab", () => {
     render(
       <MemoryRouter>

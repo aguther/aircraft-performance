@@ -22,7 +22,7 @@ export function App() {
   const location = useLocation();
   const { aircraft, availableAircraft, selectAircraft } = useAircraft();
   const { resetFlightPlan } = useFlightPlan();
-  const { preference, resolvedTheme, toggleTheme } = useTheme();
+  const { preference, resolvedTheme, setThemePreference } = useTheme();
   const [usageNoticeOpen, setUsageNoticeOpen] = useState(
     () => !hasAcceptedUsageNotice(),
   );
@@ -93,7 +93,7 @@ export function App() {
         <Route path="/climb.html" element={<ClimbPage />} />
         <Route path="/climb_rate.html" element={<ClimbRatePage />} />
         <Route path="/stall.html" element={<StallPage />} />
-        <Route path="/settings.html" element={<SettingsPage preference={preference} resolvedTheme={resolvedTheme} onResetFlightPlan={resetFlightPlan} onToggleTheme={toggleTheme} />} />
+        <Route path="/settings.html" element={<SettingsPage preference={preference} onResetFlightPlan={resetFlightPlan} onSelectTheme={setThemePreference} />} />
         <Route path="*" element={<HomePage aircraft={aircraft} />} />
       </Routes>
       <UsageNotice

@@ -1,20 +1,22 @@
-import { Moon, RotateCcw, Settings } from "lucide-react";
+import { Laptop, Moon, RotateCcw, Settings, Sun } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import type { ResolvedTheme, ThemePreference } from "../app/theme";
+import type { ThemePreference } from "../app/theme";
 
 export function SettingsPage({
   preference,
-  resolvedTheme,
   onResetFlightPlan,
-  onToggleTheme,
+  onSelectTheme,
 }: {
   preference: ThemePreference;
-  resolvedTheme: ResolvedTheme;
   onResetFlightPlan: () => void;
-  onToggleTheme: () => void;
+  onSelectTheme: (preference: ThemePreference) => void;
 }) {
   const navigate = useNavigate();
-  const themeLabel = preference === "auto" ? "Automatisch" : resolvedTheme === "dark" ? "Dunkel" : "Hell";
+  const themeOptions = [
+    { value: "auto", label: "Automatisch", Icon: Laptop },
+    { value: "light", label: "Hell", Icon: Sun },
+    { value: "dark", label: "Dunkel", Icon: Moon },
+  ] as const;
 
   const resetFlightPlan = () => {
     if (!window.confirm("Neue Flugplanung starten? Alle gespeicherten Eingaben, Flugplätze und übernommenen Werte werden zurückgesetzt.")) return;
@@ -32,11 +34,24 @@ export function SettingsPage({
         </div>
       </section>
       <section className="settings-page-card">
-        <button className="settings-page-row" type="button" onClick={onToggleTheme}>
+        <div className="settings-page-row settings-theme-row">
           <Moon aria-hidden="true" />
           <span><strong>Darstellung</strong><small>Farbschema der Anwendung</small></span>
-          <b>{themeLabel}</b>
-        </button>
+          <div className="settings-theme-options" role="group" aria-label="Farbschema">
+            {themeOptions.map(({ value, label, Icon }) => (
+              <button
+                className={preference === value ? "active" : ""}
+                type="button"
+                aria-pressed={preference === value}
+                onClick={() => onSelectTheme(value)}
+                key={value}
+              >
+                <Icon aria-hidden="true" />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </section>
       <section className="settings-page-card">
         <button className="settings-page-row settings-page-row-danger" type="button" onClick={resetFlightPlan}>
