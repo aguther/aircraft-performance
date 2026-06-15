@@ -18,6 +18,7 @@ import { CalculatorContextCard } from "../components/CalculatorContextCard";
 import { FlightPlanMassImport } from "../components/FlightPlanMassImport";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
+import { landingRunwayWarnings, type RunwayDirection } from "../flight-data";
 
 type LandingResult = ReturnType<typeof calculateLanding>;
 type PressureAltitudeMode = "airport" | "qnh" | "direct";
@@ -328,6 +329,7 @@ export function LandingPage() {
   const [massKg, setMassKg] = useState(920);
   const [windKt, setWindKt] = useState(0);
   const [safetyMarginPercent, setSafetyMarginPercent] = useState(40);
+  const [selectedRunway, setSelectedRunway] = useState<RunwayDirection>();
   const pressureAltitudeFt = pressureAltitudeMode !== "direct" ? pressureAltitudeFromQnh(elevationFt, qnhHpa) : directPressureAltitudeFt;
   const inputs = useMemo<LandingInputs>(() => ({
     pressureAltitudeFt,
@@ -337,6 +339,13 @@ export function LandingPage() {
     safetyMarginPercent,
   }), [pressureAltitudeFt, oatC, massKg, windKt, safetyMarginPercent]);
   const result = useMemo(() => calculateLanding(inputs), [inputs]);
+  const warnings = useMemo(
+    () => [
+      ...result.warnings,
+      ...landingRunwayWarnings(pressureAltitudeMode === "airport" ? selectedRunway : undefined, result.landingRollMeters, result.landingDistanceMeters),
+    ],
+    [pressureAltitudeMode, result, selectedRunway],
+  );
 
   useEffect(() => {
     document.body.classList.add("runway-calculator");
@@ -364,6 +373,7 @@ export function LandingPage() {
                 weatherNow={flightPlan.imports.arrivalWeatherNow}
                 onEnabledChange={(value) => updateImports({ arrivalImport: value })}
                 onWeatherNowChange={(enabled) => updateImports({ arrivalWeatherNow: enabled })}
+                onRunwayChange={setSelectedRunway}
                 onApply={(values) => {
                   if (values.elevationFt != null) setElevationFt(values.elevationFt);
                   if (values.qnhHpa != null) setQnhHpa(values.qnhHpa);
@@ -415,7 +425,7 @@ export function LandingPage() {
         </div>
       </aside>
       <main className="results">
-        <CalculatorContextCard atmosphere={result.atmosphere} warnings={result.warnings} conditions={result.conditions} />
+        <CalculatorContextCard atmosphere={result.atmosphere} warnings={warnings} conditions={result.conditions} />
         <PipelineCard inputs={inputs} result={result} />
         <CalculatorCard title="Ergebnis">
           <div className="result-grid">

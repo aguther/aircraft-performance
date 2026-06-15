@@ -5,6 +5,8 @@ import {
   normalizeOpenAipAirport,
   normalizeOpenMeteoCurrent,
   normalizeOpenMeteoForecast,
+  landingRunwayWarnings,
+  takeoffRunwayWarnings,
 } from "../src/flight-data";
 import { openAipAirportFixture } from "./fixtures/openAipAirport";
 
@@ -67,5 +69,24 @@ describe("flight data models and OpenAIP adapter", () => {
 
     expect(current.validAt).toBe("2026-06-14T19:15Z");
     expect(current.source.model).toBe("ICON-D2");
+  });
+
+  it("warns against directional takeoff distances", () => {
+    const runway = normalizeOpenAipAirport(openAipAirportFixture)!.runways[0];
+
+    expect(takeoffRunwayWarnings(runway, 1450, 1600)).toEqual(expect.arrayContaining([
+      expect.objectContaining({ danger: true, text: expect.stringContaining("TORA 1400 m") }),
+      expect.objectContaining({ danger: false, text: expect.stringContaining("TODA 1400 m") }),
+    ]));
+    expect(takeoffRunwayWarnings(runway, 1200, 1500)[0].text).toContain("noch keine 15 m");
+  });
+
+  it("uses LDA for landing availability warnings", () => {
+    const runway = normalizeOpenAipAirport(openAipAirportFixture)!.runways[0];
+
+    expect(landingRunwayWarnings(runway, 900, 1350)).toEqual([
+      expect.objectContaining({ danger: true, text: expect.stringContaining("LDA 1300 m") }),
+    ]);
+    expect(landingRunwayWarnings(runway, 900, 1200)).toEqual([]);
   });
 });

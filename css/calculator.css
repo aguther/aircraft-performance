@@ -752,6 +752,18 @@
   gap: 0.4rem;
 }
 
+.airport-declared-distances,
+.airport-weather-basics,
+.airport-wind-components {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.airport-weather-basics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .airport-weather {
   display: flex;
   flex-direction: column;
@@ -805,6 +817,51 @@
 
 .airport-preview-value.warn {
   color: var(--amber);
+}
+
+.airport-wind-compact {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 0.4rem;
+}
+
+.airport-wind-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.1rem 0.5rem;
+  align-items: center;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+}
+
+.airport-wind-main .airport-preview-label {
+  grid-column: 1 / -1;
+}
+
+.airport-wind-gust {
+  color: var(--text-dim);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.airport-wind-gust span {
+  font-size: 0.82em;
+}
+
+.airport-wind-components {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 560px) {
+  .airport-declared-distances {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .airport-wind-compact {
+    grid-template-columns: 1fr;
+  }
 }
 
 .airport-sources {

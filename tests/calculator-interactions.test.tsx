@@ -239,23 +239,22 @@ describe("calculator interactions", () => {
     await user.click(screen.getByRole("button", { name: "Suchen" }));
     expect(await screen.findByText(/OpenAIP · Stand/)).toBeTruthy();
     expect(await screen.findByText(/ICON-D2-Prognose/)).toBeTruthy();
-    expect(screen.getByText("Gegenwind")).toBeTruthy();
+    expect(screen.getByText("HW")).toBeTruthy();
+    expect(screen.getByText("CW")).toBeTruthy();
+    expect(screen.getByText("TORA")).toBeTruthy();
+    expect(screen.getByText("TODA")).toBeTruthy();
     expect(screen.getByText("Geplante Startzeit · UTC · 24 h")).toBeTruthy();
-    await user.click(screen.getByRole("checkbox", { name: "Flugplatzwerte übernehmen" }));
+    await user.click(screen.getByRole("checkbox", { name: "Werte übernehmen" }));
     expect(screen.getByRole("button", { name: "Elevation" }).hasAttribute("disabled")).toBe(true);
     const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;
     const qnhField = within(atmosphereSection).getByText("QNH", { selector: ".field-label" }).parentElement!;
-    expect(qnhField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(false);
+    expect(qnhField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(true);
     const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".section-header" }).parentElement!;
     const windField = within(runwaySection).getByText("Wind", { selector: ".field-label" }).parentElement!;
-    expect(windField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(false);
-    await user.click(screen.getByRole("checkbox", { name: "Wetterwerte übernehmen" }));
-    expect(qnhField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(true);
     expect(windField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(true);
-    await user.click(screen.getByRole("checkbox", { name: "Flugplatzwerte übernommen" }));
+    await user.click(screen.getByRole("checkbox", { name: "Werte übernommen" }));
     expect(screen.getByRole("button", { name: "Elevation" }).hasAttribute("disabled")).toBe(false);
-    expect(qnhField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(true);
-    await user.click(screen.getByRole("checkbox", { name: "Wetterwerte übernommen" }));
+    expect(qnhField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(false);
     await user.click(screen.getByRole("button", { name: "Elevation" }));
 
     expect(within(atmosphereSection).getByDisplayValue("384")).toBeTruthy();
@@ -263,8 +262,7 @@ describe("calculator interactions", () => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
       expect(storedPlan.departure.airportId).toBe("open-aip-edfe");
       expect(storedPlan.departure.runwayId).toBe("edfe-08");
-      expect(storedPlan.imports.departureAirport).toBe(false);
-      expect(storedPlan.imports.departureWeather).toBe(false);
+      expect(storedPlan.imports.departureImport).toBe(false);
       expect(storedPlan.departure.plannedAt).toMatch(/Z$/);
     });
   });
@@ -280,14 +278,14 @@ describe("calculator interactions", () => {
     expect(screen.getByText("Geplante Landezeit · UTC · 24 h")).toBeTruthy();
     const plannedTime = screen.getByText("Geplante Landezeit · UTC · 24 h").parentElement!.querySelector("input")!;
     expect(plannedTime.hasAttribute("disabled")).toBe(false);
-    await user.click(screen.getByRole("checkbox", { name: "Jetzt · aktuelle ICON-D2-Modellbedingungen" }));
+    await user.click(screen.getByRole("checkbox", { name: "Jetzt" }));
     expect(plannedTime.hasAttribute("disabled")).toBe(true);
     await waitFor(() => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
       expect(storedPlan.imports.arrivalWeatherNow).toBe(true);
     });
-    await user.click(screen.getByRole("checkbox", { name: "Flugplatzwerte übernehmen" }));
-    await user.click(screen.getByRole("checkbox", { name: "Flugplatzwerte übernommen" }));
+    await user.click(screen.getByRole("checkbox", { name: "Werte übernehmen" }));
+    await user.click(screen.getByRole("checkbox", { name: "Werte übernommen" }));
     await user.click(screen.getByRole("button", { name: "Elevation" }));
 
     const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;

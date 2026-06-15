@@ -76,6 +76,7 @@ export function AirportRunwayInput({
   onEnabledChange,
   onWeatherNowChange,
   onApply,
+  onRunwayChange,
 }: Readonly<{
   operation: AirportRunwayOperation;
   enabled: boolean;
@@ -83,6 +84,7 @@ export function AirportRunwayInput({
   onEnabledChange: (enabled: boolean) => void;
   onWeatherNowChange: (enabled: boolean) => void;
   onApply: (values: AirportRunwayValues) => void;
+  onRunwayChange?: (runway?: RunwayDirection) => void;
 }>) {
   const { flightPlan, updateArrival, updateDeparture } = useFlightPlan();
   const savedSelection = operation === "departure" ? flightPlan.departure : flightPlan.arrival;
@@ -122,10 +124,9 @@ export function AirportRunwayInput({
     : null;
   const weatherValues = weather && runway ? weatherValuesForRunway(weather, runway) : null;
   const weatherTitle = buildWeatherTitle(weather, weatherNow, weatherLoading);
-  const headwindLabel = windComponents && windComponents.headwindKt < 0 ? "Rückenwind" : "Gegenwind";
   const headwindStatus = windStatus(windComponents ? windComponents.headwindKt >= 0 : null);
   const crosswindStatus = windStatus(windComponents ? Math.abs(windComponents.crosswindKt) < 10 : null);
-  const gustUnit = weather?.windGustKt == null ? undefined : "kt" as const;
+  const headwindCode = windComponents && windComponents.headwindKt < 0 ? "TW" : "HW";
 
   const saveSelection = (selectedAirport: Airport, selectedRunway: RunwayDirection, selectedPlannedAt: string) => {
     const selection = {
@@ -142,6 +143,10 @@ export function AirportRunwayInput({
     onApply({ elevationFt: airport.elevationFt });
     saveSelection(airport, runway, plannedAt);
   }, [airport?.id, enabled, plannedAt, runway?.id]);
+
+  useEffect(() => {
+    onRunwayChange?.(runway);
+  }, [onRunwayChange, runway]);
 
   useEffect(() => {
     if (!enabled || !weatherValues) return;
@@ -274,26 +279,42 @@ export function AirportRunwayInput({
                 <AirportPreviewValue label="RWY true / mag" value={`${formatDirection(runway.trueHeadingDeg)}° / ${formatDirection(runway.magneticHeadingDeg)}°`} />
                 <AirportPreviewValue label="Bahnlänge" value={runway.lengthM} unit="m" />
               </div>
+              <div className="airport-declared-distances" aria-label="Verfügbare Pistenstrecken">
+                <AirportPreviewValue label="TORA" value={runway.toraM ?? "–"} unit={runway.toraM != null ? "m" : undefined} />
+                <AirportPreviewValue label="TODA" value={runway.todaM ?? "–"} unit={runway.todaM != null ? "m" : undefined} />
+                <AirportPreviewValue label="ASDA" value={runway.asdaM ?? "–"} unit={runway.asdaM != null ? "m" : undefined} />
+                <AirportPreviewValue label="LDA" value={runway.ldaM ?? "–"} unit={runway.ldaM != null ? "m" : undefined} />
+              </div>
               {weatherError && !weather ? <div className="airport-status error">{weatherError}</div> : null}
               <div className={`airport-weather${!weather || weatherLoading ? " airport-weather--loading" : ""}`}>
                 <div className="airport-weather-title">{weatherTitle}</div>
-                <div className="airport-preview">
+                <div className="airport-weather-basics">
                   <AirportPreviewValue label="QNH" value={weather?.qnhHpa.toFixed(1) ?? "–"} unit={weather ? "hPa" : undefined} />
                   <AirportPreviewValue label="OAT" value={weather?.temperatureC.toFixed(1) ?? "–"} unit={weather ? "°C" : undefined} />
-                  <AirportPreviewValue label="Wind true" value={weather ? `${formatDirection(weather.windDirectionTrueDeg)}° / ${weather.windSpeedKt.toFixed(1)}` : "–"} unit={weather ? "kt" : undefined} />
-                  <AirportPreviewValue label="Böen" value={weather?.windGustKt?.toFixed(1) ?? "–"} unit={gustUnit} />
-                  <AirportPreviewValue
-                    label={headwindLabel}
-                    value={windComponents ? Math.abs(windComponents.headwindKt).toFixed(1) : "–"}
-                    unit={windComponents ? "kt" : undefined}
-                    status={headwindStatus}
-                  />
-                  <AirportPreviewValue
-                    label="Seitenwind"
-                    value={windComponents ? Math.abs(windComponents.crosswindKt).toFixed(1) : "–"}
-                    unit={windComponents ? "kt" : undefined}
-                    status={crosswindStatus}
-                  />
+                </div>
+                <div className="airport-wind-compact">
+                  <div className="airport-wind-main">
+                    <span className="airport-preview-label">Wind true</span>
+                    <strong className="airport-preview-value">
+                      {weather ? `${formatDirection(weather.windDirectionTrueDeg)}° / ${weather.windSpeedKt.toFixed(1)}` : "–"}
+                      {weather ? <span className="airport-preview-unit">kt</span> : null}
+                    </strong>
+                    {weather?.windGustKt != null ? <span className="airport-wind-gust">G {weather.windGustKt.toFixed(1)} <span>kt</span></span> : null}
+                  </div>
+                  <div className="airport-wind-components">
+                    <AirportPreviewValue
+                      label={headwindCode}
+                      value={windComponents ? Math.abs(windComponents.headwindKt).toFixed(1) : "–"}
+                      unit={windComponents ? "kt" : undefined}
+                      status={headwindStatus}
+                    />
+                    <AirportPreviewValue
+                      label="CW"
+                      value={windComponents ? Math.abs(windComponents.crosswindKt).toFixed(1) : "–"}
+                      unit={windComponents ? "kt" : undefined}
+                      status={crosswindStatus}
+                    />
+                  </div>
                 </div>
               </div>
             </>
