@@ -96,7 +96,7 @@ function CalculationPath({ inputs, result }: { inputs: TakeoffInputs; result: Ta
   return (
     <div className="calculation-path-grid">
       {steps.map((step, index) => (
-        <div className={`calculation-path-row${index === steps.length - 1 ? " final" : ""}`} key={step.name}>
+        <div className="calculation-path-row" key={step.name}>
           <span className="calculation-path-index">{index + 1}</span>
           <div>
             <div className="step-name">{step.name}</div>
@@ -289,24 +289,26 @@ function TraceabilityCard({ inputs, result, exportContext }: { inputs: TakeoffIn
             {view === "chart" ? "Rechenweg im originalen Flughandbuchdiagramm" : "Schrittweise Herleitung der berechneten Strecken"}
           </div>
         </div>
+      </div>
+      <div className="traceability-toolbar">
         <div className="traceability-tabs" role="tablist" aria-label="Nachvollziehbarkeit">
           <button className={view === "chart" ? "active" : ""} type="button" role="tab" aria-selected={view === "chart"} onClick={() => setView("chart")}>Diagramm</button>
           <button className={view === "path" ? "active" : ""} type="button" role="tab" aria-selected={view === "path"} onClick={() => setView("path")}>Rechenweg</button>
         </div>
+        {view === "chart" ? (
+          <div className="takeoff-chart-actions">
+            <label className="takeoff-chart-toggle">
+              <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
+              <span>Rechenweg</span>
+            </label>
+            <button className="takeoff-chart-download" type="button" disabled={exporting} onClick={exportImage}>
+              {exporting ? "Erzeuge PNG…" : "Als Bild speichern"}
+            </button>
+          </div>
+        ) : null}
       </div>
       {view === "path" ? <CalculationPath inputs={inputs} result={result} /> : (
         <>
-          <div className="takeoff-chart-header">
-            <div className="takeoff-chart-actions">
-              <label className="takeoff-chart-toggle">
-                <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
-                <span>Rechenweg</span>
-              </label>
-              <button className="takeoff-chart-download" type="button" disabled={exporting} onClick={exportImage}>
-                {exporting ? "Erzeuge PNG…" : "Als Bild speichern"}
-              </button>
-            </div>
-          </div>
           <div className="takeoff-chart-scroll">
             <div className={`takeoff-chart-stage${overlayVisible ? "" : " overlay-hidden"}`}>
               <img className="takeoff-chart-image" src={CHART_SOURCE} alt="Originales Flughandbuchdiagramm Bild 5.3.7 Startstrecke" width="1516" height="1038" />
