@@ -280,9 +280,20 @@ export function AirportRunwayInput({
                 <AirportPreviewValue label="Bahnlänge" value={runway.lengthM} unit="m" />
               </div>
               <div className="airport-declared-distances" aria-label="Verfügbare Pistenstrecken">
-                <AirportPreviewValue label="TORA" value={runway.toraM ?? "–"} unit={runway.toraM != null ? "m" : undefined} />
-                <AirportPreviewValue label="TODA" value={runway.todaM ?? "–"} unit={runway.todaM != null ? "m" : undefined} />
-                <AirportPreviewValue label="ASDA" value={runway.asdaM ?? "–"} unit={runway.asdaM != null ? "m" : undefined} />
+                <div className="airport-preview-item airport-declared-combined">
+                  <div>
+                    <span className="airport-preview-label">TORA</span>
+                    <strong className="airport-preview-value">
+                      {runway.toraM ?? "–"}{runway.toraM != null ? <span className="airport-preview-unit">m</span> : null}
+                    </strong>
+                  </div>
+                  <div>
+                    <span className="airport-preview-label">TODA</span>
+                    <strong className="airport-preview-value">
+                      {runway.todaM ?? "–"}{runway.todaM != null ? <span className="airport-preview-unit">m</span> : null}
+                    </strong>
+                  </div>
+                </div>
                 <AirportPreviewValue label="LDA" value={runway.ldaM ?? "–"} unit={runway.ldaM != null ? "m" : undefined} />
               </div>
               {weatherError && !weather ? <div className="airport-status error">{weatherError}</div> : null}
@@ -302,18 +313,20 @@ export function AirportRunwayInput({
                     {weather?.windGustKt != null ? <span className="airport-wind-gust">G {weather.windGustKt.toFixed(1)} <span>kt</span></span> : null}
                   </div>
                   <div className="airport-wind-components">
-                    <AirportPreviewValue
-                      label={headwindCode}
-                      value={windComponents ? Math.abs(windComponents.headwindKt).toFixed(1) : "–"}
-                      unit={windComponents ? "kt" : undefined}
-                      status={headwindStatus}
-                    />
-                    <AirportPreviewValue
-                      label="CW"
-                      value={windComponents ? Math.abs(windComponents.crosswindKt).toFixed(1) : "–"}
-                      unit={windComponents ? "kt" : undefined}
-                      status={crosswindStatus}
-                    />
+                    <div>
+                      <span className="airport-preview-label">{headwindCode}</span>
+                      <strong className={`airport-preview-value${headwindStatus ? ` ${headwindStatus}` : ""}`}>
+                        {windComponents ? Math.abs(windComponents.headwindKt).toFixed(1) : "–"}
+                        {windComponents ? <span className="airport-preview-unit">kt</span> : null}
+                      </strong>
+                    </div>
+                    <div>
+                      <span className="airport-preview-label">XW</span>
+                      <strong className={`airport-preview-value${crosswindStatus ? ` ${crosswindStatus}` : ""}`}>
+                        {windComponents ? Math.abs(windComponents.crosswindKt).toFixed(1) : "–"}
+                        {windComponents ? <span className="airport-preview-unit">kt</span> : null}
+                      </strong>
+                    </div>
                   </div>
                 </div>
               </div>

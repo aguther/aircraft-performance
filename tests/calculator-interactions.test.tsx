@@ -240,7 +240,7 @@ describe("calculator interactions", () => {
     expect(await screen.findByText(/OpenAIP · Stand/)).toBeTruthy();
     expect(await screen.findByText(/ICON-D2-Prognose/)).toBeTruthy();
     expect(screen.getByText("HW")).toBeTruthy();
-    expect(screen.getByText("CW")).toBeTruthy();
+    expect(screen.getByText("XW")).toBeTruthy();
     expect(screen.getByText("TORA")).toBeTruthy();
     expect(screen.getByText("TODA")).toBeTruthy();
     expect(screen.getByText("Geplante Startzeit · UTC · 24 h")).toBeTruthy();

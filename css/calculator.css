@@ -756,12 +756,22 @@
 .airport-weather-basics,
 .airport-wind-components {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.4rem;
 }
 
-.airport-weather-basics {
+.airport-declared-combined {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.airport-declared-combined > div,
+.airport-wind-components > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.1rem;
 }
 
 .airport-weather {
@@ -821,7 +831,7 @@
 
 .airport-wind-compact {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.4rem;
 }
 
@@ -852,16 +862,10 @@
 
 .airport-wind-components {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-@media (max-width: 560px) {
-  .airport-declared-distances {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .airport-wind-compact {
-    grid-template-columns: 1fr;
-  }
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
 }
 
 .airport-sources {
