@@ -2156,14 +2156,12 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 }
 
 @media (max-width: 640px) {
-  input[type="date"],
-  input[type="number"],
-  input[type="search"],
-  input[type="text"],
-  input[type="time"],
-  select,
-  select[class],
-  textarea {
+  .input-wrap input[type="number"],
+  .input-wrap input[type="text"],
+  .airport-field input:not(:disabled),
+  .airport-field select:not(:disabled),
+  .airport-datetime-control input:not(:disabled),
+  textarea:not(:disabled) {
     font-size: 16px;
   }
 
