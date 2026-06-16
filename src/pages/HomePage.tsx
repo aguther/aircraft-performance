@@ -3,10 +3,6 @@ import { Link } from "react-router-dom";
 import { Plane, RotateCcw, ShieldCheck, Weight } from "lucide-react";
 import { g115bData } from "../aircraft/g115b/data";
 import { useFlightPlan } from "../app/FlightPlanContext";
-import {
-  calculatorRegistry,
-  type CalculatorDefinition,
-} from "../app/calculators";
 
 type HomePageProps = {
   aircraft: AircraftDefinition;
@@ -14,49 +10,6 @@ type HomePageProps = {
   onResetFlightPlan: () => void;
   onSelectAircraft: (aircraftId: string) => void;
 };
-
-type CalculatorGroupProps = {
-  title: string;
-  description: string;
-  calculators: CalculatorDefinition[];
-};
-
-function CalculatorGroup({
-  title,
-  description,
-  calculators,
-}: CalculatorGroupProps) {
-  return (
-    <section className="idx-group">
-      <div className="idx-group-head">
-        <div className="idx-section">{title}</div>
-        <div className="idx-group-copy">{description}</div>
-      </div>
-      <div className="idx-grid">
-        {calculators.map((calculator) => {
-          const content = (
-            <>
-            <div className="idx-icon">{calculator.icon}</div>
-            <div className="idx-left">
-              <div className="idx-tag">{calculator.tag}</div>
-              <div className="idx-title">{calculator.title}</div>
-              <div className="idx-desc">{calculator.description}</div>
-              <div className="idx-meta">{calculator.source}</div>
-            </div>
-            <div className="idx-arrow">→</div>
-            </>
-          );
-
-          return (
-            <Link className="idx-card" to={calculator.href} key={calculator.href}>
-              {content}
-            </Link>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
 
 export function HomePage({
   aircraft,
@@ -69,9 +22,6 @@ export function HomePage({
   const selectedEmptyAircraft =
     g115bData.weightBalance.emptyAircraft.find((entry) => entry.name === plan.registration) ??
     g115bData.weightBalance.emptyAircraft[0];
-  const availableCalculators = calculatorRegistry.filter((calculator) =>
-    aircraft.capabilities.includes(calculator.capability),
-  );
   const startFuelMassKg = plan.startFuelLiters * g115bData.weightBalance.fuelDensityKgPerLiter;
 
   const resetFlightPlan = () => {
@@ -144,21 +94,6 @@ export function HomePage({
           <Link className="idx-secondary-link" to="/weight_balance.html">Beladung bearbeiten</Link>
         </div>
       </section>
-
-      <CalculatorGroup
-        title="Rechner"
-        description="Rechner für Beladung, Flugleistung und Streckenplanung."
-        calculators={availableCalculators.filter(
-          (calculator) => calculator.group === "planning",
-        )}
-      />
-      <CalculatorGroup
-        title="Information & Referenz"
-        description="Ergänzende Leistungswerte außerhalb der normalen Flugplanung."
-        calculators={availableCalculators.filter(
-          (calculator) => calculator.group === "reference",
-        )}
-      />
     </main>
   );
 }
