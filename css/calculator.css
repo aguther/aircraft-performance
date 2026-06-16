@@ -806,6 +806,7 @@
   justify-content: center;
   gap: 0.35rem;
   min-height: 38px;
+  min-width: 6.5rem;
   padding: 0.65rem 0.75rem;
   border: 1px solid var(--border-strong);
   border-radius: 12px;
@@ -1027,6 +1028,14 @@
   width: 1em;
   height: 1em;
   animation: airport-loading-spin 900ms linear infinite;
+}
+
+.airport-loading-indicator.idle {
+  visibility: hidden;
+}
+
+.airport-loading-indicator.idle svg {
+  animation: none;
 }
 
 @keyframes airport-loading-spin {
@@ -2149,6 +2158,10 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 @media (max-width: 640px) {
   .airport-search {
     grid-template-columns: 1fr;
+  }
+
+  .airport-search button {
+    width: 100%;
   }
 
   .stall-calculator,

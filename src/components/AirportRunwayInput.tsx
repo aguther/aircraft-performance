@@ -45,9 +45,9 @@ function AirportPreviewValue({ label, value, unit, status }: Readonly<{ label: s
   );
 }
 
-function LoadingIndicator({ label }: Readonly<{ label: string }>) {
+function LoadingIndicator({ active, label }: Readonly<{ active: boolean; label: string }>) {
   return (
-    <span className="airport-loading-indicator" aria-label={label}>
+    <span className={`airport-loading-indicator${active ? "" : " idle"}`} aria-hidden={!active} aria-label={active ? label : undefined}>
       <RefreshCw aria-hidden="true" />
     </span>
   );
@@ -260,19 +260,13 @@ export function AirportRunwayInput({
           {!airport && !error && !loading ? <small aria-hidden="true">ICAO-Code oder Namen eingeben.</small> : null}
         </label>
         <button type="submit" disabled={loading}>
-          {loading ? <LoadingIndicator label="Flugplatzsuche läuft" /> : null}
+          <LoadingIndicator active={loading} label="Flugplatzsuche läuft" />
           <span>{loading ? "Lädt…" : "Suchen"}</span>
         </button>
       </form>
       {error ? <div className="airport-status error">{error}</div> : null}
       {!airport && !error ? (
         <div className="airport-empty-state">
-          {loading ? (
-            <div className="airport-status loading">
-              <LoadingIndicator label="Flugplatzdaten werden geladen" />
-              <span>Flugplatzdaten werden geladen…</span>
-            </div>
-          ) : null}
           <label className="airport-field">
             <span>Flugplatz</span>
             <input type="text" value="Noch kein Flugplatz ausgewählt" disabled readOnly />
@@ -313,7 +307,10 @@ export function AirportRunwayInput({
             <AirportPreviewValue label="LDA" value="–" />
           </div>
           <div className="airport-weather airport-weather--loading">
-            <div className="airport-weather-title">Wetterdaten nach Flugplatzauswahl</div>
+            <div className="airport-weather-title">
+              <LoadingIndicator active={false} label="Wetterdaten werden geladen" />
+              <span>Wetterdaten nach Flugplatzauswahl</span>
+            </div>
             <div className="airport-weather-basics">
               <AirportPreviewValue label="QNH" value="–" />
               <AirportPreviewValue label="OAT" value="–" />
@@ -405,7 +402,7 @@ export function AirportRunwayInput({
               {weatherError && !weather ? <div className="airport-status error">{weatherError}</div> : null}
               <div className={`airport-weather${!weather || weatherLoading ? " airport-weather--loading" : ""}`}>
                 <div className="airport-weather-title">
-                  {weatherLoading ? <LoadingIndicator label="Wetterdaten werden geladen" /> : null}
+                  <LoadingIndicator active={weatherLoading} label="Wetterdaten werden geladen" />
                   <span>{weatherTitle}</span>
                 </div>
                 <div className="airport-weather-basics">
