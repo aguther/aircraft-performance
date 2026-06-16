@@ -257,6 +257,7 @@ export function AirportRunwayInput({
             placeholder="ICAO oder Name"
             onChange={(event) => setSearch(event.target.value.toLocaleUpperCase("de-DE"))}
           />
+          {!airport && !error && !loading ? <small aria-hidden="true">ICAO-Code oder Namen eingeben.</small> : null}
         </label>
         <button type="submit" disabled={loading}>
           {loading ? <LoadingIndicator label="Flugplatzsuche läuft" /> : null}
@@ -266,10 +267,12 @@ export function AirportRunwayInput({
       {error ? <div className="airport-status error">{error}</div> : null}
       {!airport && !error ? (
         <div className="airport-empty-state">
-          <div className={`airport-status${loading ? " loading" : ""}`}>
-            {loading ? <LoadingIndicator label="Flugplatzdaten werden geladen" /> : null}
-            <span>{loading ? "Flugplatzdaten werden geladen…" : "Bitte Flugplatz über ICAO-Code oder Namen suchen."}</span>
-          </div>
+          {loading ? (
+            <div className="airport-status loading">
+              <LoadingIndicator label="Flugplatzdaten werden geladen" />
+              <span>Flugplatzdaten werden geladen…</span>
+            </div>
+          ) : null}
           <label className="airport-field">
             <span>Flugplatz</span>
             <input type="text" value="Noch kein Flugplatz ausgewählt" disabled readOnly />
