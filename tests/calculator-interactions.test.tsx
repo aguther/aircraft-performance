@@ -369,6 +369,9 @@ describe("calculator interactions", () => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
       expect(storedPlan.imports.arrivalWeatherNow).toBe(true);
     });
+    await waitFor(() => {
+      expect((screen.getByRole("checkbox", { name: "Werte übernommen" }) as HTMLInputElement).checked).toBe(true);
+    });
     await user.click(screen.getByRole("checkbox", { name: "Werte übernommen" }));
     await user.click(screen.getByRole("button", { name: "Elevation" }));
 

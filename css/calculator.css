@@ -2038,7 +2038,7 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   font-weight: 800;
 }
 
-@media (min-width: 1280px) and (min-height: 820px) {
+@media (min-width: 1366px) and (min-height: 820px) {
   .page-layout {
     grid-template-columns: minmax(336px, 372px) minmax(0, 1fr);
   }
@@ -2142,6 +2142,43 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 
   .wb-chart {
     max-height: 250px;
+  }
+}
+
+@media (max-width: 1365px) {
+  .page-layout,
+  .compact-calculator-layout,
+  .runway-calculator .page-layout,
+  .cruise-calculator .page-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar,
+  .runway-calculator .sidebar,
+  .cruise-calculator .sidebar {
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .results,
+  .runway-calculator .results {
+    min-height: auto;
+  }
+
+  .takeoff-chart-scroll,
+  .runway-calculator .takeoff-chart-scroll,
+  .cruise-calculator .takeoff-chart-scroll {
+    overflow-x: hidden;
+  }
+
+  .takeoff-chart-stage,
+  .runway-calculator .takeoff-chart-stage,
+  .cruise-calculator .takeoff-chart-stage {
+    min-width: 0;
+    width: 100%;
   }
 }
 
