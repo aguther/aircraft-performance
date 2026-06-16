@@ -220,6 +220,26 @@ function timestamp(date: Date) {
 }
 
 async function exportChartImage(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext) {
+  const { canvas, exportDate } = await createTakeoffExportCanvas(inputs, result, exportContext);
+  const blob = await canvasToBlob(canvas);
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Startstreckenberechnung.png`, "image/png", "Grob G115B Startstreckenberechnung");
+}
+
+async function exportChartPdf(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext) {
+  const { canvas, exportDate } = await createTakeoffExportCanvas(inputs, result, exportContext);
+  const { jsPDF } = await import("jspdf");
+  const pdf = new jsPDF({
+    compress: true,
+    format: [canvas.width, canvas.height],
+    orientation: "portrait",
+    unit: "px",
+  });
+  pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, canvas.width, canvas.height);
+  const blob = pdf.output("blob");
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Startstreckenberechnung.pdf`, "application/pdf", "Grob G115B Startstreckenberechnung");
+}
+
+async function createTakeoffExportCanvas(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext) {
   const exportDate = new Date();
   const headerHeight = 745;
   const canvas = document.createElement("canvas");
@@ -278,11 +298,13 @@ async function exportChartImage(inputs: TakeoffInputs, result: TakeoffResult, ex
   context.stroke();
   context.restore();
 
-  const blob = await canvasToBlob(canvas);
-  const fileName = `${timestamp(exportDate)}Z Grob G115B Startstreckenberechnung.png`;
-  const file = new File([blob], fileName, { type: "image/png" });
+  return { canvas, exportDate };
+}
+
+async function saveExportBlob(blob: Blob, fileName: string, type: string, title: string) {
+  const file = new File([blob], fileName, { type });
   if (navigator.share && navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ files: [file], title: "Grob G115B Startstreckenberechnung" });
+    await navigator.share({ files: [file], title });
     return;
   }
   const link = document.createElement("a");
@@ -297,18 +319,29 @@ async function exportChartImage(inputs: TakeoffInputs, result: TakeoffResult, ex
 function TraceabilityCard({ inputs, result, exportContext }: { inputs: TakeoffInputs; result: TakeoffResult; exportContext: ExportContext }) {
   const [view, setView] = useState<"chart" | "path">("chart");
   const [overlayVisible, setOverlayVisible] = useState(true);
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
   const points = createChartPoints(inputs, result);
   const finalDistancePoint: ChartPoint = [1227, chartDistanceY(result.takeoffDistanceMeters)];
 
   const exportImage = async () => {
-    setExporting(true);
+    setExporting("png");
     try {
       await exportChartImage(inputs, result, exportContext);
     } catch (error) {
       if (!(error instanceof DOMException && error.name === "AbortError")) console.error(error);
     } finally {
-      setExporting(false);
+      setExporting(null);
+    }
+  };
+
+  const exportPdf = async () => {
+    setExporting("pdf");
+    try {
+      await exportChartPdf(inputs, result, exportContext);
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) console.error(error);
+    } finally {
+      setExporting(null);
     }
   };
 
@@ -333,8 +366,11 @@ function TraceabilityCard({ inputs, result, exportContext }: { inputs: TakeoffIn
               <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
               <span>Rechenweg</span>
             </label>
-            <button className="takeoff-chart-download" type="button" disabled={exporting} onClick={exportImage}>
-              {exporting ? "Erzeuge PNG…" : "Als Bild speichern"}
+            <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={exportImage}>
+              {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
+            </button>
+            <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={exportPdf}>
+              {exporting === "pdf" ? "Erzeuge PDF…" : "PDF speichern"}
             </button>
           </div>
         ) : null}
