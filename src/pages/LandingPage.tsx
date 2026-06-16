@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { CloudSun, Gauge, Plane, Road } from "lucide-react";
 import { calculateLanding } from "../aircraft/g115b/calculators";
 import { g115bData } from "../aircraft/g115b/data";
 import type { LandingInputs } from "../aircraft/g115b/types";
@@ -15,10 +16,12 @@ import {
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
 import { AirportRunwayInput } from "../components/AirportRunwayInput";
 import { CalculatorContextCard } from "../components/CalculatorContextCard";
+import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { FlightPlanMassImport } from "../components/FlightPlanMassImport";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
 import { landingRunwayWarnings, type RunwayDirection } from "../flight-data";
+import type { Airport } from "../flight-data";
 
 type LandingResult = ReturnType<typeof calculateLanding>;
 type PressureAltitudeMode = "airport" | "qnh" | "direct";
@@ -35,6 +38,37 @@ function formatWindLabel(windKt: number) {
   const windKmh = knotsToKilometersPerHour(windKt);
   if (windKt === 0) return "Kein Wind";
   return `${Math.abs(windKt)} kt (${Math.abs(windKmh).toFixed(1)} km/h) ${windKt > 0 ? "HW" : "TW"}`;
+}
+
+function formatAtmosphereSummary({
+  airport,
+  elevationFt,
+  mode,
+  oatC,
+  pressureAltitudeFt,
+  qnhHpa,
+  runway,
+  weatherValues,
+}: {
+  airport?: Airport;
+  elevationFt: number;
+  mode: PressureAltitudeMode;
+  oatC: number;
+  pressureAltitudeFt: number;
+  qnhHpa: number;
+  runway?: RunwayDirection;
+  weatherValues?: { qnhHpa?: number; oatC?: number };
+}) {
+  if (mode === "airport") {
+    const airportLabel = airport ? `${airport.icaoCode ? `${airport.icaoCode} · ` : ""}${airport.name}` : "Noch kein Flugplatz";
+    const runwayLabelText = runway ? ` · RWY ${runway.designator}` : "";
+    const displayElevationFt = airport?.elevationFt ?? elevationFt;
+    const displayQnhHpa = weatherValues?.qnhHpa ?? qnhHpa;
+    const displayOatC = weatherValues?.oatC ?? oatC;
+    return `${airportLabel}${runwayLabelText} · Elev ${displayElevationFt.toLocaleString("de-DE")} ft · QNH ${displayQnhHpa} hPa · OAT ${displayOatC} °C`;
+  }
+  if (mode === "qnh") return `Elevation ${elevationFt.toLocaleString("de-DE")} ft · QNH ${qnhHpa} hPa · PA ${pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT ${oatC} °C`;
+  return `PA ${pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT ${oatC} °C`;
 }
 
 function chartAxisPosition(value: number, values: readonly number[], pixels: readonly number[]) {
@@ -106,7 +140,7 @@ function createChartPoints(inputs: LandingInputs, result: LandingResult): ChartP
   ];
 }
 
-function PipelineCard({ inputs, result }: { inputs: LandingInputs; result: LandingResult }) {
+function CalculationPath({ inputs, result }: { inputs: LandingInputs; result: LandingResult }) {
   const steps = [
     { name: "Schritt 1 - Atmosphäre", detail: `PA ${inputs.pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT ${inputs.oatC} °C`, value: `${round(result.landingRollByAtmosphereMeters)} m` },
     { name: "Schritt 2 - Masse", detail: `${round(result.landingRollByAtmosphereMeters)} m · ${inputs.massKg} kg`, value: `${round(result.landingRollByMassMeters)} m` },
@@ -115,23 +149,18 @@ function PipelineCard({ inputs, result }: { inputs: LandingInputs; result: Landi
     { name: `Zuschlag ${inputs.safetyMarginPercent}% auf Rollstrecke`, detail: `+${round(result.landingRollMarginMeters)} m auf Roll- und Landestrecke`, value: `${result.landingRollMeters} m / ${result.landingDistanceMeters} m` },
   ];
   return (
-    <CalculatorCard title="Rechenweg">
-      <div className="pipeline">
-        {steps.map((step, index) => (
-          <div className="step" key={step.name}>
-            <div className="step-rail">
-              <div className={`step-dot${index === steps.length - 1 ? " active" : ""}`} />
-              {index < steps.length - 1 ? <div className="step-line" /> : null}
-            </div>
-            <div className="step-body">
-              <div className="step-name">{step.name}</div>
-              <div className="step-detail">{step.detail}</div>
-            </div>
-            <div className="step-val">{step.value}</div>
+    <div className="calculation-path-grid">
+      {steps.map((step, index) => (
+        <div className="calculation-path-row" key={step.name}>
+          <span className="calculation-path-index">{index + 1}</span>
+          <div>
+            <div className="step-name">{step.name}</div>
+            <div className="step-detail">{step.detail}</div>
           </div>
-        ))}
-      </div>
-    </CalculatorCard>
+          <div className="step-val">{step.value}</div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -197,6 +226,26 @@ function timestamp(date: Date) {
 }
 
 async function exportChartImage(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext) {
+  const { canvas, exportDate } = await createLandingExportCanvas(inputs, result, exportContext);
+  const blob = await canvasToBlob(canvas);
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Landestreckenberechnung.png`, "image/png");
+}
+
+async function exportChartPdf(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext) {
+  const { canvas, exportDate } = await createLandingExportCanvas(inputs, result, exportContext);
+  const { jsPDF } = await import("jspdf");
+  const pdf = new jsPDF({
+    compress: true,
+    format: [canvas.width, canvas.height],
+    orientation: "portrait",
+    unit: "px",
+  });
+  pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, canvas.width, canvas.height);
+  const blob = pdf.output("blob");
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Landestreckenberechnung.pdf`, "application/pdf");
+}
+
+async function createLandingExportCanvas(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext) {
   const exportDate = new Date();
   const headerHeight = 745;
   const canvas = document.createElement("canvas");
@@ -253,11 +302,14 @@ async function exportChartImage(inputs: LandingInputs, result: LandingResult, ex
   context.fill();
   context.stroke();
   context.restore();
-  const blob = await canvasToBlob(canvas);
-  const fileName = `${timestamp(exportDate)}Z Grob G115B Landestreckenberechnung.png`;
-  const file = new File([blob], fileName, { type: "image/png" });
-  if (navigator.share && navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ files: [file], title: "Grob G115B Landestreckenberechnung" });
+
+  return { canvas, exportDate };
+}
+
+async function saveExportBlob(blob: Blob, fileName: string, type: string, options: { share?: boolean } = {}) {
+  const file = new File([blob], fileName, { type });
+  if ((options.share ?? true) && navigator.share && navigator.canShare?.({ files: [file] })) {
+    await navigator.share({ files: [file] });
     return;
   }
   const link = document.createElement("a");
@@ -269,52 +321,86 @@ async function exportChartImage(inputs: LandingInputs, result: LandingResult, ex
   window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 }
 
-function ChartCard({ inputs, result, exportContext }: { inputs: LandingInputs; result: LandingResult; exportContext: ExportContext }) {
+function TraceabilityCard({ inputs, result, exportContext }: { inputs: LandingInputs; result: LandingResult; exportContext: ExportContext }) {
+  const [view, setView] = useState<"chart" | "path">("chart");
   const [overlayVisible, setOverlayVisible] = useState(true);
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
   const points = createChartPoints(inputs, result);
   const finalDistancePoint: ChartPoint = [1178, chartDistanceY(result.landingDistanceMeters)];
+
   const exportImage = async () => {
-    setExporting(true);
+    setExporting("png");
     try {
       await exportChartImage(inputs, result, exportContext);
     } catch (error) {
       if (!(error instanceof DOMException && error.name === "AbortError")) console.error(error);
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
   };
+
+  const exportPdf = async () => {
+    setExporting("pdf");
+    try {
+      await exportChartPdf(inputs, result, exportContext);
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) console.error(error);
+    } finally {
+      setExporting(null);
+    }
+  };
+
   return (
-    <section className="card takeoff-chart-card">
-      <div className="takeoff-chart-header">
-        <div className="card-title">Grafische Nachvollziehbarkeit</div>
-        <div className="takeoff-chart-actions">
-          <label className="takeoff-chart-toggle">
-            <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
-            <span>Rechenweg</span>
-          </label>
-          <button className="takeoff-chart-download" type="button" disabled={exporting} onClick={exportImage}>
-            {exporting ? "Erzeuge PNG…" : "Als Bild speichern"}
-          </button>
+    <section className="card takeoff-chart-card traceability-card">
+      <div className="traceability-header">
+        <div>
+          <div className="card-title">Nachvollziehbarkeit</div>
+          <div className="traceability-description">
+            {view === "chart" ? "Rechenweg im originalen Flughandbuchdiagramm" : "Schrittweise Herleitung der berechneten Strecken"}
+          </div>
         </div>
       </div>
-      <div className="takeoff-chart-scroll">
-        <div className={`takeoff-chart-stage${overlayVisible ? "" : " overlay-hidden"}`}>
-          <img className="takeoff-chart-image" src={CHART_SOURCE} alt="Originales Flughandbuchdiagramm Bild 5.3.15 Landestrecke" width="1505" height="1045" />
-          <svg className="takeoff-chart-overlay" viewBox="0 0 1505 1045" aria-label="Grafischer Rechenweg im originalen Landestreckendiagramm">
-            <polyline className="takeoff-chart-path" points={points.map((point) => point.join(",")).join(" ")} />
-            {points.slice(1).map(([x, y], index) => <circle className="takeoff-chart-point" cx={x} cy={y} r="5" key={`${index}-${x}-${y}`} />)}
-            <circle className="takeoff-chart-final-point" cx={finalDistancePoint[0]} cy={finalDistancePoint[1]} r="5" />
-          </svg>
+      <div className="traceability-toolbar">
+        <div className="traceability-tabs" role="tablist" aria-label="Nachvollziehbarkeit">
+          <button className={view === "chart" ? "active" : ""} type="button" role="tab" aria-selected={view === "chart"} onClick={() => setView("chart")}>Diagramm</button>
+          <button className={view === "path" ? "active" : ""} type="button" role="tab" aria-selected={view === "path"} onClick={() => setView("path")}>Rechenweg</button>
         </div>
+        {view === "chart" ? (
+          <div className="takeoff-chart-actions">
+            <label className="takeoff-chart-toggle">
+              <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
+              <span>Rechenweg</span>
+            </label>
+            <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={exportImage}>
+              {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
+            </button>
+            <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={exportPdf}>
+              {exporting === "pdf" ? "Erzeuge PDF…" : "PDF speichern"}
+            </button>
+          </div>
+        ) : null}
       </div>
-      <div className="takeoff-chart-legend">
-        <span className="takeoff-chart-key">Unbezuschlagter Weg im Originaldiagramm</span>
-        <span>Rollstrecke: {round(result.landingRollByWindMeters)} m</span>
-        <span>Landestrecke über 15 m: {round(result.landingDistanceWithoutMarginMeters)} m</span>
-        <span>Zuschlag: +{round(result.landingRollMarginMeters)} m</span>
-        <span className="takeoff-chart-margin-key">Landestrecke über 15 m inkl. Zuschlag: {result.landingDistanceMeters} m</span>
-      </div>
+      {view === "path" ? <CalculationPath inputs={inputs} result={result} /> : (
+        <>
+          <div className="takeoff-chart-scroll">
+            <div className={`takeoff-chart-stage${overlayVisible ? "" : " overlay-hidden"}`}>
+              <img className="takeoff-chart-image" src={CHART_SOURCE} alt="Originales Flughandbuchdiagramm Bild 5.3.15 Landestrecke" width="1505" height="1045" />
+              <svg className="takeoff-chart-overlay" viewBox="0 0 1505 1045" aria-label="Grafischer Rechenweg im originalen Landestreckendiagramm">
+                <polyline className="takeoff-chart-path" points={points.map((point) => point.join(",")).join(" ")} />
+                {points.slice(1).map(([x, y], index) => <circle className="takeoff-chart-point" cx={x} cy={y} r="5" key={`${index}-${x}-${y}`} />)}
+                <circle className="takeoff-chart-final-point" cx={finalDistancePoint[0]} cy={finalDistancePoint[1]} r="5" />
+              </svg>
+            </div>
+          </div>
+          <div className="takeoff-chart-legend">
+            <span className="takeoff-chart-key">Unbezuschlagter Weg im Originaldiagramm</span>
+            <span>Rollstrecke: {round(result.landingRollByWindMeters)} m</span>
+            <span>Landestrecke über 15 m: {round(result.landingDistanceWithoutMarginMeters)} m</span>
+            <span>Zuschlag: +{round(result.landingRollMarginMeters)} m</span>
+            <span className="takeoff-chart-margin-key">Landestrecke über 15 m inkl. Zuschlag: {result.landingDistanceMeters} m</span>
+          </div>
+        </>
+      )}
     </section>
   );
 }
@@ -329,7 +415,9 @@ export function LandingPage() {
   const [massKg, setMassKg] = useState(920);
   const [windKt, setWindKt] = useState(0);
   const [safetyMarginPercent, setSafetyMarginPercent] = useState(40);
+  const [selectedAirport, setSelectedAirport] = useState<Airport>();
   const [selectedRunway, setSelectedRunway] = useState<RunwayDirection>();
+  const [selectedWeatherValues, setSelectedWeatherValues] = useState<{ qnhHpa?: number; oatC?: number }>();
   const pressureAltitudeFt = pressureAltitudeMode !== "direct" ? pressureAltitudeFromQnh(elevationFt, qnhHpa) : directPressureAltitudeFt;
   const inputs = useMemo<LandingInputs>(() => ({
     pressureAltitudeFt,
@@ -361,10 +449,23 @@ export function LandingPage() {
   }, [flightPlan.imports.arrivalImport]);
 
   return (
-    <div className="page-layout">
-      <aside className="sidebar">
-        <div className="sidebar-section">
-          <div className="section-header">Atmosphäre</div>
+    <div className="page-layout compact-calculator-layout">
+      <aside className="sidebar compact-input-panel">
+        <CalculatorInputSection
+          icon={<CloudSun aria-hidden="true" />}
+          title="Atmosphäre"
+          description="Flugplatz, Höhe und Wetter"
+          summary={formatAtmosphereSummary({
+            airport: selectedAirport,
+            elevationFt,
+            mode: pressureAltitudeMode,
+            oatC,
+            pressureAltitudeFt,
+            qnhHpa,
+            runway: selectedRunway,
+            weatherValues: selectedWeatherValues,
+          })}
+        >
           <div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
             <button className={`mode-btn${pressureAltitudeMode === "airport" ? " active" : ""}`} type="button" onClick={() => setPressureAltitudeMode("airport")}>Airport</button>
             <button className={`mode-btn${pressureAltitudeMode === "qnh" ? " active" : ""}`} type="button" disabled={flightPlan.imports.arrivalImport} onClick={() => setPressureAltitudeMode("qnh")}>Elevation</button>
@@ -378,7 +479,9 @@ export function LandingPage() {
                 weatherNow={flightPlan.imports.arrivalWeatherNow}
                 onEnabledChange={(value) => updateImports({ arrivalImport: value })}
                 onWeatherNowChange={(enabled) => updateImports({ arrivalWeatherNow: enabled })}
+                onAirportChange={setSelectedAirport}
                 onRunwayChange={setSelectedRunway}
+                onWeatherValuesChange={setSelectedWeatherValues}
                 onApply={(values) => {
                   if (values.elevationFt != null) setElevationFt(values.elevationFt);
                   if (values.qnhHpa != null) setQnhHpa(values.qnhHpa);
@@ -406,9 +509,14 @@ export function LandingPage() {
             </div>
           )}
           {pressureAltitudeMode !== "airport" ? <div style={{ marginTop: "1.25rem" }}><SliderField label="OAT" unit="°C" value={oatC} min={-20} max={40} onChange={setOatC} /></div> : null}
-        </div>
-        <div className="sidebar-section">
-          <div className="section-header">Flugzeug</div>
+        </CalculatorInputSection>
+        <CalculatorInputSection
+          icon={<Plane aria-hidden="true" />}
+          title="Flugzeug & Betrieb"
+          description="Landemasse und betrieblicher Zuschlag"
+          summary={`${massKg} kg · Zuschlag ${safetyMarginPercent}%`}
+          defaultOpen={false}
+        >
           <FlightPlanMassImport
             label="Landemasse aus Flugplanung"
             massKg={flightPlan.masses?.landingMassKg}
@@ -419,32 +527,36 @@ export function LandingPage() {
             onImport={setMassKg}
           />
           <SliderField label="Masse" labelDetail="kg · MTOW 920" unit="kg" value={massKg} min={700} max={920} disabled={flightPlan.imports.landingMass} onChange={setMassKg} />
-        </div>
-        <div className="sidebar-section">
-          <div className="section-header">Pistenbedingungen</div>
-          <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} disabled={flightPlan.imports.arrivalImport} onChange={setWindKt} />
-        </div>
-        <div className="sidebar-section">
-          <div className="section-header">Betrieblicher Zuschlag</div>
           <SliderField label="Zuschlag" unit="%" value={safetyMarginPercent} min={0} max={60} inputMax={100} hint="Trockene Grasbahn: +40% · Hartbelag trocken: 0%" onChange={setSafetyMarginPercent} />
-        </div>
+        </CalculatorInputSection>
+        <CalculatorInputSection
+          icon={<Road aria-hidden="true" />}
+          title="Pistenbedingungen"
+          description="Windkomponente"
+          summary={formatWindLabel(windKt)}
+          defaultOpen={false}
+        >
+          <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} disabled={flightPlan.imports.arrivalImport} onChange={setWindKt} />
+        </CalculatorInputSection>
       </aside>
       <main className="results">
         <CalculatorContextCard atmosphere={result.atmosphere} warnings={warnings} conditions={result.conditions} />
-        <PipelineCard inputs={inputs} result={result} />
-        <CalculatorCard title="Ergebnis">
+        <CalculatorCard title="Landeleistung">
+          <div className="takeoff-summary-heading">
+            <Gauge aria-hidden="true" />
+            <span>Berechnete Strecken und Geschwindigkeiten</span>
+          </div>
           <div className="result-grid">
             <MetricItem label="Landing Roll · Landerollstrecke" value={String(result.landingRollMeters)} unit="m" danger={landingRollExceedsLda} />
             <MetricItem label="Landing Distance · Landestrecke über 15 m" value={String(result.landingDistanceMeters)} unit="m" danger={landingDistanceExceedsLda} />
           </div>
-        </CalculatorCard>
-        <CalculatorCard title="Anfluggeschwindigkeiten">
+          <div className="takeoff-summary-divider">Anfluggeschwindigkeiten</div>
           <div className="speed-grid">
             <MetricItem label={<span><SpeedSymbol index="APP" /> · Approach</span>} value={kilometersPerHourToKnots(result.approachSpeedKmh).toFixed(1)} unit="kt" speedType="IAS" subtext={`${result.approachSpeedKmh.toFixed(0)} km/h`} />
             <MetricItem label={<span><SpeedSymbol index="REF" /> · 1.3 × <SpeedSymbol index="S0" /></span>} value={kilometersPerHourToKnots(result.referenceSpeedKmh).toFixed(1)} unit="kt" speedType="IAS" subtext={`${result.referenceSpeedKmh.toFixed(0)} km/h`} />
           </div>
         </CalculatorCard>
-        <ChartCard inputs={inputs} result={result} exportContext={{ pressureAltitudeMode, elevationFt, qnhHpa }} />
+        <TraceabilityCard inputs={inputs} result={result} exportContext={{ pressureAltitudeMode, elevationFt, qnhHpa }} />
       </main>
     </div>
   );

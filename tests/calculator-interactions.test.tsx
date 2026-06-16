@@ -372,7 +372,7 @@ describe("calculator interactions", () => {
     await user.click(screen.getByRole("checkbox", { name: "Werte übernommen" }));
     await user.click(screen.getByRole("button", { name: "Elevation" }));
 
-    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;
+    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
     expect(within(atmosphereSection).getByDisplayValue("384")).toBeTruthy();
     await waitFor(() => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
