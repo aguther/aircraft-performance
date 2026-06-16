@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Gauge, Mountain, Plane } from "lucide-react";
 import { calculateCruise } from "../aircraft/g115b/calculators";
 import {
   densityAltitude,
@@ -8,6 +9,7 @@ import {
   pressureAltitudeFromQnh,
 } from "../domain";
 import { CalculatorCard, MetricItem } from "../components/CalculatorCard";
+import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
 
@@ -108,6 +110,12 @@ function timestamp(date: Date) {
   return date.toISOString().replace("T", " ").replace(/:/g, "-").slice(0, 19);
 }
 
+function formatAltitudeSummary(inputs: CruiseViewInputs) {
+  if (inputs.mode === "alt") return `Altitude ${inputs.altitudeFt!.toLocaleString("de-DE")} ft · QNH ${inputs.qnhHpa} hPa · DA ${inputs.densityAltitudeFt.toLocaleString("de-DE")} ft`;
+  if (inputs.mode === "fl") return `FL ${inputs.flightLevel} · DA ${inputs.densityAltitudeFt.toLocaleString("de-DE")} ft`;
+  return `DA ${inputs.densityAltitudeFt.toLocaleString("de-DE")} ft`;
+}
+
 function altitudeFields(inputs: CruiseViewInputs): Array<[string, string, boolean?]> {
   if (inputs.mode === "alt") {
     return [
@@ -150,6 +158,26 @@ function drawExportHeader(context: CanvasRenderingContext2D, inputs: CruiseViewI
 }
 
 async function exportChart(inputs: CruiseViewInputs, chart: CruiseChart, trace: ReturnType<typeof createTrace>) {
+  const { canvas, time } = await createCruiseExportCanvas(inputs, chart, trace);
+  const blob = await canvasToBlob(canvas);
+  await saveExportBlob(blob, `${time}Z Grob G115B ${chart.fileName}.png`, "image/png");
+}
+
+async function exportChartPdf(inputs: CruiseViewInputs, chart: CruiseChart, trace: ReturnType<typeof createTrace>) {
+  const { canvas, time } = await createCruiseExportCanvas(inputs, chart, trace);
+  const { jsPDF } = await import("jspdf");
+  const pdf = new jsPDF({
+    compress: true,
+    format: [canvas.width, canvas.height],
+    orientation: "portrait",
+    unit: "px",
+  });
+  pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, canvas.width, canvas.height);
+  const blob = pdf.output("blob");
+  await saveExportBlob(blob, `${time}Z Grob G115B ${chart.fileName}.pdf`, "application/pdf");
+}
+
+async function createCruiseExportCanvas(inputs: CruiseViewInputs, chart: CruiseChart, trace: ReturnType<typeof createTrace>) {
   const time = timestamp(new Date());
   const headerHeight = 720;
   const image = await loadImage(chart.source);
@@ -178,11 +206,14 @@ async function exportChart(inputs: CruiseViewInputs, chart: CruiseChart, trace: 
     context.fill();
   });
   context.restore();
-  const blob = await canvasToBlob(canvas);
-  const fileName = `${time}Z Grob G115B ${chart.fileName}.png`;
-  const file = new File([blob], fileName, { type: "image/png" });
+
+  return { canvas, time };
+}
+
+async function saveExportBlob(blob: Blob, fileName: string, type: string) {
+  const file = new File([blob], fileName, { type });
   if (navigator.share && navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ files: [file], title: `Grob G115B ${chart.fileName}` });
+    await navigator.share({ files: [file] });
     return;
   }
   const link = document.createElement("a");
@@ -196,27 +227,43 @@ async function exportChart(inputs: CruiseViewInputs, chart: CruiseChart, trace: 
 
 function CruiseChartCard({ inputs, chart }: { inputs: CruiseViewInputs; chart: CruiseChart }) {
   const [overlayVisible, setOverlayVisible] = useState(true);
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
   const trace = createTrace(inputs, chart);
   const saveImage = async () => {
-    setExporting(true);
+    setExporting("png");
     try {
       await exportChart(inputs, chart, trace);
     } finally {
-      setExporting(false);
+      setExporting(null);
+    }
+  };
+  const savePdf = async () => {
+    setExporting("pdf");
+    try {
+      await exportChartPdf(inputs, chart, trace);
+    } finally {
+      setExporting(null);
     }
   };
   return (
-    <section className="card takeoff-chart-card">
-      <div className="takeoff-chart-header">
-        <div className="card-title">{chart.cardTitle}</div>
+    <section className="card takeoff-chart-card traceability-card">
+      <div className="traceability-header">
+        <div>
+          <div className="card-title">{chart.cardTitle.replace("Grafische Nachvollziehbarkeit · ", "Nachvollziehbarkeit · ")}</div>
+          <div className="traceability-description">Rechenweg im originalen Flughandbuchdiagramm</div>
+        </div>
+      </div>
+      <div className="traceability-toolbar">
         <div className="takeoff-chart-actions">
           <label className="takeoff-chart-toggle">
             <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
             <span>Rechenweg</span>
           </label>
-          <button className="takeoff-chart-download" type="button" disabled={exporting} onClick={saveImage}>
-            {exporting ? "Erzeuge PNG…" : "Als Bild speichern"}
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={saveImage}>
+            {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
+          </button>
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={savePdf}>
+            {exporting === "pdf" ? "Erzeuge PDF…" : "PDF speichern"}
           </button>
         </div>
       </div>
@@ -319,10 +366,14 @@ export function CruisePage() {
   };
 
   return (
-    <div className="page-layout">
-      <aside className="sidebar">
-        <div className="sidebar-section">
-          <div className="section-header">Höhe</div>
+    <div className="page-layout compact-calculator-layout">
+      <aside className="sidebar compact-input-panel">
+        <CalculatorInputSection
+          icon={<Mountain aria-hidden="true" />}
+          title="Höhe"
+          description="Flughöhe, QNH und Temperatur"
+          summary={formatAltitudeSummary(inputs)}
+        >
           <div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
             {([["alt", "Altitude"], ["fl", "Flight Level"], ["da", "Density Alt."]] as const).map(([value, label]) => (
               <button className={`mode-btn${mode === value ? " active" : ""}`} type="button" onClick={() => setMode(value)} key={value}>{label}</button>
@@ -333,15 +384,24 @@ export function CruisePage() {
           {mode === "da" ? <div className="pa-mode"><NumberField label="Density Altitude" unit="ft" value={directDensityAltitudeFt} step={100} onChange={setDirectDensityAltitudeFt} /></div> : null}
           {mode !== "da" ? <div style={{ marginTop: "1.25rem" }}><SliderField label="OAT" unit="°C" value={oatC} min={-40} max={50} onChange={setOatC} /></div> : null}
           {mode !== "da" ? <div className="derived-box"><div className="derived-label">Density Altitude</div><div className="derived-value">{inputs.densityAltitudeFt.toLocaleString("de-DE")} ft</div></div> : null}
-        </div>
-        <div className="sidebar-section">
-          <div className="section-header">Leistung</div>
+        </CalculatorInputSection>
+        <CalculatorInputSection
+          defaultOpen={false}
+          icon={<Plane aria-hidden="true" />}
+          title="Leistung"
+          description="Motorleistung"
+          summary={powerPercent >= 100 ? "Vollgas" : `${powerPercent}% Leistung`}
+        >
           <SliderField label="Leistung" unit="%" value={powerPercent} min={45} max={100} hint="Vollgas = 100% · Leistungseinstellung POH Abschnitt 4" onChange={setPowerPercent} />
-        </div>
+        </CalculatorInputSection>
       </aside>
       <main className="results">
         {mode !== "da" ? <CalculatorCard title="Atmosphäre"><div className="atmos-grid"><div className="atmos-item"><div className="atmos-item-label">Density Altitude</div><div className={`atmos-item-value${inputs.densityAltitudeFt > 10000 ? " warn" : ""}`}>{inputs.densityAltitudeFt.toLocaleString("de-DE")} <span>ft</span></div></div><div className="atmos-item"><div className="atmos-item-label">ISA-Abweichung</div><div className={`atmos-item-value${Math.abs(inputs.isaDeviationC!) < 0.1 ? "" : inputs.isaDeviationC! > 0 ? " warn" : " good"}`}>{formatSigned(inputs.isaDeviationC!, 1)} <span>°C</span></div></div></div></CalculatorCard> : null}
-        <CalculatorCard title={`Ergebnis - ${result.powerLabel} Leistung · DA ${inputs.densityAltitudeFt.toLocaleString("de-DE")} ft`}>
+        <CalculatorCard title="Reiseflugleistung">
+          <div className="takeoff-summary-heading">
+            <Gauge aria-hidden="true" />
+            <span>{result.powerLabel} Leistung · DA {inputs.densityAltitudeFt.toLocaleString("de-DE")} ft</span>
+          </div>
           <div className="result-grid">
             <MetricItem label="Drehzahl · POH 5.3.11" value={String(Math.round(result.rpm))} unit="rpm" />
             <MetricItem label="Fuel Flow · POH 5.3.10" value={result.fuelFlowLitersPerHour.toFixed(1)} unit="l/h" subtext={`${result.nauticalMilesPerLiter.toFixed(2)} nm/l`} />
