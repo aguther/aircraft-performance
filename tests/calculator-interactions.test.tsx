@@ -446,7 +446,9 @@ describe("calculator interactions", () => {
   it("shows an error when the climb destination is below the departure", async () => {
     const user = userEvent.setup();
     render(<ClimbPage />);
-    const destinationSection = screen.getByText("Ziel", { selector: ".section-header" }).parentElement!;
+    const destinationButton = screen.getByRole("button", { name: /Ziel/ });
+    await user.click(destinationButton);
+    const destinationSection = screen.getByText("Ziel", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
 
     await user.click(within(destinationSection).getByRole("button", { name: "Density Alt." }));
     const destinationAltitude = within(destinationSection).getByDisplayValue("4500");

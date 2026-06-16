@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { PlaneLanding, PlaneTakeoff } from "lucide-react";
 import { calculateClimb } from "../aircraft/g115b/calculators";
 import { g115bData } from "../aircraft/g115b/data";
 import { interpolate1D } from "../domain";
 import { AltitudeInput, type AltitudeInputValue, resolveAltitudeInput } from "../components/AltitudeInput";
 import { CalculatorCard, MetricItem } from "../components/CalculatorCard";
+import { CalculatorInputSection } from "../components/CalculatorInputSection";
 
 type ClimbResult = ReturnType<typeof calculateClimb>;
 type LegState = AltitudeInputValue;
@@ -20,12 +23,17 @@ function describeLeg(leg: LegState) {
   return `Höhe ${leg.altitudeFt.toLocaleString("de-DE")} ft · QNH ${leg.qnhHpa} hPa · OAT ${leg.oatC} °C`;
 }
 
-function LegFields({ title, leg, onChange }: { title: string; leg: LegState; onChange: (leg: LegState) => void }) {
+function LegFields({ defaultOpen = true, icon, title, leg, onChange }: { defaultOpen?: boolean; icon: ReactNode; title: string; leg: LegState; onChange: (leg: LegState) => void }) {
   return (
-    <div className="sidebar-section">
-      <div className="section-header">{title}</div>
+    <CalculatorInputSection
+      defaultOpen={defaultOpen}
+      description="Höhe, QNH und Temperatur"
+      icon={icon}
+      summary={describeLeg(leg)}
+      title={title}
+    >
       <AltitudeInput value={leg} onChange={onChange} />
-    </div>
+    </CalculatorInputSection>
   );
 }
 
@@ -118,6 +126,30 @@ function drawOverlay(context: CanvasRenderingContext2D, inputs: { departureDensi
 }
 
 async function exportChart(from: LegState, to: LegState, inputs: { departureDensityAltitudeFt: number; destinationDensityAltitudeFt: number }, result: ClimbResult) {
+  const exportCanvas = await createClimbExportCanvas(from, to, inputs, result);
+  if (!exportCanvas) return;
+  const { canvas, exportDate } = exportCanvas;
+  const blob = await canvasToBlob(canvas);
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Steigflugberechnung.png`, "image/png");
+}
+
+async function exportChartPdf(from: LegState, to: LegState, inputs: { departureDensityAltitudeFt: number; destinationDensityAltitudeFt: number }, result: ClimbResult) {
+  const exportCanvas = await createClimbExportCanvas(from, to, inputs, result);
+  if (!exportCanvas) return;
+  const { canvas, exportDate } = exportCanvas;
+  const { jsPDF } = await import("jspdf");
+  const pdf = new jsPDF({
+    compress: true,
+    format: [canvas.width, canvas.height],
+    orientation: "portrait",
+    unit: "px",
+  });
+  pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, canvas.width, canvas.height);
+  const blob = pdf.output("blob");
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Steigflugberechnung.pdf`, "application/pdf");
+}
+
+async function createClimbExportCanvas(from: LegState, to: LegState, inputs: { departureDensityAltitudeFt: number; destinationDensityAltitudeFt: number }, result: ClimbResult) {
   if (result.error || result.climbTimeMinutes === null || result.climbFuelLiters === null || result.climbDistanceKm === null || result.climbDistanceNm === null) return;
   const exportDate = new Date();
   const canvas = document.createElement("canvas");
@@ -144,11 +176,14 @@ async function exportChart(from: LegState, to: LegState, inputs: { departureDens
   context.scale(1200 / CHART.width, 1808 / CHART.height);
   drawOverlay(context, inputs, result);
   context.restore();
-  const blob = await canvasToBlob(canvas);
-  const fileName = `${timestamp(exportDate)}Z Grob G115B Steigflugberechnung.png`;
-  const file = new File([blob], fileName, { type: "image/png" });
+
+  return { canvas, exportDate };
+}
+
+async function saveExportBlob(blob: Blob, fileName: string, type: string) {
+  const file = new File([blob], fileName, { type });
   if (navigator.share && navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ files: [file], title: "Grob G115B Steigflugberechnung" });
+    await navigator.share({ files: [file] });
     return;
   }
   const link = document.createElement("a");
@@ -180,15 +215,38 @@ function ContextCard({ inputs, result }: { inputs: { departureDensityAltitudeFt:
 
 function ChartCard({ from, to, inputs, result }: { from: LegState; to: LegState; inputs: { departureDensityAltitudeFt: number; destinationDensityAltitudeFt: number }; result: ClimbResult }) {
   const [overlayVisible, setOverlayVisible] = useState(true);
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
   const valid = !result.error && result.climbTimeMinutes !== null && result.climbFuelLiters !== null && result.climbDistanceKm !== null && result.climbDistanceNm !== null;
-  const save = async () => {
-    setExporting(true);
-    try { await exportChart(from, to, inputs, result); } finally { setExporting(false); }
+  const saveImage = async () => {
+    setExporting("png");
+    try { await exportChart(from, to, inputs, result); } finally { setExporting(null); }
+  };
+  const savePdf = async () => {
+    setExporting("pdf");
+    try { await exportChartPdf(from, to, inputs, result); } finally { setExporting(null); }
   };
   return (
-    <section className="card takeoff-chart-card climb-chart-card">
-      <div className="takeoff-chart-header"><div className="card-title">Grafische Nachvollziehbarkeit</div><div className="takeoff-chart-actions"><label className="takeoff-chart-toggle"><input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} /><span>Rechenweg</span></label><button className="takeoff-chart-download" type="button" disabled={!valid || exporting} onClick={save}>{exporting ? "Erzeuge PNG…" : "Als Bild speichern"}</button></div></div>
+    <section className="card takeoff-chart-card climb-chart-card traceability-card">
+      <div className="traceability-header">
+        <div>
+          <div className="card-title">Nachvollziehbarkeit</div>
+          <div className="traceability-description">Rechenweg im originalen Flughandbuchdiagramm</div>
+        </div>
+      </div>
+      <div className="traceability-toolbar">
+        <div className="takeoff-chart-actions">
+          <label className="takeoff-chart-toggle">
+            <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
+            <span>Rechenweg</span>
+          </label>
+          <button className="takeoff-chart-download" type="button" disabled={!valid || exporting !== null} onClick={saveImage}>
+            {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
+          </button>
+          <button className="takeoff-chart-download" type="button" disabled={!valid || exporting !== null} onClick={savePdf}>
+            {exporting === "pdf" ? "Erzeuge PDF…" : "PDF speichern"}
+          </button>
+        </div>
+      </div>
       <div className="climb-chart-scroll"><div className={`climb-chart-stage${overlayVisible ? "" : " overlay-hidden"}`}><img className="climb-chart-image" src={CHART_SOURCE} alt="Originales Flughandbuchdiagramm Bild 5.3.9 Steigflug" width={CHART.width} height={CHART.height} /><ClimbOverlay inputs={inputs} result={result} /></div></div>
       <div className="climb-chart-results">
         <div className="climb-chart-result start"><strong>Start · kumulativ</strong><span>{result.departureCumulative.timeMinutes.toFixed(1)} min · {result.departureCumulative.fuelLiters.toFixed(1)} l · {result.departureCumulative.distanceKm.toFixed(1)} km</span></div>
@@ -215,8 +273,11 @@ export function ClimbPage() {
   }, []);
 
   return (
-    <div className="page-layout">
-      <aside className="sidebar"><LegFields title="Abflug" leg={from} onChange={setFrom} /><LegFields title="Ziel" leg={to} onChange={setTo} /></aside>
+    <div className="page-layout compact-calculator-layout">
+      <aside className="sidebar compact-input-panel">
+        <LegFields icon={<PlaneTakeoff aria-hidden="true" />} title="Abflug" leg={from} onChange={setFrom} />
+        <LegFields defaultOpen={false} icon={<PlaneLanding aria-hidden="true" />} title="Ziel" leg={to} onChange={setTo} />
+      </aside>
       <main className="results">
         {result.warnings.length ? <div className="warnings">{result.warnings.map((warning) => <div className={`warn-item${warning.danger ? " danger" : ""}`} key={warning.text}>{warning.text}</div>)}</div> : null}
         <ContextCard inputs={inputs} result={result} />
