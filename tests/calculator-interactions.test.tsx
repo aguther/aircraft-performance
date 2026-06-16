@@ -315,19 +315,22 @@ describe("calculator interactions", () => {
     expect(screen.getByText("TODA")).toBeTruthy();
     expect(screen.getByText("Geplante Startzeit · UTC · 24 h")).toBeTruthy();
     let atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
-    expect(atmosphereSection.querySelector('input[type="number"][value="1016"]')).toBeTruthy();
-    expect(atmosphereSection.querySelector('input[type="number"][value="17"]')).toBeTruthy();
+    await waitFor(() => {
+      expect(atmosphereSection.querySelector('input[type="number"][value="1016"]')).toBeTruthy();
+      expect(atmosphereSection.querySelector('input[type="number"][value="17"]')).toBeTruthy();
+    });
     let runwaySection = screen.getByText("Pistenbedingungen", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
     await user.click(within(runwaySection).getByRole("button", { name: /Pistenbedingungen/ }));
     expect(runwaySection.querySelector('input[type="number"][value="7"]')).toBeTruthy();
     await user.click(within(runwaySection).getByRole("button", { name: /Pistenbedingungen/ }));
-    expect(screen.getByRole("checkbox", { name: "Werte übernehmen" }).hasAttribute("checked")).toBe(false);
+    await waitFor(() => {
+      expect((screen.getByRole("checkbox", { name: "Werte übernommen" }) as HTMLInputElement).checked).toBe(true);
+    });
     await user.click(screen.getByRole("button", { name: /Atmosphäre/ }));
     const atmosphereButton = screen.getByRole("button", { name: /EDFE · Frankfurt-Egelsbach · RWY 08/ });
     expect(atmosphereButton.textContent).toContain("Elev 384 ft");
     expect(atmosphereButton.textContent).toContain("QNH 1016 hPa");
     await user.click(atmosphereButton);
-    await user.click(screen.getByRole("checkbox", { name: "Werte übernehmen" }));
     expect(screen.getByRole("button", { name: "Elevation" }).hasAttribute("disabled")).toBe(true);
     atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
     const qnhField = within(atmosphereSection).getByText("QNH", { selector: ".field-label" }).parentElement!;
@@ -366,7 +369,6 @@ describe("calculator interactions", () => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
       expect(storedPlan.imports.arrivalWeatherNow).toBe(true);
     });
-    await user.click(screen.getByRole("checkbox", { name: "Werte übernehmen" }));
     await user.click(screen.getByRole("checkbox", { name: "Werte übernommen" }));
     await user.click(screen.getByRole("button", { name: "Elevation" }));
 

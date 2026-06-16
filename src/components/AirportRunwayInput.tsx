@@ -112,6 +112,7 @@ export function AirportRunwayInput({
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState("");
   const weatherRequestId = useRef(0);
+  const autoImportSuppressedKey = useRef<string | null>(null);
 
   useEffect(() => {
     if (!savedSelection?.airportId) return;
@@ -144,6 +145,9 @@ export function AirportRunwayInput({
   const headwindStatus = windStatus(windComponents ? windComponents.headwindKt >= 0 : null);
   const crosswindStatus = windStatus(windComponents ? Math.abs(windComponents.crosswindKt) < 10 : null);
   const headwindCode = windComponents && windComponents.headwindKt < 0 ? "TW" : "HW";
+  const autoImportKey = airport && runway && plannedAt && weatherValues && weather
+    ? `${airport.id}|${runway.id}|${plannedAt}|${weather.id}`
+    : null;
 
   const saveSelection = (selectedAirport: Airport, selectedRunway: RunwayDirection, selectedPlannedAt: string) => {
     const selection = {
@@ -168,10 +172,9 @@ export function AirportRunwayInput({
   }, [airport, onAirportChange, onRunwayChange, onWeatherValuesChange, runway, weatherValues]);
 
   useEffect(() => {
-    if (!airport || !runway || !plannedAt || !weatherValues) return;
-    onApply({ elevationFt: airport.elevationFt, ...weatherValues });
-    saveSelection(airport, runway, plannedAt);
-  }, [airport?.id, plannedAt, runway?.id, weather?.id]);
+    if (!autoImportKey || enabled || autoImportSuppressedKey.current === autoImportKey) return;
+    onEnabledChange(true);
+  }, [autoImportKey, enabled, onEnabledChange]);
 
   useEffect(() => {
     if (!enabled || !weatherValues) return;
@@ -247,6 +250,8 @@ export function AirportRunwayInput({
   };
 
   const toggleImport = (nextEnabled: boolean) => {
+    if (!nextEnabled) autoImportSuppressedKey.current = autoImportKey;
+    else autoImportSuppressedKey.current = null;
     onEnabledChange(nextEnabled);
     if (nextEnabled) {
       if (airport && runway && plannedAt) {

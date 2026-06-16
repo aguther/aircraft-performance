@@ -2162,6 +2162,7 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   input[type="text"],
   input[type="time"],
   select,
+  select[class],
   textarea {
     font-size: 16px;
   }
@@ -2280,14 +2281,19 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   }
 
   .takeoff-chart-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
-    flex-direction: column;
     align-items: stretch;
   }
 
+  .takeoff-chart-toggle {
+    grid-column: 1 / -1;
+  }
+
   .takeoff-chart-download {
-    width: auto;
-    align-self: flex-start;
+    width: 100%;
+    min-width: 0;
     padding: 0.65rem 0.75rem;
   }
 

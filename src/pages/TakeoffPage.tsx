@@ -222,7 +222,7 @@ function timestamp(date: Date) {
 async function exportChartImage(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext) {
   const { canvas, exportDate } = await createTakeoffExportCanvas(inputs, result, exportContext);
   const blob = await canvasToBlob(canvas);
-  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Startstreckenberechnung.png`, "image/png", "Grob G115B Startstreckenberechnung");
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Startstreckenberechnung.png`, "image/png");
 }
 
 async function exportChartPdf(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext) {
@@ -236,7 +236,7 @@ async function exportChartPdf(inputs: TakeoffInputs, result: TakeoffResult, expo
   });
   pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, canvas.width, canvas.height);
   const blob = pdf.output("blob");
-  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Startstreckenberechnung.pdf`, "application/pdf", "Grob G115B Startstreckenberechnung");
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Startstreckenberechnung.pdf`, "application/pdf");
 }
 
 async function createTakeoffExportCanvas(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext) {
@@ -301,10 +301,10 @@ async function createTakeoffExportCanvas(inputs: TakeoffInputs, result: TakeoffR
   return { canvas, exportDate };
 }
 
-async function saveExportBlob(blob: Blob, fileName: string, type: string, title: string) {
+async function saveExportBlob(blob: Blob, fileName: string, type: string, options: { share?: boolean } = {}) {
   const file = new File([blob], fileName, { type });
-  if (navigator.share && navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ files: [file], title });
+  if ((options.share ?? true) && navigator.share && navigator.canShare?.({ files: [file] })) {
+    await navigator.share({ files: [file] });
     return;
   }
   const link = document.createElement("a");
