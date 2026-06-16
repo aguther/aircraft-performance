@@ -383,6 +383,28 @@ describe("calculator interactions", () => {
     });
   });
 
+  it("retries transient weather failures before showing unavailable data", async () => {
+    let weatherRequests = 0;
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/weather?")) {
+        weatherRequests += 1;
+        if (weatherRequests === 1) return Response.json({ error: "Kurz nicht verfügbar" }, { status: 503 });
+        return Response.json(weather);
+      }
+      return Response.json(url.includes("/api/airports?") ? { items: [airport], totalCount: 1 } : airport);
+    }));
+    const user = userEvent.setup();
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    await user.type(screen.getByRole("searchbox", { name: "Flugplatzsuche" }), "EDFE");
+    await user.click(screen.getByRole("button", { name: "Suchen" }));
+
+    expect(await screen.findByText(/Aktuelle ICON-D2-Werte/, undefined, { timeout: 2500 })).toBeTruthy();
+    expect(screen.queryByText("Kurz nicht verfügbar")).toBeNull();
+    expect(weatherRequests).toBe(2);
+  });
+
   it("applies real OpenAIP destination airport data to landing", async () => {
     stubAirportSearch();
     const user = userEvent.setup();

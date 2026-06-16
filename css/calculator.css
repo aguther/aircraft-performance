@@ -797,8 +797,8 @@
 
 .airport-search {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
+  grid-template-columns: minmax(0, 1fr) minmax(82px, 96px);
+  align-items: start;
   gap: 0.5rem;
 }
 
@@ -807,15 +807,16 @@
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  min-height: 38px;
-  min-width: 6.5rem;
-  padding: 0.65rem 0.75rem;
+  width: 100%;
+  min-height: 40px;
+  margin-top: calc(10.5px + 0.3rem + 5px);
+  padding: 0.58rem 0.7rem;
   border: 1px solid var(--border-strong);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--cyan-bg);
   color: var(--cyan);
   font-family: inherit;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
   cursor: pointer;
 }

@@ -57,6 +57,10 @@ function runwayLabel(runway: RunwayDirection) {
   return `RWY ${runway.designator} · ${runway.lengthM} m · ${runway.surface}`;
 }
 
+function waitForRetry(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 export function weatherValuesForRunway(weather: WeatherForecast, runway: RunwayDirection): WeatherRunwayValues {
   const wind = calculateWindComponents(weather.windDirectionTrueDeg, weather.windSpeedKt, runway.trueHeadingDeg);
   return {
@@ -111,6 +115,7 @@ export function AirportRunwayInput({
   const [weather, setWeather] = useState<WeatherForecast | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState("");
+  const [weatherReloadKey, setWeatherReloadKey] = useState(0);
   const weatherRequestId = useRef(0);
   const autoImportSuppressedKey = useRef<string | null>(null);
 
@@ -194,30 +199,38 @@ export function AirportRunwayInput({
     weatherRequestId.current = requestId;
     setWeatherLoading(true);
     setWeatherError("");
-    getOpenMeteoWeather(
-      airport.coordinates.latitude,
-      airport.coordinates.longitude,
-      airport.elevationFt,
-      utcDateTimeIso(plannedAt),
-      weatherNow,
-      { airportId: airport.id, icaoCode: airport.icaoCode, signal: controller.signal },
-    )
-      .then((loadedWeather) => {
-        if (weatherRequestId.current !== requestId) return;
-        setWeather(loadedWeather);
-        setWeatherLoading(false);
-      })
-      .catch((loadError) => {
-        if (weatherRequestId.current !== requestId) return;
-        if (loadError instanceof DOMException && loadError.name === "AbortError") return;
-        setWeather(null);
-        setWeatherError(loadError instanceof Error ? loadError.message : "Wetterdaten konnten nicht geladen werden.");
-      })
-      .finally(() => {
-        if (weatherRequestId.current === requestId) setWeatherLoading(false);
-      });
+    const loadWeather = async () => {
+      let lastError: unknown;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          const loadedWeather = await getOpenMeteoWeather(
+            airport.coordinates.latitude,
+            airport.coordinates.longitude,
+            airport.elevationFt,
+            utcDateTimeIso(plannedAt),
+            weatherNow,
+            { airportId: airport.id, icaoCode: airport.icaoCode, signal: controller.signal },
+          );
+          if (weatherRequestId.current !== requestId) return;
+          setWeather(loadedWeather);
+          setWeatherLoading(false);
+          return;
+        } catch (loadError) {
+          if (weatherRequestId.current !== requestId) return;
+          if (loadError instanceof DOMException && loadError.name === "AbortError") return;
+          if (controller.signal.aborted) return;
+          lastError = loadError;
+          if (attempt === 0) await waitForRetry(700);
+        }
+      }
+      if (weatherRequestId.current !== requestId) return;
+      setWeather(null);
+      setWeatherError(lastError instanceof Error ? lastError.message : "Wetterdaten konnten nicht geladen werden.");
+      setWeatherLoading(false);
+    };
+    void loadWeather();
     return () => controller.abort();
-  }, [airport?.id, plannedAt, weatherNow]);
+  }, [airport?.id, plannedAt, weatherNow, weatherReloadKey]);
 
   const submitSearch = async (event: { preventDefault(): void }) => {
     event.preventDefault();
@@ -230,6 +243,7 @@ export function AirportRunwayInput({
       setWeather(null);
       setAirport(selected);
       setRunwayId(selected?.runways[0]?.id ?? "");
+      if (selected) setWeatherReloadKey((current) => current + 1);
       if (selected) setSearch("");
       else setError("Kein passender Flugplatz gefunden.");
     } catch (searchError) {
@@ -247,6 +261,7 @@ export function AirportRunwayInput({
     setWeather(null);
     setAirport(selected);
     setRunwayId(selected?.runways[0]?.id ?? "");
+    setWeatherReloadKey((current) => current + 1);
   };
 
   const toggleImport = (nextEnabled: boolean) => {
