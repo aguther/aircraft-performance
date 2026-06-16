@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { Gauge, Plane, Weight } from "lucide-react";
+import { Gauge, Weight } from "lucide-react";
 import { calculateWeightBalance, isPointInPolygon } from "../aircraft/g115b/calculators";
 import { g115bData } from "../aircraft/g115b/data";
 import { useFlightPlan } from "../app/FlightPlanContext";
@@ -251,30 +251,6 @@ export function WeightBalancePage() {
   return (
     <div className="page-layout compact-calculator-layout">
       <aside className="sidebar compact-input-panel">
-        <CalculatorInputSection
-          icon={<Plane aria-hidden="true" />}
-          title="Flugzeug"
-          description="Leermasse und Registrierung"
-          summary={plan.registration}
-        >
-          <div
-            className="mode-toggle"
-            style={{
-              gridTemplateColumns: `repeat(${g115bData.weightBalance.emptyAircraft.length}, 1fr)`,
-            }}
-          >
-            {g115bData.weightBalance.emptyAircraft.map((aircraft) => (
-              <button
-                className={`mode-btn${aircraft.name === plan.registration ? " active" : ""}`}
-                type="button"
-                key={aircraft.name}
-                onClick={() => updateWeightBalance({ registration: aircraft.name })}
-              >
-                {aircraft.name}
-              </button>
-            ))}
-          </div>
-        </CalculatorInputSection>
         <CalculatorInputSection
           icon={<Weight aria-hidden="true" />}
           title="Beladung"

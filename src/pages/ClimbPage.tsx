@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { PlaneLanding, PlaneTakeoff } from "lucide-react";
 import { calculateClimb } from "../aircraft/g115b/calculators";
 import { g115bData } from "../aircraft/g115b/data";
+import { useFlightPlan, type FlightPlanTakeoffStart } from "../app/FlightPlanContext";
 import { interpolate1D } from "../domain";
 import { AltitudeInput, type AltitudeInputValue, resolveAltitudeInput } from "../components/AltitudeInput";
 import { CalculatorCard, MetricItem } from "../components/CalculatorCard";
@@ -34,6 +35,57 @@ function LegFields({ defaultOpen = true, icon, title, leg, onChange }: { default
     >
       <AltitudeInput value={leg} onChange={onChange} />
     </CalculatorInputSection>
+  );
+}
+
+function takeoffStartToLeg(takeoffStart: FlightPlanTakeoffStart): LegState {
+  return {
+    mode: "da",
+    altitudeFt: takeoffStart.elevationFt ?? 0,
+    flightLevel: 0,
+    densityAltitudeFt: takeoffStart.densityAltitudeFt,
+    oatC: takeoffStart.oatC,
+    qnhHpa: takeoffStart.qnhHpa ?? 1013,
+  };
+}
+
+function formatTakeoffSource(takeoffStart: FlightPlanTakeoffStart) {
+  const source = [takeoffStart.airportLabel, takeoffStart.runwayLabel].filter(Boolean).join(" · ");
+  return source || "Takeoff-Rechner";
+}
+
+function TakeoffStartImport({
+  enabled,
+  onEnabledChange,
+  takeoffStart,
+}: {
+  enabled: boolean;
+  onEnabledChange: (enabled: boolean) => void;
+  takeoffStart?: FlightPlanTakeoffStart;
+}) {
+  if (!takeoffStart) {
+    return (
+      <div className="flight-plan-import empty">
+        <div className="flight-plan-import-label">Start aus Takeoff übernehmen</div>
+        <div className="flight-plan-import-copy">Noch keine Takeoff-Daten verfügbar.</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flight-plan-import">
+      <div>
+        <div className="flight-plan-import-label">Start aus Takeoff übernehmen</div>
+        <div className="flight-plan-import-value">{takeoffStart.densityAltitudeFt.toLocaleString("de-DE")} ft DA</div>
+        <div className="flight-plan-import-copy">
+          {formatTakeoffSource(takeoffStart)} · PA {takeoffStart.pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT {takeoffStart.oatC} °C · Takeoff {new Date(takeoffStart.updatedAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })}
+        </div>
+      </div>
+      <label className="import-toggle">
+        <input type="checkbox" checked={enabled} onChange={(event) => onEnabledChange(event.target.checked)} />
+        <span>{enabled ? "Start übernommen" : "Start übernehmen"}</span>
+      </label>
+    </div>
   );
 }
 
@@ -258,12 +310,17 @@ function ChartCard({ from, to, inputs, result }: { from: LegState; to: LegState;
 }
 
 export function ClimbPage() {
+  const { flightPlan, updateImports } = useFlightPlan();
   const [from, setFrom] = useState<LegState>({ mode: "alt", altitudeFt: 0, flightLevel: 0, densityAltitudeFt: 0, oatC: 15, qnhHpa: 1013 });
   const [to, setTo] = useState<LegState>({ mode: "alt", altitudeFt: 4500, flightLevel: 45, densityAltitudeFt: 4500, oatC: 6, qnhHpa: 1013 });
+  const takeoffStart = flightPlan.takeoffStart;
+  const takeoffStartLeg = useMemo(() => takeoffStart ? takeoffStartToLeg(takeoffStart) : undefined, [takeoffStart]);
+  const activeFrom = flightPlan.imports.climbStartFromTakeoff && takeoffStartLeg ? takeoffStartLeg : from;
+  const usesTakeoffStart = activeFrom === takeoffStartLeg;
   const inputs = useMemo(() => ({
-    departureDensityAltitudeFt: resolveAltitudeInput(from).densityAltitudeFt,
+    departureDensityAltitudeFt: resolveAltitudeInput(activeFrom).densityAltitudeFt,
     destinationDensityAltitudeFt: resolveAltitudeInput(to).densityAltitudeFt,
-  }), [from, to]);
+  }), [activeFrom, to]);
   const result = useMemo(() => calculateClimb(inputs), [inputs]);
   const valid = !result.error;
 
@@ -275,7 +332,24 @@ export function ClimbPage() {
   return (
     <div className="page-layout compact-calculator-layout">
       <aside className="sidebar compact-input-panel">
-        <LegFields icon={<PlaneTakeoff aria-hidden="true" />} title="Abflug" leg={from} onChange={setFrom} />
+        <CalculatorInputSection
+          icon={<PlaneTakeoff aria-hidden="true" />}
+          title="Abflug"
+          description="Startwert für den Steigflug"
+          summary={describeLeg(activeFrom)}
+        >
+          <TakeoffStartImport
+            enabled={flightPlan.imports.climbStartFromTakeoff}
+            onEnabledChange={(enabled) => updateImports({ climbStartFromTakeoff: enabled })}
+            takeoffStart={takeoffStart}
+          />
+          {usesTakeoffStart ? (
+            <div className="derived-box">
+              <div className="derived-label">Übernommene Start-Dichtehöhe</div>
+              <div className="derived-value">{activeFrom.densityAltitudeFt.toLocaleString("de-DE")} ft</div>
+            </div>
+          ) : <AltitudeInput value={from} onChange={setFrom} />}
+        </CalculatorInputSection>
         <LegFields defaultOpen={false} icon={<PlaneLanding aria-hidden="true" />} title="Ziel" leg={to} onChange={setTo} />
       </aside>
       <main className="results">
@@ -288,7 +362,7 @@ export function ClimbPage() {
             <MetricItem label="Strecke · Distance" value={valid ? result.climbDistanceNm!.toFixed(1) : "—"} unit={valid ? "nm" : ""} subtext={valid ? `${result.climbDistanceKm!.toFixed(1)} km` : undefined} />
           </div>
         </CalculatorCard>
-        <ChartCard from={from} to={to} inputs={inputs} result={result} />
+        <ChartCard from={activeFrom} to={to} inputs={inputs} result={result} />
       </main>
     </div>
   );

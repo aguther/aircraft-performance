@@ -513,8 +513,8 @@ export function LandingPage() {
         <CalculatorInputSection
           icon={<Plane aria-hidden="true" />}
           title="Flugzeug & Betrieb"
-          description="Landemasse und betrieblicher Zuschlag"
-          summary={`${massKg} kg · Zuschlag ${safetyMarginPercent}%`}
+          description="Landemasse"
+          summary={`${massKg} kg`}
           defaultOpen={false}
         >
           <FlightPlanMassImport
@@ -527,16 +527,16 @@ export function LandingPage() {
             onImport={setMassKg}
           />
           <SliderField label="Masse" labelDetail="kg · MTOW 920" unit="kg" value={massKg} min={700} max={920} disabled={flightPlan.imports.landingMass} onChange={setMassKg} />
-          <SliderField label="Zuschlag" unit="%" value={safetyMarginPercent} min={0} max={60} inputMax={100} hint="Trockene Grasbahn: +40% · Hartbelag trocken: 0%" onChange={setSafetyMarginPercent} />
         </CalculatorInputSection>
         <CalculatorInputSection
           icon={<Road aria-hidden="true" />}
           title="Pistenbedingungen"
-          description="Windkomponente"
-          summary={formatWindLabel(windKt)}
+          description="Wind und Zuschlag"
+          summary={`${formatWindLabel(windKt)} · Zuschlag ${safetyMarginPercent}%`}
           defaultOpen={false}
         >
           <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} disabled={flightPlan.imports.arrivalImport} onChange={setWindKt} />
+          <SliderField label="Zuschlag" unit="%" value={safetyMarginPercent} min={0} max={60} inputMax={100} hint="Trockene Grasbahn: +40% · Hartbelag trocken: 0%" onChange={setSafetyMarginPercent} />
         </CalculatorInputSection>
       </aside>
       <main className="results">

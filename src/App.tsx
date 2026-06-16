@@ -84,8 +84,8 @@ export function App() {
         onOpenUsageNotice={() => setUsageNoticeOpen(true)}
       />
       <Routes>
-        <Route path="/" element={<HomePage aircraft={aircraft} />} />
-        <Route path="/index.html" element={<HomePage aircraft={aircraft} />} />
+        <Route path="/" element={<HomePage aircraft={aircraft} availableAircraft={availableAircraft} onResetFlightPlan={resetFlightPlan} onSelectAircraft={selectAircraft} />} />
+        <Route path="/index.html" element={<HomePage aircraft={aircraft} availableAircraft={availableAircraft} onResetFlightPlan={resetFlightPlan} onSelectAircraft={selectAircraft} />} />
         <Route path="/weight_balance.html" element={<WeightBalancePage />} />
         <Route path="/takeoff.html" element={<TakeoffPage />} />
         <Route path="/landing.html" element={<LandingPage />} />
@@ -93,8 +93,8 @@ export function App() {
         <Route path="/climb.html" element={<ClimbPage />} />
         <Route path="/climb_rate.html" element={<ClimbRatePage />} />
         <Route path="/stall.html" element={<StallPage />} />
-        <Route path="/settings.html" element={<SettingsPage preference={preference} onResetFlightPlan={resetFlightPlan} onSelectTheme={setThemePreference} />} />
-        <Route path="*" element={<HomePage aircraft={aircraft} />} />
+        <Route path="/settings.html" element={<SettingsPage preference={preference} onSelectTheme={setThemePreference} />} />
+        <Route path="*" element={<HomePage aircraft={aircraft} availableAircraft={availableAircraft} onResetFlightPlan={resetFlightPlan} onSelectAircraft={selectAircraft} />} />
       </Routes>
       <UsageNotice
         open={usageNoticeOpen}

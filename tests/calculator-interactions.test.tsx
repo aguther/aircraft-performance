@@ -19,6 +19,7 @@ import { LandingPage } from "../src/pages/LandingPage";
 import { AppHeader } from "../src/components/AppHeader";
 import { defaultAircraft } from "../src/app/aircraft";
 import { SettingsPage } from "../src/pages/SettingsPage";
+import { HomePage } from "../src/pages/HomePage";
 
 afterEach(() => {
   cleanup();
@@ -87,7 +88,7 @@ describe("calculator interactions", () => {
     const onSelectTheme = vi.fn();
     render(
       <MemoryRouter>
-        <SettingsPage preference="auto" onResetFlightPlan={vi.fn()} onSelectTheme={onSelectTheme} />
+        <SettingsPage preference="auto" onSelectTheme={onSelectTheme} />
       </MemoryRouter>,
     );
 
@@ -95,6 +96,34 @@ describe("calculator interactions", () => {
     await user.click(screen.getByRole("button", { name: "Dunkel" }));
 
     expect(onSelectTheme).toHaveBeenCalledWith("dark");
+  });
+
+  it("selects the concrete aircraft and resets planning data on the overview", async () => {
+    const user = userEvent.setup();
+    const onResetFlightPlan = vi.fn();
+    render(
+      <MemoryRouter>
+        <FlightPlanProvider>
+          <HomePage
+            aircraft={defaultAircraft}
+            availableAircraft={[defaultAircraft]}
+            onResetFlightPlan={onResetFlightPlan}
+            onSelectAircraft={vi.fn()}
+          />
+        </FlightPlanProvider>
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "D-ELWF" }));
+    expect(screen.getByRole("button", { name: "D-ELWF" }).getAttribute("aria-pressed")).toBe("true");
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.weightBalance.registration).toBe("D-ELWF");
+    });
+
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    await user.click(screen.getByRole("button", { name: "Neue Planung" }));
+    expect(onResetFlightPlan).toHaveBeenCalledTimes(1);
   });
 
   it("keeps the important notice separate from the settings tab", () => {
@@ -406,7 +435,9 @@ describe("calculator interactions", () => {
 
     const aircraftButton = screen.getByRole("button", { name: /Flugzeug & Betrieb/ });
     expect(aircraftButton.getAttribute("aria-expanded")).toBe("false");
-    expect(aircraftButton.textContent).toContain("920 kg · Zuschlag 15%");
+    expect(aircraftButton.textContent).toContain("920 kg");
+    const runwayButton = screen.getByRole("button", { name: /Pistenbedingungen/ });
+    expect(runwayButton.textContent).toContain("Zuschlag 15%");
 
     await user.click(aircraftButton);
     expect(aircraftButton.getAttribute("aria-expanded")).toBe("true");
@@ -414,7 +445,8 @@ describe("calculator interactions", () => {
     fireEvent.change(aircraftSection.querySelector('input[type="number"][value="920"]')!, { target: { value: "880" } });
     await user.click(aircraftButton);
 
-    expect(aircraftButton.textContent).toContain("880 kg · Zuschlag 15%");
+    expect(aircraftButton.textContent).toContain("880 kg");
+    expect(runwayButton.textContent).toContain("Zuschlag 15%");
   });
 
   it("colors landing result distances when LDA is exceeded", async () => {
@@ -448,7 +480,7 @@ describe("calculator interactions", () => {
 
   it("shows an error when the climb destination is below the departure", async () => {
     const user = userEvent.setup();
-    render(<ClimbPage />);
+    render(<FlightPlanProvider><ClimbPage /></FlightPlanProvider>);
     const destinationButton = screen.getByRole("button", { name: /Ziel/ });
     await user.click(destinationButton);
     const destinationSection = screen.getByText("Ziel", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;

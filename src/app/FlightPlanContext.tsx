@@ -19,6 +19,17 @@ export type FlightPlanMasses = {
   updatedAt: string;
 };
 
+export type FlightPlanTakeoffStart = {
+  pressureAltitudeFt: number;
+  densityAltitudeFt: number;
+  oatC: number;
+  elevationFt?: number;
+  qnhHpa?: number;
+  airportLabel?: string;
+  runwayLabel?: string;
+  updatedAt: string;
+};
+
 export type FlightPlanAirportSelection = {
   airportId: string;
   runwayId: string;
@@ -33,12 +44,14 @@ export type FlightPlanImports = {
   arrivalWeatherNow: boolean;
   takeoffMass: boolean;
   landingMass: boolean;
+  climbStartFromTakeoff: boolean;
 };
 
 export type FlightPlan = {
   weightBalance: WeightBalancePlan;
   imports: FlightPlanImports;
   masses?: FlightPlanMasses;
+  takeoffStart?: FlightPlanTakeoffStart;
   departure?: FlightPlanAirportSelection;
   arrival?: FlightPlanAirportSelection;
 };
@@ -47,6 +60,7 @@ type FlightPlanContextValue = {
   flightPlan: FlightPlan;
   updateWeightBalance: (change: Partial<WeightBalancePlan>) => void;
   publishMasses: (masses: Omit<FlightPlanMasses, "updatedAt">) => void;
+  publishTakeoffStart: (takeoffStart: Omit<FlightPlanTakeoffStart, "updatedAt">) => void;
   updateDeparture: (departure: Omit<FlightPlanAirportSelection, "updatedAt">) => void;
   updateArrival: (arrival: Omit<FlightPlanAirportSelection, "updatedAt">) => void;
   updateImports: (change: Partial<FlightPlanImports>) => void;
@@ -69,6 +83,7 @@ const defaultFlightPlan: FlightPlan = {
     arrivalWeatherNow: true,
     takeoffMass: false,
     landingMass: false,
+    climbStartFromTakeoff: false,
   },
 };
 
@@ -101,6 +116,10 @@ export function FlightPlanProvider({ children }: { children: ReactNode }) {
     ...current,
     masses: { ...masses, updatedAt: new Date().toISOString() },
   })), []);
+  const publishTakeoffStart = useCallback((takeoffStart: Omit<FlightPlanTakeoffStart, "updatedAt">) => setFlightPlan((current) => ({
+    ...current,
+    takeoffStart: { ...takeoffStart, updatedAt: new Date().toISOString() },
+  })), []);
   const updateDeparture = useCallback((departure: Omit<FlightPlanAirportSelection, "updatedAt">) => setFlightPlan((current) => ({
     ...current,
     departure: { ...departure, updatedAt: new Date().toISOString() },
@@ -127,11 +146,12 @@ export function FlightPlanProvider({ children }: { children: ReactNode }) {
     flightPlan,
     updateWeightBalance,
     publishMasses,
+    publishTakeoffStart,
     updateDeparture,
     updateArrival,
     updateImports,
     resetFlightPlan,
-  }), [flightPlan, publishMasses, resetFlightPlan, updateArrival, updateDeparture, updateImports, updateWeightBalance]);
+  }), [flightPlan, publishMasses, publishTakeoffStart, resetFlightPlan, updateArrival, updateDeparture, updateImports, updateWeightBalance]);
 
   return <FlightPlanContext.Provider value={value}>{children}</FlightPlanContext.Provider>;
 }

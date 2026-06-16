@@ -401,7 +401,7 @@ function TraceabilityCard({ inputs, result, exportContext }: { inputs: TakeoffIn
 }
 
 export function TakeoffPage() {
-  const { flightPlan, updateImports } = useFlightPlan();
+  const { flightPlan, publishTakeoffStart, updateImports } = useFlightPlan();
   const [pressureAltitudeMode, setPressureAltitudeMode] = useState<PressureAltitudeMode>("airport");
   const [elevationFt, setElevationFt] = useState(0);
   const [qnhHpa, setQnhHpa] = useState(1013);
@@ -448,6 +448,17 @@ export function TakeoffPage() {
   useEffect(() => {
     if (flightPlan.imports.departureImport) setPressureAltitudeMode("airport");
   }, [flightPlan.imports.departureImport]);
+  useEffect(() => {
+    publishTakeoffStart({
+      pressureAltitudeFt,
+      densityAltitudeFt: result.atmosphere.densityAltitudeFt,
+      oatC,
+      elevationFt: pressureAltitudeMode !== "direct" ? elevationFt : undefined,
+      qnhHpa: pressureAltitudeMode !== "direct" ? qnhHpa : undefined,
+      airportLabel: selectedAirport ? `${selectedAirport.icaoCode ? `${selectedAirport.icaoCode} · ` : ""}${selectedAirport.name}` : undefined,
+      runwayLabel: selectedRunway ? `RWY ${selectedRunway.designator}` : undefined,
+    });
+  }, [elevationFt, oatC, pressureAltitudeFt, pressureAltitudeMode, publishTakeoffStart, qnhHpa, result.atmosphere.densityAltitudeFt, selectedAirport, selectedRunway]);
 
   return (
     <div className="page-layout compact-calculator-layout">
@@ -514,8 +525,8 @@ export function TakeoffPage() {
         <CalculatorInputSection
           icon={<Plane aria-hidden="true" />}
           title="Flugzeug & Betrieb"
-          description="Masse und betrieblicher Zuschlag"
-          summary={`${massKg} kg · Zuschlag ${safetyMarginPercent}%`}
+          description="Startmasse"
+          summary={`${massKg} kg`}
           defaultOpen={false}
         >
           <FlightPlanMassImport
@@ -528,17 +539,17 @@ export function TakeoffPage() {
             onImport={setMassKg}
           />
           <SliderField label="Masse" labelDetail="kg · MTOW 920" unit="kg" value={massKg} min={750} max={920} disabled={flightPlan.imports.takeoffMass} onChange={setMassKg} />
-          <SliderField label="Zuschlag" unit="%" value={safetyMarginPercent} min={0} max={50} inputMax={100} hint="Grasbahn trocken kurzgeschoren: +15% · Hohes Gras/Schnee: mehr · Hartbelag trocken: 0%" onChange={setSafetyMarginPercent} />
         </CalculatorInputSection>
         <CalculatorInputSection
           icon={<Road aria-hidden="true" />}
           title="Pistenbedingungen"
-          description="Neigung und Windkomponente"
-          summary={`${formatSlopeLabel(slopePercent)} · ${formatWindLabel(windKt)}`}
+          description="Neigung, Wind und Zuschlag"
+          summary={`${formatSlopeLabel(slopePercent)} · ${formatWindLabel(windKt)} · Zuschlag ${safetyMarginPercent}%`}
           defaultOpen={false}
         >
           <SliderField label="Slope" labelDetail="% · bergauf(+) bergab(−)" unit="%" value={slopePercent} min={-2} max={2} step={0.1} onChange={setSlopePercent} />
           <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} disabled={flightPlan.imports.departureImport} onChange={setWindKt} />
+          <SliderField label="Zuschlag" unit="%" value={safetyMarginPercent} min={0} max={50} inputMax={100} hint="Grasbahn trocken kurzgeschoren: +15% · Hohes Gras/Schnee: mehr · Hartbelag trocken: 0%" onChange={setSafetyMarginPercent} />
         </CalculatorInputSection>
       </aside>
       <main className="results">

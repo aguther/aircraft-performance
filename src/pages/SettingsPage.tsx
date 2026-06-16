@@ -1,28 +1,18 @@
-import { Laptop, Moon, RotateCcw, Settings, Sun } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Laptop, Moon, Settings, Sun } from "lucide-react";
 import type { ThemePreference } from "../app/theme";
 
 export function SettingsPage({
   preference,
-  onResetFlightPlan,
   onSelectTheme,
 }: {
   preference: ThemePreference;
-  onResetFlightPlan: () => void;
   onSelectTheme: (preference: ThemePreference) => void;
 }) {
-  const navigate = useNavigate();
   const themeOptions = [
     { value: "auto", label: "Automatisch", Icon: Laptop },
     { value: "light", label: "Hell", Icon: Sun },
     { value: "dark", label: "Dunkel", Icon: Moon },
   ] as const;
-
-  const resetFlightPlan = () => {
-    if (!window.confirm("Neue Flugplanung starten? Alle gespeicherten Eingaben, Flugplätze und übernommenen Werte werden zurückgesetzt.")) return;
-    onResetFlightPlan();
-    navigate("/");
-  };
 
   return (
     <main className="settings-page">
@@ -52,13 +42,6 @@ export function SettingsPage({
             ))}
           </div>
         </div>
-      </section>
-      <section className="settings-page-card">
-        <button className="settings-page-row settings-page-row-danger" type="button" onClick={resetFlightPlan}>
-          <RotateCcw aria-hidden="true" />
-          <span><strong>Neue Flugplanung</strong><small>Alle gespeicherten Planungsdaten zurücksetzen</small></span>
-          <b>Reset</b>
-        </button>
       </section>
     </main>
   );

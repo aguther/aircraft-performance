@@ -7,6 +7,220 @@
   gap: 1rem;
 }
 
+.idx-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at top left, var(--cyan-bg), transparent 42%),
+    var(--bg-card);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.idx-hero-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.idx-hero h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.55rem, 3vw, 2.4rem);
+  line-height: 1.05;
+}
+
+.idx-hero p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.idx-reset-button,
+.idx-secondary-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  background: var(--bg-soft);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.idx-reset-button:hover,
+.idx-secondary-link:hover {
+  border-color: var(--cyan);
+  background: var(--bg-active);
+  color: var(--cyan);
+}
+
+.idx-reset-button svg,
+.idx-secondary-link svg {
+  width: 18px;
+  height: 18px;
+}
+
+.idx-aircraft-panel {
+  display: grid;
+  grid-template-columns: minmax(300px, 1.15fr) minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: 0.85rem;
+}
+
+.idx-aircraft-card {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.idx-aircraft-select-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.idx-card-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--cyan);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.idx-card-kicker svg {
+  width: 18px;
+  height: 18px;
+}
+
+.idx-control-label {
+  color: var(--text-sub);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.idx-aircraft-select {
+  min-height: 44px;
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-soft);
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.idx-aircraft-select:disabled {
+  color: var(--text-dim);
+  opacity: 1;
+}
+
+.idx-registration-options {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.idx-registration-options button {
+  min-height: 42px;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-soft);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.idx-registration-options button:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+  background: var(--bg-active);
+}
+
+.idx-registration-options button.active {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background: var(--cyan-bg);
+}
+
+.idx-aircraft-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.8rem;
+}
+
+.idx-aircraft-metrics div,
+.idx-plan-status span {
+  min-width: 0;
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-soft);
+}
+
+.idx-aircraft-metrics span,
+.idx-plan-status span {
+  display: block;
+  color: var(--text-sub);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.idx-aircraft-metrics strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.idx-plan-status {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 0.8rem 0;
+}
+
+.idx-plan-status span {
+  color: var(--text);
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.idx-secondary-link {
+  width: 100%;
+}
+
 .idx-group {
   border: 1px solid var(--border);
   border-radius: 28px;
@@ -285,6 +499,15 @@
     padding: 1rem 1rem 1.5rem;
   }
 
+  .idx-hero,
+  .idx-aircraft-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .idx-reset-button {
+    width: 100%;
+  }
+
   .idx-grid {
     grid-template-columns: 1fr;
   }
@@ -303,8 +526,15 @@
 }
 
 @media (max-width: 640px) {
+  .idx-hero,
   .idx-group {
     border-radius: 24px;
+  }
+
+  .idx-aircraft-metrics,
+  .idx-plan-status,
+  .idx-registration-options {
+    grid-template-columns: 1fr !important;
   }
 
   .idx-card {
