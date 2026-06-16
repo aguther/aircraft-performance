@@ -462,12 +462,16 @@ describe("calculator interactions", () => {
     const user = userEvent.setup();
     render(<StallPage />);
 
-    await user.click(screen.getByRole("button", { name: "Vollast" }));
-    await user.click(screen.getByRole("button", { name: "0°" }));
+    const configurationButton = screen.getByRole("button", { name: /Konfiguration/ });
+    await user.click(configurationButton);
+    const configurationSection = screen.getByText("Konfiguration", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
 
-    expect(screen.getByText("Ergebnis - 920 kg · Vollast · Klappen 0°")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Vollast" }).classList.contains("active")).toBe(true);
-    expect(screen.getByRole("button", { name: "0°" }).classList.contains("active")).toBe(true);
+    await user.click(within(configurationSection).getByRole("button", { name: "Vollast" }));
+    await user.click(within(configurationSection).getByRole("button", { name: "0°" }));
+
+    expect(screen.getByText("920 kg · Vollast · Klappen 0°")).toBeTruthy();
+    expect(within(configurationSection).getByRole("button", { name: "Vollast" }).classList.contains("active")).toBe(true);
+    expect(within(configurationSection).getByRole("button", { name: "0°" }).classList.contains("active")).toBe(true);
     expect(screen.getByText("Vollast · Klappen 0°")).toBeTruthy();
   });
 });
