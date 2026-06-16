@@ -1,9 +1,11 @@
 import { useEffect, useMemo } from "react";
+import { Gauge, Plane, Weight } from "lucide-react";
 import { calculateWeightBalance, isPointInPolygon } from "../aircraft/g115b/calculators";
 import { g115bData } from "../aircraft/g115b/data";
 import { useFlightPlan } from "../app/FlightPlanContext";
 import { interpolate1D, kilometersPerHourToKnots } from "../domain";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
+import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { SliderField } from "../components/SliderField";
 
 type WeightBalanceResult = ReturnType<typeof calculateWeightBalance>;
@@ -247,10 +249,14 @@ export function WeightBalancePage() {
   }, [landingFuelLiters, landingResult.totalMassKg, plan.startFuelLiters, publishMasses, startResult.totalMassKg]);
 
   return (
-    <div className="page-layout">
-      <aside className="sidebar">
-        <div className="sidebar-section">
-          <div className="section-header">Flugzeug</div>
+    <div className="page-layout compact-calculator-layout">
+      <aside className="sidebar compact-input-panel">
+        <CalculatorInputSection
+          icon={<Plane aria-hidden="true" />}
+          title="Flugzeug"
+          description="Leermasse und Registrierung"
+          summary={plan.registration}
+        >
           <div
             className="mode-toggle"
             style={{
@@ -268,9 +274,13 @@ export function WeightBalancePage() {
               </button>
             ))}
           </div>
-        </div>
-        <div className="sidebar-section">
-          <div className="section-header">Beladung</div>
+        </CalculatorInputSection>
+        <CalculatorInputSection
+          icon={<Weight aria-hidden="true" />}
+          title="Beladung"
+          description="Besatzung, Gepäck und Kraftstoff"
+          summary={`Start ${startResult.totalMassKg.toFixed(1)} kg · Landung ${landingResult.totalMassKg.toFixed(1)} kg`}
+        >
           <SliderField
             label="Pilot"
             unit="kg"
@@ -317,10 +327,14 @@ export function WeightBalancePage() {
             hint={`Verbleibend bei Landung: ${landingFuelLiters.toFixed(1)} l`}
             onChange={(plannedFuelBurnLiters) => updateWeightBalance({ plannedFuelBurnLiters })}
           />
-        </div>
+        </CalculatorInputSection>
       </aside>
       <main className="results">
         <CalculatorCard title="Flugplanung">
+          <div className="takeoff-summary-heading">
+            <Gauge aria-hidden="true" />
+            <span>{plan.registration} · Start bis Landung</span>
+          </div>
           <div className="wb-summary">
             <div className="result-grid">
               <MetricItem
