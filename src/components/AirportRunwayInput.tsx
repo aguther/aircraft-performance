@@ -260,15 +260,12 @@ export function AirportRunwayInput({
         </button>
       </form>
       {error ? <div className="airport-status error">{error}</div> : null}
-      {loading ? (
-        <div className="airport-status loading">
-          <LoadingIndicator label="Flugplatzdaten werden geladen" />
-          <span>Flugplatzdaten werden geladen…</span>
-        </div>
-      ) : null}
-      {!airport && !error && !loading ? (
+      {!airport && !error ? (
         <div className="airport-empty-state">
-          <div className="airport-status">Bitte Flugplatz über ICAO-Code oder Namen suchen.</div>
+          <div className={`airport-status${loading ? " loading" : ""}`}>
+            {loading ? <LoadingIndicator label="Flugplatzdaten werden geladen" /> : null}
+            <span>{loading ? "Flugplatzdaten werden geladen…" : "Bitte Flugplatz über ICAO-Code oder Namen suchen."}</span>
+          </div>
           <label className="airport-field">
             <span>Flugplatz</span>
             <input type="text" value="Noch kein Flugplatz ausgewählt" disabled readOnly />
