@@ -29,6 +29,62 @@ type ChartPoint = readonly [number, number];
 
 const CHART_SOURCE = "/assets/grob115b-takeoff-chart.png";
 
+const TAKEOFF_STATE_STORAGE_KEY = "performance-calculators-takeoff-state";
+
+type PersistedTakeoffState = {
+  pressureAltitudeMode: PressureAltitudeMode;
+  elevationFt: number;
+  qnhHpa: number;
+  directPressureAltitudeFt: number;
+  oatC: number;
+  massKg: number;
+  slopePercent: number;
+  windKt: number;
+  safetyMarginPercent: number;
+};
+
+const defaultTakeoffState: PersistedTakeoffState = {
+  pressureAltitudeMode: "airport",
+  elevationFt: 0,
+  qnhHpa: 1013,
+  directPressureAltitudeFt: 0,
+  oatC: 15,
+  massKg: 920,
+  slopePercent: 0,
+  windKt: 0,
+  safetyMarginPercent: 15,
+};
+
+function numberOrDefault(value: unknown, fallback: number) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function pressureAltitudeModeOrDefault(value: unknown, fallback: PressureAltitudeMode): PressureAltitudeMode {
+  return value === "airport" || value === "qnh" || value === "direct" ? value : fallback;
+}
+
+function loadTakeoffState(): PersistedTakeoffState {
+  if (typeof window === "undefined") return defaultTakeoffState;
+  try {
+    const stored = window.localStorage.getItem(TAKEOFF_STATE_STORAGE_KEY);
+    if (!stored) return defaultTakeoffState;
+    const parsed = JSON.parse(stored) as Partial<PersistedTakeoffState>;
+    return {
+      pressureAltitudeMode: pressureAltitudeModeOrDefault(parsed.pressureAltitudeMode, defaultTakeoffState.pressureAltitudeMode),
+      elevationFt: numberOrDefault(parsed.elevationFt, defaultTakeoffState.elevationFt),
+      qnhHpa: numberOrDefault(parsed.qnhHpa, defaultTakeoffState.qnhHpa),
+      directPressureAltitudeFt: numberOrDefault(parsed.directPressureAltitudeFt, defaultTakeoffState.directPressureAltitudeFt),
+      oatC: numberOrDefault(parsed.oatC, defaultTakeoffState.oatC),
+      massKg: numberOrDefault(parsed.massKg, defaultTakeoffState.massKg),
+      slopePercent: numberOrDefault(parsed.slopePercent, defaultTakeoffState.slopePercent),
+      windKt: numberOrDefault(parsed.windKt, defaultTakeoffState.windKt),
+      safetyMarginPercent: numberOrDefault(parsed.safetyMarginPercent, defaultTakeoffState.safetyMarginPercent),
+    };
+  } catch {
+    return defaultTakeoffState;
+  }
+}
+
 function formatWindLabel(windKt: number) {
   const windKmh = knotsToKilometersPerHour(windKt);
   if (windKt === 0) return "Kein Wind";
@@ -319,15 +375,16 @@ function ChartCard({ inputs, result, exportContext }: { inputs: TakeoffInputs; r
 
 export function TakeoffPage() {
   const { flightPlan, updateImports } = useFlightPlan();
-  const [pressureAltitudeMode, setPressureAltitudeMode] = useState<PressureAltitudeMode>("airport");
-  const [elevationFt, setElevationFt] = useState(0);
-  const [qnhHpa, setQnhHpa] = useState(1013);
-  const [directPressureAltitudeFt, setDirectPressureAltitudeFt] = useState(0);
-  const [oatC, setOatC] = useState(15);
-  const [massKg, setMassKg] = useState(920);
-  const [slopePercent, setSlopePercent] = useState(0);
-  const [windKt, setWindKt] = useState(0);
-  const [safetyMarginPercent, setSafetyMarginPercent] = useState(15);
+  const [savedState] = useState(loadTakeoffState);
+  const [pressureAltitudeMode, setPressureAltitudeMode] = useState<PressureAltitudeMode>(savedState.pressureAltitudeMode);
+  const [elevationFt, setElevationFt] = useState(savedState.elevationFt);
+  const [qnhHpa, setQnhHpa] = useState(savedState.qnhHpa);
+  const [directPressureAltitudeFt, setDirectPressureAltitudeFt] = useState(savedState.directPressureAltitudeFt);
+  const [oatC, setOatC] = useState(savedState.oatC);
+  const [massKg, setMassKg] = useState(savedState.massKg);
+  const [slopePercent, setSlopePercent] = useState(savedState.slopePercent);
+  const [windKt, setWindKt] = useState(savedState.windKt);
+  const [safetyMarginPercent, setSafetyMarginPercent] = useState(savedState.safetyMarginPercent);
   const [selectedRunway, setSelectedRunway] = useState<RunwayDirection>();
   const pressureAltitudeFt = pressureAltitudeMode !== "direct"
     ? pressureAltitudeFromQnh(elevationFt, qnhHpa)
@@ -363,6 +420,23 @@ export function TakeoffPage() {
   useEffect(() => {
     if (flightPlan.imports.departureImport) setPressureAltitudeMode("airport");
   }, [flightPlan.imports.departureImport]);
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(TAKEOFF_STATE_STORAGE_KEY, JSON.stringify({
+        pressureAltitudeMode,
+        elevationFt,
+        qnhHpa,
+        directPressureAltitudeFt,
+        oatC,
+        massKg,
+        slopePercent,
+        windKt,
+        safetyMarginPercent,
+      }));
+    } catch {
+      // Local calculator state is optional; the current session values remain active.
+    }
+  }, [directPressureAltitudeFt, elevationFt, massKg, oatC, pressureAltitudeMode, qnhHpa, safetyMarginPercent, slopePercent, windKt]);
 
   return (
     <div className="page-layout">

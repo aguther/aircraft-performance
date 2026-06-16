@@ -271,6 +271,37 @@ describe("calculator interactions", () => {
     });
   });
 
+  it("keeps manual takeoff edits after disabling airport imports and remounting", async () => {
+    stubAirportSearch();
+    const user = userEvent.setup();
+    const view = render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    await user.type(screen.getByRole("searchbox", { name: "Flugplatzsuche" }), "EDFE");
+    await user.click(screen.getByRole("button", { name: "Suchen" }));
+    expect(await screen.findByText(/ICON-D2-Prognose/)).toBeTruthy();
+    await user.click(screen.getByRole("checkbox", { name: "Werte übernehmen" }));
+    await user.click(screen.getByRole("checkbox", { name: "Werte übernommen" }));
+
+    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;
+    const oatField = within(atmosphereSection).getByText("OAT", { selector: ".field-label" }).parentElement!;
+    const oatInput = oatField.querySelector('input[type="number"]')!;
+    fireEvent.change(oatInput, { target: { value: "22" } });
+    expect(within(atmosphereSection).getAllByDisplayValue("22").length).toBeGreaterThan(0);
+
+    view.unmount();
+    render(<MemoryRouter><FlightPlanProvider><LandingPage /></FlightPlanProvider></MemoryRouter>);
+    cleanup();
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    const restoredAtmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;
+    expect(within(restoredAtmosphereSection).getAllByDisplayValue("22").length).toBeGreaterThan(0);
+    expect(await screen.findByRole("checkbox", { name: "Werte übernehmen" })).toBeTruthy();
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.imports.departureImport).toBe(false);
+    });
+  });
+
   it("applies real OpenAIP destination airport data to landing", async () => {
     stubAirportSearch();
     const user = userEvent.setup();
@@ -320,7 +351,7 @@ describe("calculator interactions", () => {
   it("colors landing result distances when LDA is exceeded", async () => {
     stubAirportSearch({
       ...airport,
-      runways: [{ ...airport.runways[0], lengthM: 100, ldaM: 100 }],
+      runways: [{ ...airport.runways[0], lengthM: 10, ldaM: 10 }],
     });
     const user = userEvent.setup();
     render(<MemoryRouter><FlightPlanProvider><LandingPage /></FlightPlanProvider></MemoryRouter>);
