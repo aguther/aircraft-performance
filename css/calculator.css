@@ -797,16 +797,24 @@
 
 .airport-search {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(82px, 96px);
+  grid-template-columns: minmax(0, 1fr) 22px minmax(82px, 96px);
   align-items: start;
   gap: 0.5rem;
+}
+
+.airport-search-status {
+  display: grid;
+  width: 22px;
+  min-height: 40px;
+  margin-top: calc(10.5px + 0.3rem + 5px);
+  place-items: center;
+  color: var(--cyan);
 }
 
 .airport-search button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
   width: 100%;
   min-height: 40px;
   margin-top: calc(10.5px + 0.3rem + 5px);
@@ -986,6 +994,32 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
+}
+
+.airport-heading-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.airport-heading-pair span {
+  min-width: 0;
+}
+
+.airport-heading-pair small {
+  display: block;
+  color: var(--text-dim);
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.airport-heading-pair strong {
+  display: block;
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 800;
+  line-height: 1.25;
 }
 
 .airport-declared-combined > div,
@@ -2243,10 +2277,21 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   }
 
   .airport-search {
-    grid-template-columns: 1fr;
+    grid-template-columns: 22px minmax(0, 1fr);
+  }
+
+  .airport-search .airport-field {
+    grid-column: 1 / -1;
+  }
+
+  .airport-search-status {
+    grid-column: 1;
+    margin-top: 0;
   }
 
   .airport-search button {
+    grid-column: 2;
+    margin-top: 0;
     width: 100%;
   }
 

@@ -45,6 +45,24 @@ function AirportPreviewValue({ label, value, unit, status }: Readonly<{ label: s
   );
 }
 
+function RunwayHeadingPreview({ runway }: Readonly<{ runway: RunwayDirection }>) {
+  return (
+    <div className="airport-preview-item">
+      <span className="airport-preview-label">RWY true / mag</span>
+      <div className="airport-heading-pair">
+        <span>
+          <small>TRUE</small>
+          <strong>{formatDirection(runway.trueHeadingDeg)}°</strong>
+        </span>
+        <span>
+          <small>MAG</small>
+          <strong>{formatDirection(runway.magneticHeadingDeg)}°</strong>
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function LoadingIndicator({ active, label }: Readonly<{ active: boolean; label: string }>) {
   return (
     <span className={`airport-loading-indicator${active ? "" : " idle"}`} aria-hidden={!active} aria-label={active ? label : undefined}>
@@ -293,8 +311,10 @@ export function AirportRunwayInput({
           />
           {!airport && !error && !loading ? <small aria-hidden="true">ICAO-Code oder Namen eingeben.</small> : null}
         </label>
-        <button type="submit" disabled={loading}>
+        <span className="airport-search-status">
           <LoadingIndicator active={loading} label="Flugplatzsuche läuft" />
+        </span>
+        <button type="submit" disabled={loading}>
           <span>{loading ? "Lädt…" : "Suchen"}</span>
         </button>
       </form>
@@ -413,7 +433,7 @@ export function AirportRunwayInput({
             <>
               <div className="airport-preview">
                 <AirportPreviewValue label="Elevation" value={airport.elevationFt} unit="ft" />
-                <AirportPreviewValue label="RWY true / mag" value={`${formatDirection(runway.trueHeadingDeg)}° / ${formatDirection(runway.magneticHeadingDeg)}°`} />
+                <RunwayHeadingPreview runway={runway} />
                 <AirportPreviewValue label="Bahnlänge" value={runway.lengthM} unit="m" />
               </div>
               <div className="airport-declared-distances" aria-label="Verfügbare Pistenstrecken">

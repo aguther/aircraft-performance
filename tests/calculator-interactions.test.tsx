@@ -343,6 +343,8 @@ describe("calculator interactions", () => {
     expect(screen.getByText("TORA")).toBeTruthy();
     expect(screen.getByText("TODA")).toBeTruthy();
     expect(screen.getByText("Geplante Startzeit · UTC · 24 h")).toBeTruthy();
+    expect(screen.getByText("TRUE")).toBeTruthy();
+    expect(screen.getByText("MAG")).toBeTruthy();
     let atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
     await waitFor(() => {
       expect(atmosphereSection.querySelector('input[type="number"][value="1016"]')).toBeTruthy();
