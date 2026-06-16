@@ -296,11 +296,40 @@ export function AirportRunwayInput({
             <AirportPreviewValue label="RWY true / mag" value="–" />
             <AirportPreviewValue label="Bahnlänge" value="–" />
           </div>
+          <div className="airport-declared-distances" aria-label="Verfügbare Pistenstrecken">
+            <div className="airport-preview-item airport-declared-combined">
+              <div>
+                <span className="airport-preview-label">TORA</span>
+                <strong className="airport-preview-value">–</strong>
+              </div>
+              <div>
+                <span className="airport-preview-label">TODA</span>
+                <strong className="airport-preview-value">–</strong>
+              </div>
+            </div>
+            <AirportPreviewValue label="LDA" value="–" />
+          </div>
           <div className="airport-weather airport-weather--loading">
             <div className="airport-weather-title">Wetterdaten nach Flugplatzauswahl</div>
             <div className="airport-weather-basics">
               <AirportPreviewValue label="QNH" value="–" />
               <AirportPreviewValue label="OAT" value="–" />
+            </div>
+            <div className="airport-wind-compact">
+              <div className="airport-wind-main">
+                <span className="airport-preview-label">Wind true</span>
+                <strong className="airport-preview-value">–</strong>
+              </div>
+              <div className="airport-wind-components">
+                <div>
+                  <span className="airport-preview-label">HW</span>
+                  <strong className="airport-preview-value">–</strong>
+                </div>
+                <div>
+                  <span className="airport-preview-label">XW</span>
+                  <strong className="airport-preview-value">–</strong>
+                </div>
+              </div>
             </div>
           </div>
         </div>

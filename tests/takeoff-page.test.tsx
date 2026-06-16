@@ -18,6 +18,12 @@ describe("TakeoffPage", () => {
     expect(markup).toContain("Noch kein Flugplatz ausgewählt");
     expect(markup).toContain("Keine Bahn ausgewählt");
     expect(markup).toContain("Wetterdaten nach Flugplatzauswahl");
+    expect(markup).toContain("TORA");
+    expect(markup).toContain("TODA");
+    expect(markup).toContain("LDA");
+    expect(markup).toContain("Wind true");
+    expect(markup).toContain("HW");
+    expect(markup).toContain("XW");
     expect(markup).toContain('step="1" value="920"');
   });
 });
