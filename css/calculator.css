@@ -797,14 +797,15 @@
 
 .airport-search {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 22px minmax(82px, 96px);
+  grid-template-columns: minmax(0, 1fr) 18px 132px;
   align-items: start;
-  gap: 0.5rem;
+  column-gap: 0.45rem;
+  row-gap: 0.35rem;
 }
 
 .airport-search-status {
   display: grid;
-  width: 22px;
+  width: 18px;
   min-height: 40px;
   margin-top: calc(10.5px + 0.3rem + 5px);
   place-items: center;
@@ -2277,7 +2278,7 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   }
 
   .airport-search {
-    grid-template-columns: 22px minmax(0, 1fr);
+    grid-template-columns: 18px minmax(0, 1fr);
   }
 
   .airport-search .airport-field {
