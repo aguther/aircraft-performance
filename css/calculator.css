@@ -781,6 +781,12 @@
   gap: 0.6rem;
 }
 
+.airport-empty-state {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
 .airport-manual-weather {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
@@ -795,6 +801,10 @@
 }
 
 .airport-search button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   min-height: 38px;
   padding: 0.65rem 0.75rem;
   border: 1px solid var(--border-strong);
@@ -813,12 +823,21 @@
 }
 
 .airport-status {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   padding: 0.65rem 0.7rem;
   border: 1px dashed var(--border);
   border-radius: 10px;
   color: var(--text-dim);
   font-size: 10.5px;
   line-height: 1.45;
+}
+
+.airport-status.loading {
+  border-style: solid;
+  color: var(--cyan);
+  background: var(--cyan-bg);
 }
 
 .airport-status.error {
@@ -855,6 +874,12 @@
   font-size: 12px;
   font-weight: 700;
   text-transform: none;
+}
+
+.airport-field input:disabled,
+.airport-field select:disabled {
+  color: var(--text-dim);
+  opacity: 1;
 }
 
 .airport-time {
@@ -970,11 +995,35 @@
 }
 
 .airport-weather-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   color: var(--cyan);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+.airport-loading-indicator {
+  display: inline-grid;
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
+  place-items: center;
+  color: currentColor;
+}
+
+.airport-loading-indicator svg {
+  width: 1em;
+  height: 1em;
+  animation: airport-loading-spin 900ms linear infinite;
+}
+
+@keyframes airport-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .airport-preview-item {

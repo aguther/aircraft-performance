@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { RefreshCw } from "lucide-react";
 import { useFlightPlan } from "../app/FlightPlanContext";
 import {
   calculateWindComponents,
@@ -44,6 +45,14 @@ function AirportPreviewValue({ label, value, unit, status }: Readonly<{ label: s
   );
 }
 
+function LoadingIndicator({ label }: Readonly<{ label: string }>) {
+  return (
+    <span className="airport-loading-indicator" aria-label={label}>
+      <RefreshCw aria-hidden="true" />
+    </span>
+  );
+}
+
 function runwayLabel(runway: RunwayDirection) {
   return `RWY ${runway.designator} · ${runway.lengthM} m · ${runway.surface}`;
 }
@@ -76,7 +85,9 @@ export function AirportRunwayInput({
   onEnabledChange,
   onWeatherNowChange,
   onApply,
+  onAirportChange,
   onRunwayChange,
+  onWeatherValuesChange,
 }: Readonly<{
   operation: AirportRunwayOperation;
   enabled: boolean;
@@ -84,7 +95,9 @@ export function AirportRunwayInput({
   onEnabledChange: (enabled: boolean) => void;
   onWeatherNowChange: (enabled: boolean) => void;
   onApply: (values: AirportRunwayValues) => void;
+  onAirportChange?: (airport?: Airport) => void;
   onRunwayChange?: (runway?: RunwayDirection) => void;
+  onWeatherValuesChange?: (values?: WeatherRunwayValues) => void;
 }>) {
   const { flightPlan, updateArrival, updateDeparture } = useFlightPlan();
   const savedSelection = operation === "departure" ? flightPlan.departure : flightPlan.arrival;
@@ -122,7 +135,10 @@ export function AirportRunwayInput({
   const windComponents = weather && runway
     ? calculateWindComponents(weather.windDirectionTrueDeg, weather.windSpeedKt, runway.trueHeadingDeg)
     : null;
-  const weatherValues = weather && runway ? weatherValuesForRunway(weather, runway) : null;
+  const weatherValues = useMemo(
+    () => weather && runway ? weatherValuesForRunway(weather, runway) : null,
+    [runway?.id, weather?.id],
+  );
   const weatherTitle = buildWeatherTitle(weather, weatherNow, weatherLoading);
   const headwindStatus = windStatus(windComponents ? windComponents.headwindKt >= 0 : null);
   const crosswindStatus = windStatus(windComponents ? Math.abs(windComponents.crosswindKt) < 10 : null);
@@ -145,8 +161,10 @@ export function AirportRunwayInput({
   }, [airport?.id, enabled, plannedAt, runway?.id]);
 
   useEffect(() => {
+    onAirportChange?.(airport ?? undefined);
     onRunwayChange?.(runway);
-  }, [onRunwayChange, runway]);
+    onWeatherValuesChange?.(weatherValues ?? undefined);
+  }, [airport, onAirportChange, onRunwayChange, onWeatherValuesChange, runway, weatherValues]);
 
   useEffect(() => {
     if (!enabled || !weatherValues) return;
@@ -236,10 +254,56 @@ export function AirportRunwayInput({
             onChange={(event) => setSearch(event.target.value.toLocaleUpperCase("de-DE"))}
           />
         </label>
-        <button type="submit" disabled={loading}>{loading ? "Lädt…" : "Suchen"}</button>
+        <button type="submit" disabled={loading}>
+          {loading ? <LoadingIndicator label="Flugplatzsuche läuft" /> : null}
+          <span>{loading ? "Lädt…" : "Suchen"}</span>
+        </button>
       </form>
       {error ? <div className="airport-status error">{error}</div> : null}
-      {!airport && !error && !loading ? <div className="airport-status">Bitte Flugplatz über ICAO-Code oder Namen suchen.</div> : null}
+      {loading ? (
+        <div className="airport-status loading">
+          <LoadingIndicator label="Flugplatzdaten werden geladen" />
+          <span>Flugplatzdaten werden geladen…</span>
+        </div>
+      ) : null}
+      {!airport && !error && !loading ? (
+        <div className="airport-empty-state">
+          <div className="airport-status">Bitte Flugplatz über ICAO-Code oder Namen suchen.</div>
+          <label className="airport-field">
+            <span>Flugplatz</span>
+            <input type="text" value="Noch kein Flugplatz ausgewählt" disabled readOnly />
+          </label>
+          <label className="airport-field">
+            <span>{operation === "departure" ? "Startbahn" : "Landebahn"}</span>
+            <input type="text" value="Keine Bahn ausgewählt" disabled readOnly />
+          </label>
+          <div className="airport-time">
+            <div className="airport-field-label">Geplante {operation === "departure" ? "Startzeit" : "Landezeit"} · UTC · 24 h</div>
+            <div className="airport-time-row">
+              <span className="airport-datetime-control">
+                <input type="date" lang="de-DE" value={plannedAt.slice(0, 10)} disabled={weatherNow} readOnly />
+                <input type="time" lang="de-DE" value={plannedAt.slice(11)} disabled={weatherNow} readOnly />
+              </span>
+              <label className="import-toggle airport-now-toggle">
+                <input type="checkbox" checked={weatherNow} onChange={(event) => onWeatherNowChange(event.target.checked)} />
+                <span>Jetzt</span>
+              </label>
+            </div>
+          </div>
+          <div className="airport-preview">
+            <AirportPreviewValue label="Elevation" value="–" />
+            <AirportPreviewValue label="RWY true / mag" value="–" />
+            <AirportPreviewValue label="Bahnlänge" value="–" />
+          </div>
+          <div className="airport-weather airport-weather--loading">
+            <div className="airport-weather-title">Wetterdaten nach Flugplatzauswahl</div>
+            <div className="airport-weather-basics">
+              <AirportPreviewValue label="QNH" value="–" />
+              <AirportPreviewValue label="OAT" value="–" />
+            </div>
+          </div>
+        </div>
+      ) : null}
       {airport ? (
         <>
           <label className="airport-field">
@@ -307,7 +371,10 @@ export function AirportRunwayInput({
               </div>
               {weatherError && !weather ? <div className="airport-status error">{weatherError}</div> : null}
               <div className={`airport-weather${!weather || weatherLoading ? " airport-weather--loading" : ""}`}>
-                <div className="airport-weather-title">{weatherTitle}</div>
+                <div className="airport-weather-title">
+                  {weatherLoading ? <LoadingIndicator label="Wetterdaten werden geladen" /> : null}
+                  <span>{weatherTitle}</span>
+                </div>
                 <div className="airport-weather-basics">
                   <AirportPreviewValue label="QNH" value={weather?.qnhHpa.toFixed(1) ?? "–"} unit={weather ? "hPa" : undefined} />
                   <AirportPreviewValue label="OAT" value={weather?.temperatureC.toFixed(1) ?? "–"} unit={weather ? "°C" : undefined} />

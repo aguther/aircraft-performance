@@ -19,6 +19,7 @@ import { FlightPlanMassImport } from "../components/FlightPlanMassImport";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
 import { takeoffRunwayWarnings, type RunwayDirection } from "../flight-data";
+import type { Airport } from "../flight-data";
 
 type TakeoffResult = ReturnType<typeof calculateTakeoff>;
 type PressureAltitudeMode = "airport" | "qnh" | "direct";
@@ -41,6 +42,37 @@ function formatSlopeLabel(slopePercent: number) {
   if (slopePercent > 0) return `${slopePercent.toFixed(1)}% bergauf`;
   if (slopePercent < 0) return `${Math.abs(slopePercent).toFixed(1)}% bergab`;
   return "eben";
+}
+
+function formatAtmosphereSummary({
+  airport,
+  elevationFt,
+  mode,
+  oatC,
+  pressureAltitudeFt,
+  qnhHpa,
+  runway,
+  weatherValues,
+}: {
+  airport?: Airport;
+  elevationFt: number;
+  mode: PressureAltitudeMode;
+  oatC: number;
+  pressureAltitudeFt: number;
+  qnhHpa: number;
+  runway?: RunwayDirection;
+  weatherValues?: { qnhHpa?: number; oatC?: number };
+}) {
+  if (mode === "airport") {
+    const airportLabel = airport ? `${airport.icaoCode ? `${airport.icaoCode} · ` : ""}${airport.name}` : "Noch kein Flugplatz";
+    const runwayLabelText = runway ? ` · RWY ${runway.designator}` : "";
+    const displayElevationFt = airport?.elevationFt ?? elevationFt;
+    const displayQnhHpa = weatherValues?.qnhHpa ?? qnhHpa;
+    const displayOatC = weatherValues?.oatC ?? oatC;
+    return `${airportLabel}${runwayLabelText} · Elev ${displayElevationFt.toLocaleString("de-DE")} ft · QNH ${displayQnhHpa} hPa · OAT ${displayOatC} °C`;
+  }
+  if (mode === "qnh") return `Elevation ${elevationFt.toLocaleString("de-DE")} ft · QNH ${qnhHpa} hPa · PA ${pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT ${oatC} °C`;
+  return `PA ${pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT ${oatC} °C`;
 }
 
 function chartX(
@@ -343,7 +375,9 @@ export function TakeoffPage() {
   const [slopePercent, setSlopePercent] = useState(0);
   const [windKt, setWindKt] = useState(0);
   const [safetyMarginPercent, setSafetyMarginPercent] = useState(15);
+  const [selectedAirport, setSelectedAirport] = useState<Airport>();
   const [selectedRunway, setSelectedRunway] = useState<RunwayDirection>();
+  const [selectedWeatherValues, setSelectedWeatherValues] = useState<{ qnhHpa?: number; oatC?: number }>();
   const pressureAltitudeFt = pressureAltitudeMode !== "direct"
     ? pressureAltitudeFromQnh(elevationFt, qnhHpa)
     : directPressureAltitudeFt;
@@ -386,7 +420,16 @@ export function TakeoffPage() {
           icon={<CloudSun aria-hidden="true" />}
           title="Atmosphäre"
           description="Flugplatz, Höhe und Wetter"
-          summary={`${pressureAltitudeMode === "airport" ? "Airport" : pressureAltitudeMode === "qnh" ? "Elevation" : "Pressure Alt."} · PA ${pressureAltitudeFt.toLocaleString("de-DE")} ft · OAT ${oatC} °C`}
+          summary={formatAtmosphereSummary({
+            airport: selectedAirport,
+            elevationFt,
+            mode: pressureAltitudeMode,
+            oatC,
+            pressureAltitudeFt,
+            qnhHpa,
+            runway: selectedRunway,
+            weatherValues: selectedWeatherValues,
+          })}
         >
           <div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
             <button className={`mode-btn${pressureAltitudeMode === "airport" ? " active" : ""}`} type="button" onClick={() => setPressureAltitudeMode("airport")}>Airport</button>
@@ -401,7 +444,9 @@ export function TakeoffPage() {
                 weatherNow={flightPlan.imports.departureWeatherNow}
                 onEnabledChange={(value) => updateImports({ departureImport: value })}
                 onWeatherNowChange={(enabled) => updateImports({ departureWeatherNow: enabled })}
+                onAirportChange={setSelectedAirport}
                 onRunwayChange={setSelectedRunway}
+                onWeatherValuesChange={setSelectedWeatherValues}
                 onApply={(values) => {
                   if (values.elevationFt != null) setElevationFt(values.elevationFt);
                   if (values.qnhHpa != null) setQnhHpa(values.qnhHpa);

@@ -65,8 +65,8 @@ const defaultFlightPlan: FlightPlan = {
   imports: {
     departureImport: false,
     arrivalImport: false,
-    departureWeatherNow: false,
-    arrivalWeatherNow: false,
+    departureWeatherNow: true,
+    arrivalWeatherNow: true,
     takeoffMass: false,
     landingMass: false,
   },

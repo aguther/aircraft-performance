@@ -307,13 +307,18 @@ describe("calculator interactions", () => {
     await user.click(screen.getByRole("button", { name: "Suchen" }));
     expect(await screen.findByText(/OpenAIP · Stand/)).toBeTruthy();
     expect(searchInput.getAttribute("value")).toBe("");
-    expect(await screen.findByText(/ICON-D2-Prognose/)).toBeTruthy();
+    expect(await screen.findByText(/Aktuelle ICON-D2-Werte/)).toBeTruthy();
     expect(screen.getByText("HW")).toBeTruthy();
     expect(screen.getByText("XW")).toBeTruthy();
     expect(screen.getByText(/082° \/ 7.8 G 12.4/)).toBeTruthy();
     expect(screen.getByText("TORA")).toBeTruthy();
     expect(screen.getByText("TODA")).toBeTruthy();
     expect(screen.getByText("Geplante Startzeit · UTC · 24 h")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: /Atmosphäre/ }));
+    const atmosphereButton = screen.getByRole("button", { name: /EDFE · Frankfurt-Egelsbach · RWY 08/ });
+    expect(atmosphereButton.textContent).toContain("Elev 384 ft");
+    expect(atmosphereButton.textContent).toContain("QNH 1016 hPa");
+    await user.click(atmosphereButton);
     await user.click(screen.getByRole("checkbox", { name: "Werte übernehmen" }));
     expect(screen.getByRole("button", { name: "Elevation" }).hasAttribute("disabled")).toBe(true);
     const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
@@ -348,8 +353,6 @@ describe("calculator interactions", () => {
     expect(await screen.findByText("Landebahn")).toBeTruthy();
     expect(screen.getByText("Geplante Landezeit · UTC · 24 h")).toBeTruthy();
     const plannedTime = screen.getByText("Geplante Landezeit · UTC · 24 h").parentElement!.querySelector("input")!;
-    expect(plannedTime.hasAttribute("disabled")).toBe(false);
-    await user.click(screen.getByRole("checkbox", { name: "Jetzt" }));
     expect(plannedTime.hasAttribute("disabled")).toBe(true);
     await waitFor(() => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
