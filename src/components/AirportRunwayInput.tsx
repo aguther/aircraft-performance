@@ -62,7 +62,7 @@ export function weatherValuesForRunway(weather: WeatherForecast, runway: RunwayD
   return {
     qnhHpa: Math.round(weather.qnhHpa),
     oatC: Math.round(weather.temperatureC),
-    windKt: Math.floor(wind.headwindKt),
+    windKt: Math.round(wind.headwindKt),
   };
 }
 
@@ -425,15 +425,15 @@ export function AirportRunwayInput({
                   <span>{weatherTitle}</span>
                 </div>
                 <div className="airport-weather-basics">
-                  <AirportPreviewValue label="QNH" value={weather?.qnhHpa.toFixed(1) ?? "–"} unit={weather ? "hPa" : undefined} />
-                  <AirportPreviewValue label="OAT" value={weather?.temperatureC.toFixed(1) ?? "–"} unit={weather ? "°C" : undefined} />
+                  <AirportPreviewValue label="QNH" value={weather ? Math.round(weather.qnhHpa) : "–"} unit={weather ? "hPa" : undefined} />
+                  <AirportPreviewValue label="OAT" value={weather ? Math.round(weather.temperatureC) : "–"} unit={weather ? "°C" : undefined} />
                 </div>
                 <div className="airport-wind-compact">
                   <div className="airport-wind-main">
                     <span className="airport-preview-label">Wind true</span>
                     <strong className="airport-preview-value">
                       {weather
-                        ? `${formatDirection(weather.windDirectionTrueDeg)}° / ${weather.windSpeedKt.toFixed(1)}${weather.windGustKt != null ? ` G ${weather.windGustKt.toFixed(1)}` : ""}`
+                        ? `${formatDirection(weather.windDirectionTrueDeg)}° / ${Math.round(weather.windSpeedKt)}${weather.windGustKt != null ? ` G ${Math.round(weather.windGustKt)}` : ""}`
                         : "–"}
                       {weather ? <span className="airport-preview-unit">kt</span> : null}
                     </strong>
@@ -442,14 +442,14 @@ export function AirportRunwayInput({
                     <div>
                       <span className="airport-preview-label">{headwindCode}</span>
                       <strong className={`airport-preview-value${headwindStatus ? ` ${headwindStatus}` : ""}`}>
-                        {windComponents ? Math.abs(windComponents.headwindKt).toFixed(1) : "–"}
+                        {windComponents ? Math.round(Math.abs(windComponents.headwindKt)) : "–"}
                         {windComponents ? <span className="airport-preview-unit">kt</span> : null}
                       </strong>
                     </div>
                     <div>
                       <span className="airport-preview-label">XW</span>
                       <strong className={`airport-preview-value${crosswindStatus ? ` ${crosswindStatus}` : ""}`}>
-                        {windComponents ? Math.abs(windComponents.crosswindKt).toFixed(1) : "–"}
+                        {windComponents ? Math.round(Math.abs(windComponents.crosswindKt)) : "–"}
                         {windComponents ? <span className="airport-preview-unit">kt</span> : null}
                       </strong>
                     </div>

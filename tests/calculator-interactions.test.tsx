@@ -321,7 +321,7 @@ describe("calculator interactions", () => {
     expect(weatherValuesForRunway(weather, airport.runways[0])).toEqual({
       qnhHpa: 1016,
       oatC: 17,
-      windKt: 7,
+      windKt: 8,
     });
   });
 
@@ -339,7 +339,7 @@ describe("calculator interactions", () => {
     expect(await screen.findByText(/Aktuelle ICON-D2-Werte/)).toBeTruthy();
     expect(screen.getByText("HW")).toBeTruthy();
     expect(screen.getByText("XW")).toBeTruthy();
-    expect(screen.getByText(/082° \/ 7.8 G 12.4/)).toBeTruthy();
+    expect(screen.getByText(/082° \/ 8 G 12/)).toBeTruthy();
     expect(screen.getByText("TORA")).toBeTruthy();
     expect(screen.getByText("TODA")).toBeTruthy();
     expect(screen.getByText("Geplante Startzeit · UTC · 24 h")).toBeTruthy();
@@ -350,7 +350,7 @@ describe("calculator interactions", () => {
     });
     let runwaySection = screen.getByText("Pistenbedingungen", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
     await user.click(within(runwaySection).getByRole("button", { name: /Pistenbedingungen/ }));
-    expect(runwaySection.querySelector('input[type="number"][value="7"]')).toBeTruthy();
+    expect(runwaySection.querySelector('input[type="number"][value="8"]')).toBeTruthy();
     await user.click(within(runwaySection).getByRole("button", { name: /Pistenbedingungen/ }));
     await waitFor(() => {
       expect((screen.getByRole("checkbox", { name: "Werte übernommen" }) as HTMLInputElement).checked).toBe(true);
