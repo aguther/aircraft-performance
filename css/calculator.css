@@ -14,9 +14,11 @@
   top: 109px;
   max-height: calc(100vh - 109px);
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--bg-soft);
   border-right: 1px solid var(--border);
   backdrop-filter: blur(18px);
+  -webkit-overflow-scrolling: touch;
 }
 
 .results {
@@ -2145,7 +2147,7 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   }
 }
 
-@media (max-width: 1365px) {
+@media (max-width: 900px) {
   .page-layout,
   .compact-calculator-layout,
   .runway-calculator .page-layout,
@@ -2179,6 +2181,48 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   .cruise-calculator .takeoff-chart-stage {
     min-width: 0;
     width: 100%;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1365px) and (orientation: landscape) {
+  .page-layout,
+  .compact-calculator-layout,
+  .runway-calculator .page-layout,
+  .cruise-calculator .page-layout {
+    grid-template-columns: minmax(390px, 430px) minmax(0, 1fr);
+  }
+
+  .sidebar,
+  .runway-calculator .sidebar,
+  .cruise-calculator .sidebar {
+    position: sticky;
+    top: 109px;
+    max-height: calc(100vh - 109px);
+    max-height: calc(100dvh - 109px);
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    border-bottom: 0;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .results,
+  .runway-calculator .results {
+    min-height: calc(100vh - 109px);
+    min-height: calc(100dvh - 109px);
+  }
+
+  .takeoff-chart-scroll,
+  .runway-calculator .takeoff-chart-scroll,
+  .cruise-calculator .takeoff-chart-scroll {
+    overflow-x: auto;
+  }
+
+  .takeoff-chart-stage,
+  .runway-calculator .takeoff-chart-stage,
+  .cruise-calculator .takeoff-chart-stage {
+    width: auto;
+    min-width: 760px;
   }
 }
 
