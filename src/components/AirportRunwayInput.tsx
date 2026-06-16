@@ -115,6 +115,7 @@ export function AirportRunwayInput({
   useEffect(() => {
     if (!savedSelection?.airportId) return;
     const controller = new AbortController();
+    setWeatherLoading(true);
     getOpenAipAirport(savedSelection.airportId, controller.signal)
       .then((loadedAirport) => {
         setAirport(loadedAirport);
@@ -175,6 +176,7 @@ export function AirportRunwayInput({
   useEffect(() => {
     if (!airport || !plannedAt) {
       setWeather(null);
+      setWeatherLoading(false);
       return;
     }
     const controller = new AbortController();
@@ -207,6 +209,7 @@ export function AirportRunwayInput({
       setResults(response.items);
       const selected = response.items[0] ?? null;
       setWeather(null);
+      setWeatherLoading(Boolean(selected));
       setAirport(selected);
       setRunwayId(selected?.runways[0]?.id ?? "");
       if (selected) setSearch("");
@@ -224,6 +227,7 @@ export function AirportRunwayInput({
   const selectAirport = (airportId: string) => {
     const selected = results.find((candidate) => candidate.id === airportId) ?? null;
     setWeather(null);
+    setWeatherLoading(Boolean(selected));
     setAirport(selected);
     setRunwayId(selected?.runways[0]?.id ?? "");
   };
