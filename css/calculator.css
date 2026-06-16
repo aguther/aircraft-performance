@@ -2195,21 +2195,16 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   .sidebar,
   .runway-calculator .sidebar,
   .cruise-calculator .sidebar {
-    position: sticky;
-    top: 109px;
-    max-height: calc(100vh - 109px);
-    max-height: calc(100dvh - 109px);
-    overflow-y: auto;
+    position: static;
+    max-height: none;
+    overflow-y: visible;
     border-right: 1px solid var(--border);
     border-bottom: 0;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
   }
 
   .results,
   .runway-calculator .results {
-    min-height: calc(100vh - 109px);
-    min-height: calc(100dvh - 109px);
+    min-height: auto;
   }
 
   .takeoff-chart-scroll,
