@@ -314,6 +314,14 @@ describe("calculator interactions", () => {
     expect(screen.getByText("TORA")).toBeTruthy();
     expect(screen.getByText("TODA")).toBeTruthy();
     expect(screen.getByText("Geplante Startzeit · UTC · 24 h")).toBeTruthy();
+    let atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    expect(atmosphereSection.querySelector('input[type="number"][value="1016"]')).toBeTruthy();
+    expect(atmosphereSection.querySelector('input[type="number"][value="17"]')).toBeTruthy();
+    let runwaySection = screen.getByText("Pistenbedingungen", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    await user.click(within(runwaySection).getByRole("button", { name: /Pistenbedingungen/ }));
+    expect(runwaySection.querySelector('input[type="number"][value="7"]')).toBeTruthy();
+    await user.click(within(runwaySection).getByRole("button", { name: /Pistenbedingungen/ }));
+    expect(screen.getByRole("checkbox", { name: "Werte übernehmen" }).hasAttribute("checked")).toBe(false);
     await user.click(screen.getByRole("button", { name: /Atmosphäre/ }));
     const atmosphereButton = screen.getByRole("button", { name: /EDFE · Frankfurt-Egelsbach · RWY 08/ });
     expect(atmosphereButton.textContent).toContain("Elev 384 ft");
@@ -321,10 +329,10 @@ describe("calculator interactions", () => {
     await user.click(atmosphereButton);
     await user.click(screen.getByRole("checkbox", { name: "Werte übernehmen" }));
     expect(screen.getByRole("button", { name: "Elevation" }).hasAttribute("disabled")).toBe(true);
-    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
     const qnhField = within(atmosphereSection).getByText("QNH", { selector: ".field-label" }).parentElement!;
     expect(qnhField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(true);
-    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    runwaySection = screen.getByText("Pistenbedingungen", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
     await user.click(within(runwaySection).getByRole("button", { name: /Pistenbedingungen/ }));
     const windField = within(runwaySection).getByText("Wind", { selector: ".field-label" }).parentElement!;
     expect(windField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(true);

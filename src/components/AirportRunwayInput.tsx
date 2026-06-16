@@ -168,6 +168,12 @@ export function AirportRunwayInput({
   }, [airport, onAirportChange, onRunwayChange, onWeatherValuesChange, runway, weatherValues]);
 
   useEffect(() => {
+    if (!airport || !runway || !plannedAt || !weatherValues) return;
+    onApply({ elevationFt: airport.elevationFt, ...weatherValues });
+    saveSelection(airport, runway, plannedAt);
+  }, [airport?.id, plannedAt, runway?.id, weather?.id]);
+
+  useEffect(() => {
     if (!enabled || !weatherValues) return;
     onApply(weatherValues);
     if (airport && runway && plannedAt) saveSelection(airport, runway, plannedAt);
