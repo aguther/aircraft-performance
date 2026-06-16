@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { useFlightPlan } from "../app/FlightPlanContext";
 import {
@@ -111,11 +111,11 @@ export function AirportRunwayInput({
   const [weather, setWeather] = useState<WeatherForecast | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState("");
+  const weatherRequestId = useRef(0);
 
   useEffect(() => {
     if (!savedSelection?.airportId) return;
     const controller = new AbortController();
-    setWeatherLoading(true);
     getOpenAipAirport(savedSelection.airportId, controller.signal)
       .then((loadedAirport) => {
         setAirport(loadedAirport);
@@ -175,11 +175,14 @@ export function AirportRunwayInput({
 
   useEffect(() => {
     if (!airport || !plannedAt) {
+      weatherRequestId.current += 1;
       setWeather(null);
       setWeatherLoading(false);
       return;
     }
     const controller = new AbortController();
+    const requestId = weatherRequestId.current + 1;
+    weatherRequestId.current = requestId;
     setWeatherLoading(true);
     setWeatherError("");
     getOpenMeteoWeather(
@@ -190,13 +193,20 @@ export function AirportRunwayInput({
       weatherNow,
       { airportId: airport.id, icaoCode: airport.icaoCode, signal: controller.signal },
     )
-      .then(setWeather)
+      .then((loadedWeather) => {
+        if (weatherRequestId.current !== requestId) return;
+        setWeather(loadedWeather);
+        setWeatherLoading(false);
+      })
       .catch((loadError) => {
+        if (weatherRequestId.current !== requestId) return;
         if (loadError instanceof DOMException && loadError.name === "AbortError") return;
         setWeather(null);
         setWeatherError(loadError instanceof Error ? loadError.message : "Wetterdaten konnten nicht geladen werden.");
       })
-      .finally(() => setWeatherLoading(false));
+      .finally(() => {
+        if (weatherRequestId.current === requestId) setWeatherLoading(false);
+      });
     return () => controller.abort();
   }, [airport?.id, plannedAt, weatherNow]);
 
@@ -209,7 +219,6 @@ export function AirportRunwayInput({
       setResults(response.items);
       const selected = response.items[0] ?? null;
       setWeather(null);
-      setWeatherLoading(Boolean(selected));
       setAirport(selected);
       setRunwayId(selected?.runways[0]?.id ?? "");
       if (selected) setSearch("");
@@ -227,7 +236,6 @@ export function AirportRunwayInput({
   const selectAirport = (airportId: string) => {
     const selected = results.find((candidate) => candidate.id === airportId) ?? null;
     setWeather(null);
-    setWeatherLoading(Boolean(selected));
     setAirport(selected);
     setRunwayId(selected?.runways[0]?.id ?? "");
   };
