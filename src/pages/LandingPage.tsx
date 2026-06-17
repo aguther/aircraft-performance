@@ -20,6 +20,7 @@ import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { FlightPlanMassImport } from "../components/FlightPlanMassImport";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
+import { createPdfBlobFromCanvas, warmPdfExportModule } from "../export/pdf";
 import { landingRunwayWarnings, type RunwayDirection } from "../flight-data";
 import type { Airport } from "../flight-data";
 
@@ -233,15 +234,7 @@ async function exportChartImage(inputs: LandingInputs, result: LandingResult, ex
 
 async function exportChartPdf(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext) {
   const { canvas, exportDate } = await createLandingExportCanvas(inputs, result, exportContext);
-  const { jsPDF } = await import("jspdf");
-  const pdf = new jsPDF({
-    compress: true,
-    format: [canvas.width, canvas.height],
-    orientation: "portrait",
-    unit: "px",
-  });
-  pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, canvas.width, canvas.height);
-  const blob = pdf.output("blob");
+  const blob = await createPdfBlobFromCanvas(canvas);
   await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Landestreckenberechnung.pdf`, "application/pdf");
 }
 
@@ -374,8 +367,8 @@ function TraceabilityCard({ inputs, result, exportContext }: { inputs: LandingIn
             <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={exportImage}>
               {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
             </button>
-            <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={exportPdf}>
-              {exporting === "pdf" ? "Erzeuge PDF…" : "PDF speichern"}
+            <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={exportPdf}>
+              {exporting === "pdf" ? "PDF vorbereiten…" : "PDF speichern"}
             </button>
           </div>
         ) : null}

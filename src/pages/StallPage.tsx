@@ -8,6 +8,7 @@ import { interpolate1D } from "../domain";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
 import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { SliderField } from "../components/SliderField";
+import { createPdfBlobFromCanvas, warmPdfExportModule } from "../export/pdf";
 
 type StallResult = ReturnType<typeof calculateStall>;
 type ChartPoint = readonly [number, number];
@@ -80,15 +81,7 @@ async function exportChart(inputs: StallInputs, result: StallResult) {
 
 async function exportChartPdf(inputs: StallInputs, result: StallResult) {
   const { canvas, exportDate } = await createStallExportCanvas(inputs, result);
-  const { jsPDF } = await import("jspdf");
-  const pdf = new jsPDF({
-    compress: true,
-    format: [canvas.width, canvas.height],
-    orientation: "portrait",
-    unit: "px",
-  });
-  pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, canvas.width, canvas.height);
-  const blob = pdf.output("blob");
+  const blob = await createPdfBlobFromCanvas(canvas);
   await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Überziehgeschwindigkeit.pdf`, "application/pdf");
 }
 
@@ -175,8 +168,8 @@ function ChartCard({ inputs, result }: { inputs: StallInputs; result: StallResul
           <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={saveImage}>
             {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
           </button>
-          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={savePdf}>
-            {exporting === "pdf" ? "Erzeuge PDF…" : "PDF speichern"}
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={savePdf}>
+            {exporting === "pdf" ? "PDF vorbereiten…" : "PDF speichern"}
           </button>
         </div>
       </div>

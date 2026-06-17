@@ -8,6 +8,7 @@ import { interpolate1D } from "../domain";
 import { AltitudeInput, type AltitudeInputValue, resolveAltitudeInput } from "../components/AltitudeInput";
 import { CalculatorCard, MetricItem } from "../components/CalculatorCard";
 import { CalculatorInputSection } from "../components/CalculatorInputSection";
+import { createPdfBlobFromCanvas, warmPdfExportModule } from "../export/pdf";
 
 type ClimbResult = ReturnType<typeof calculateClimb>;
 type LegState = AltitudeInputValue;
@@ -189,15 +190,7 @@ async function exportChartPdf(from: LegState, to: LegState, inputs: { departureD
   const exportCanvas = await createClimbExportCanvas(from, to, inputs, result);
   if (!exportCanvas) return;
   const { canvas, exportDate } = exportCanvas;
-  const { jsPDF } = await import("jspdf");
-  const pdf = new jsPDF({
-    compress: true,
-    format: [canvas.width, canvas.height],
-    orientation: "portrait",
-    unit: "px",
-  });
-  pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, canvas.width, canvas.height);
-  const blob = pdf.output("blob");
+  const blob = await createPdfBlobFromCanvas(canvas);
   await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Steigflugberechnung.pdf`, "application/pdf");
 }
 
@@ -294,8 +287,8 @@ function ChartCard({ from, to, inputs, result }: { from: LegState; to: LegState;
           <button className="takeoff-chart-download" type="button" disabled={!valid || exporting !== null} onClick={saveImage}>
             {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
           </button>
-          <button className="takeoff-chart-download" type="button" disabled={!valid || exporting !== null} onClick={savePdf}>
-            {exporting === "pdf" ? "Erzeuge PDF…" : "PDF speichern"}
+          <button className="takeoff-chart-download" type="button" disabled={!valid || exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={savePdf}>
+            {exporting === "pdf" ? "PDF vorbereiten…" : "PDF speichern"}
           </button>
         </div>
       </div>

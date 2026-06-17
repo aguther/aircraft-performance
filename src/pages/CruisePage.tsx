@@ -13,6 +13,7 @@ import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
 import { useFlightPlan } from "../app/FlightPlanContext";
+import { createPdfBlobFromCanvas, warmPdfExportModule } from "../export/pdf";
 
 type CruiseMode = "alt" | "fl" | "da";
 type ChartPoint = readonly [number, number];
@@ -166,15 +167,7 @@ async function exportChart(inputs: CruiseViewInputs, chart: CruiseChart, trace: 
 
 async function exportChartPdf(inputs: CruiseViewInputs, chart: CruiseChart, trace: ReturnType<typeof createTrace>) {
   const { canvas, time } = await createCruiseExportCanvas(inputs, chart, trace);
-  const { jsPDF } = await import("jspdf");
-  const pdf = new jsPDF({
-    compress: true,
-    format: [canvas.width, canvas.height],
-    orientation: "portrait",
-    unit: "px",
-  });
-  pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, canvas.width, canvas.height);
-  const blob = pdf.output("blob");
+  const blob = await createPdfBlobFromCanvas(canvas);
   await saveExportBlob(blob, `${time}Z Grob G115B ${chart.fileName}.pdf`, "application/pdf");
 }
 
@@ -263,8 +256,8 @@ function CruiseChartCard({ inputs, chart }: { inputs: CruiseViewInputs; chart: C
           <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={saveImage}>
             {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
           </button>
-          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={savePdf}>
-            {exporting === "pdf" ? "Erzeuge PDF…" : "PDF speichern"}
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={savePdf}>
+            {exporting === "pdf" ? "PDF vorbereiten…" : "PDF speichern"}
           </button>
         </div>
       </div>

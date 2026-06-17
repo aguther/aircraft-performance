@@ -1,6 +1,12 @@
-import { useEffect, useState } from "react";
+import { type ReactElement, useEffect, useState } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
+import type { AircraftCapability } from "./app/aircraft";
 import { useAircraft } from "./app/AircraftContext";
+import {
+  calculatorRegistry,
+  navigationHrefForPath,
+  pageTitleForPath,
+} from "./app/calculators";
 import { useFlightPlan } from "./app/FlightPlanContext";
 import { useTheme } from "./app/useTheme";
 import { AppHeader } from "./components/AppHeader";
@@ -18,6 +24,16 @@ import { TakeoffPage } from "./pages/TakeoffPage";
 import { WeightBalancePage } from "./pages/WeightBalancePage";
 import { SettingsPage } from "./pages/SettingsPage";
 
+const calculatorRouteElements: Record<AircraftCapability, ReactElement> = {
+  weightBalance: <WeightBalancePage />,
+  takeoff: <TakeoffPage />,
+  landing: <LandingPage />,
+  cruise: <CruisePage />,
+  climb: <ClimbPage />,
+  climbRate: <ClimbRatePage />,
+  stall: <StallPage />,
+};
+
 export function App() {
   const location = useLocation();
   const { aircraft, availableAircraft, selectAircraft } = useAircraft();
@@ -26,48 +42,8 @@ export function App() {
   const [usageNoticeOpen, setUsageNoticeOpen] = useState(
     shouldShowUsageNoticeOnStartup,
   );
-  const isWeightBalance = location.pathname === "/weight_balance.html";
-  const isTakeoff = location.pathname === "/takeoff.html";
-  const isLanding = location.pathname === "/landing.html";
-  const isCruise = location.pathname === "/cruise.html";
-  const isClimb = location.pathname === "/climb.html";
-  const isClimbRate = location.pathname === "/climb_rate.html";
-  const isStall = location.pathname === "/stall.html";
-  const isSettings = location.pathname === "/settings.html";
-  const pageTitle = isWeightBalance
-    ? "Weight & Balance"
-    : isTakeoff
-      ? "Takeoff"
-      : isLanding
-        ? "Landing"
-        : isCruise
-          ? "Cruise"
-          : isClimb
-            ? "Climb"
-            : isClimbRate
-              ? "Climb Rate"
-              : isStall
-              ? "Stall"
-              : isSettings
-                ? "Einstellungen"
-                : "Performance";
-  const currentCalculatorHref = isWeightBalance
-    ? "/weight_balance.html"
-    : isTakeoff
-      ? "/takeoff.html"
-      : isLanding
-        ? "/landing.html"
-        : isCruise
-          ? "/cruise.html"
-          : isClimb
-            ? "/climb.html"
-            : isClimbRate
-              ? "/climb_rate.html"
-              : isStall
-              ? "/stall.html"
-              : isSettings
-                ? "/settings.html"
-                : "/";
+  const pageTitle = pageTitleForPath(location.pathname);
+  const currentNavigationHref = navigationHrefForPath(location.pathname);
 
   useEffect(() => {
     document.title = pageTitle === "Performance" ? "Aircraft Performance" : `${pageTitle} - Aircraft Performance`;
@@ -77,18 +53,18 @@ export function App() {
     <>
       <AppHeader
         aircraft={aircraft}
-        currentNavigationHref={currentCalculatorHref}
+        currentNavigationHref={currentNavigationHref}
       />
       <Routes>
         <Route path="/" element={<HomePage aircraft={aircraft} availableAircraft={availableAircraft} onResetFlightPlan={resetFlightPlan} onSelectAircraft={selectAircraft} />} />
         <Route path="/index.html" element={<HomePage aircraft={aircraft} availableAircraft={availableAircraft} onResetFlightPlan={resetFlightPlan} onSelectAircraft={selectAircraft} />} />
-        <Route path="/weight_balance.html" element={<WeightBalancePage />} />
-        <Route path="/takeoff.html" element={<TakeoffPage />} />
-        <Route path="/landing.html" element={<LandingPage />} />
-        <Route path="/cruise.html" element={<CruisePage />} />
-        <Route path="/climb.html" element={<ClimbPage />} />
-        <Route path="/climb_rate.html" element={<ClimbRatePage />} />
-        <Route path="/stall.html" element={<StallPage />} />
+        {calculatorRegistry.map((calculator) => (
+          <Route
+            element={calculatorRouteElements[calculator.capability]}
+            key={calculator.href}
+            path={calculator.href}
+          />
+        ))}
         <Route path="/settings.html" element={<SettingsPage preference={preference} onOpenUsageNotice={() => setUsageNoticeOpen(true)} onSelectTheme={setThemePreference} />} />
         <Route path="*" element={<HomePage aircraft={aircraft} availableAircraft={availableAircraft} onResetFlightPlan={resetFlightPlan} onSelectAircraft={selectAircraft} />} />
       </Routes>

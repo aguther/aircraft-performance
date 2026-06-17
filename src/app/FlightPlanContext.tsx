@@ -1,6 +1,7 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 const FLIGHT_PLAN_STORAGE_KEY = "performance-calculators-flight-plan";
+const FLIGHT_PLAN_STORAGE_VERSION = 1;
 
 export type WeightBalancePlan = {
   registration: string;
@@ -129,6 +130,11 @@ export type FlightPlan = {
   arrival?: FlightPlanAirportSelection;
 };
 
+type StoredFlightPlan = {
+  version: number;
+  flightPlan: Partial<FlightPlan>;
+} & Partial<FlightPlan>;
+
 type FlightPlanContextValue = {
   flightPlan: FlightPlan;
   updateWeightBalance: (change: Partial<WeightBalancePlan>) => void;
@@ -168,18 +174,31 @@ const defaultFlightPlan: FlightPlan = {
 
 const FlightPlanContext = createContext<FlightPlanContextValue | null>(null);
 
+function mergeFlightPlan(storedFlightPlan: Partial<FlightPlan>): FlightPlan {
+  return {
+    ...defaultFlightPlan,
+    ...storedFlightPlan,
+    weightBalance: { ...defaultFlightPlan.weightBalance, ...storedFlightPlan.weightBalance },
+    imports: { ...defaultFlightPlan.imports, ...storedFlightPlan.imports },
+  };
+}
+
+function migrateStoredFlightPlan(parsed: unknown): FlightPlan {
+  if (!parsed || typeof parsed !== "object") return defaultFlightPlan;
+  const candidate = parsed as Partial<StoredFlightPlan> & Partial<FlightPlan>;
+  if ("version" in candidate || "flightPlan" in candidate) {
+    if (candidate.version !== FLIGHT_PLAN_STORAGE_VERSION || !candidate.flightPlan) return defaultFlightPlan;
+    return mergeFlightPlan(candidate.flightPlan);
+  }
+  return mergeFlightPlan(candidate);
+}
+
 function loadFlightPlan(): FlightPlan {
   if (typeof window === "undefined") return defaultFlightPlan;
   try {
     const stored = window.localStorage.getItem(FLIGHT_PLAN_STORAGE_KEY);
     if (!stored) return defaultFlightPlan;
-    const parsed = JSON.parse(stored) as Partial<FlightPlan>;
-    return {
-      ...defaultFlightPlan,
-      ...parsed,
-      weightBalance: { ...defaultFlightPlan.weightBalance, ...parsed.weightBalance },
-      imports: { ...defaultFlightPlan.imports, ...parsed.imports },
-    };
+    return migrateStoredFlightPlan(JSON.parse(stored));
   } catch {
     return defaultFlightPlan;
   }
@@ -239,7 +258,11 @@ export function FlightPlanProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(FLIGHT_PLAN_STORAGE_KEY, JSON.stringify(flightPlan));
+      window.localStorage.setItem(FLIGHT_PLAN_STORAGE_KEY, JSON.stringify({
+        version: FLIGHT_PLAN_STORAGE_VERSION,
+        flightPlan,
+        ...flightPlan,
+      } satisfies StoredFlightPlan));
     } catch {
       // Storage is optional; the flight plan still remains active for this session.
     }
