@@ -430,8 +430,8 @@ export function LandingPage() {
   const landingDistanceExceedsLda = availableLdaM != null && result.landingDistanceMeters > availableLdaM;
 
   useEffect(() => {
-    document.body.classList.add("runway-calculator");
-    return () => document.body.classList.remove("runway-calculator");
+    document.body.classList.add("runway-calculator", "landing-calculator");
+    return () => document.body.classList.remove("runway-calculator", "landing-calculator");
   }, []);
   useEffect(() => {
     updateLandingCalculator({
@@ -542,12 +542,12 @@ export function LandingPage() {
       </aside>
       <main className="results">
         <CalculatorContextCard atmosphere={result.atmosphere} warnings={warnings} conditions={result.conditions} />
-        <CalculatorCard title="Landeleistung">
+        <CalculatorCard title="Landeleistung" className="landing-primary-results">
           <div className="takeoff-summary-heading">
             <Gauge aria-hidden="true" />
             <span>Berechnete Strecken und Geschwindigkeiten</span>
           </div>
-          <div className="result-grid">
+          <div className="result-grid landing-distance-grid">
             <MetricItem label="Landing Roll · Landerollstrecke" value={String(result.landingRollMeters)} unit="m" danger={landingRollExceedsLda} />
             <MetricItem label="Landing Distance · Landestrecke über 15 m" value={String(result.landingDistanceMeters)} unit="m" danger={landingDistanceExceedsLda} />
           </div>
