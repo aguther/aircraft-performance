@@ -399,12 +399,12 @@ export function CruisePage() {
       </aside>
       <main className="results">
         {mode !== "da" ? <CalculatorCard title="Atmosphäre"><div className="atmos-grid"><div className="atmos-item"><div className="atmos-item-label">Density Altitude</div><div className={`atmos-item-value${inputs.densityAltitudeFt > 10000 ? " warn" : ""}`}>{inputs.densityAltitudeFt.toLocaleString("de-DE")} <span>ft</span></div></div><div className="atmos-item"><div className="atmos-item-label">ISA-Abweichung</div><div className={`atmos-item-value${Math.abs(inputs.isaDeviationC!) < 0.1 ? "" : inputs.isaDeviationC! > 0 ? " warn" : " good"}`}>{formatSigned(inputs.isaDeviationC!, 1)} <span>°C</span></div></div></div></CalculatorCard> : null}
-        <CalculatorCard title="Reiseflugleistung">
+        <CalculatorCard title="Reiseflugleistung" className="cruise-primary-results">
           <div className="takeoff-summary-heading">
             <Gauge aria-hidden="true" />
             <span>{result.powerLabel} Leistung · DA {inputs.densityAltitudeFt.toLocaleString("de-DE")} ft</span>
           </div>
-          <div className="result-grid">
+          <div className="result-grid cruise-result-grid">
             <MetricItem label="Drehzahl · POH 5.3.11" value={String(Math.round(result.rpm))} unit="rpm" />
             <MetricItem label="Fuel Flow · POH 5.3.10" value={result.fuelFlowLitersPerHour.toFixed(1)} unit="l/h" subtext={`${result.nauticalMilesPerLiter.toFixed(2)} nm/l`} />
             <MetricItem label="Wahre Fluggeschwindigkeit · POH 5.3.12" value={result.tasKt.toFixed(1)} unit="kt" speedType="TAS" subtext={`${Math.round(result.tasKmh)} km/h`} />
