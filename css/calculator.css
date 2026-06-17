@@ -1363,7 +1363,9 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .stall-calculator .calculator-input-section,
 .stall-calculator .card,
 .climb-rate-calculator .calculator-input-section,
-.climb-rate-calculator .card {
+.climb-rate-calculator .card,
+.weight-balance-calculator .calculator-input-section,
+.weight-balance-calculator .card {
   border-radius: 14px;
 }
 
@@ -1372,7 +1374,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-calculator .calculator-input-section,
 .cruise-calculator .calculator-input-section,
 .stall-calculator .calculator-input-section,
-.climb-rate-calculator .calculator-input-section {
+.climb-rate-calculator .calculator-input-section,
+.weight-balance-calculator .calculator-input-section {
   box-shadow: none;
 }
 
@@ -1381,7 +1384,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-calculator .calculator-input-section.open,
 .cruise-calculator .calculator-input-section.open,
 .stall-calculator .calculator-input-section.open,
-.climb-rate-calculator .calculator-input-section.open {
+.climb-rate-calculator .calculator-input-section.open,
+.weight-balance-calculator .calculator-input-section.open {
   border-color: var(--border-strong);
   background: color-mix(in srgb, var(--bg-soft) 82%, var(--bg-card));
 }
@@ -1391,7 +1395,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-calculator .calculator-input-header,
 .cruise-calculator .calculator-input-header,
 .stall-calculator .calculator-input-header,
-.climb-rate-calculator .calculator-input-header {
+.climb-rate-calculator .calculator-input-header,
+.weight-balance-calculator .calculator-input-header {
   min-height: 54px;
 }
 
@@ -1400,7 +1405,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-calculator .calculator-input-icon,
 .cruise-calculator .calculator-input-icon,
 .stall-calculator .calculator-input-icon,
-.climb-rate-calculator .calculator-input-icon {
+.climb-rate-calculator .calculator-input-icon,
+.weight-balance-calculator .calculator-input-icon {
   border-radius: 8px;
 }
 
@@ -1409,7 +1415,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-calculator .card-title,
 .cruise-calculator .card-title,
 .stall-calculator .card-title,
-.climb-rate-calculator .card-title {
+.climb-rate-calculator .card-title,
+.weight-balance-calculator .card-title {
   margin-bottom: 0.62rem;
   letter-spacing: 0.1em;
 }
@@ -1419,7 +1426,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-primary-results,
 .cruise-primary-results,
 .stall-primary-results,
-.climb-rate-primary-results {
+.climb-rate-primary-results,
+.weight-balance-primary-results {
   border-color: var(--border-strong);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--cyan-bg) 55%, transparent), transparent 52%),
@@ -1431,7 +1439,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-primary-results .takeoff-summary-heading,
 .cruise-primary-results .takeoff-summary-heading,
 .stall-primary-results .takeoff-summary-heading,
-.climb-rate-primary-results .takeoff-summary-heading {
+.climb-rate-primary-results .takeoff-summary-heading,
+.weight-balance-primary-results .takeoff-summary-heading {
   margin-bottom: 0.85rem;
   color: var(--text-sub);
 }
@@ -1441,7 +1450,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-result-grid,
 .cruise-result-grid,
 .stall-result-grid,
-.climb-rate-result-grid {
+.climb-rate-result-grid,
+.weight-balance-result-grid {
   gap: 0.85rem;
 }
 
@@ -1450,7 +1460,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-result-grid .result-item,
 .cruise-result-grid .result-item,
 .stall-result-grid .result-item,
-.climb-rate-result-grid .result-item {
+.climb-rate-result-grid .result-item,
+.weight-balance-result-grid .result-item {
   border-radius: 14px;
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--cyan-bg) 78%, transparent), transparent),
@@ -1462,7 +1473,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-result-grid .result-item-label,
 .cruise-result-grid .result-item-label,
 .stall-result-grid .result-item-label,
-.climb-rate-result-grid .result-item-label {
+.climb-rate-result-grid .result-item-label,
+.weight-balance-result-grid .result-item-label {
   color: var(--text-sub);
   letter-spacing: 0.06em;
 }
@@ -1472,18 +1484,21 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-result-grid .result-item-value,
 .cruise-result-grid .result-item-value,
 .stall-result-grid .result-item-value,
-.climb-rate-result-grid .result-item-value {
+.climb-rate-result-grid .result-item-value,
+.weight-balance-result-grid .result-item-value {
   font-size: clamp(2.05rem, 3.2vw, 2.7rem);
   letter-spacing: 0;
 }
 
 .takeoff-primary-results .speed-grid,
-.landing-primary-results .speed-grid {
+.landing-primary-results .speed-grid,
+.weight-balance-speed-results .speed-grid {
   gap: 0.6rem;
 }
 
 .takeoff-primary-results .speed-grid .result-item,
-.landing-primary-results .speed-grid .result-item {
+.landing-primary-results .speed-grid .result-item,
+.weight-balance-speed-results .speed-grid .result-item {
   padding: 0.78rem 0.9rem;
   border-color: var(--border);
   border-radius: 12px;
@@ -1491,7 +1506,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 }
 
 .takeoff-primary-results .speed-grid .result-item-value,
-.landing-primary-results .speed-grid .result-item-value {
+.landing-primary-results .speed-grid .result-item-value,
+.weight-balance-speed-results .speed-grid .result-item-value {
   font-size: clamp(1.35rem, 1.8vw, 1.7rem);
 }
 
@@ -1500,7 +1516,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-calculator .traceability-card,
 .cruise-calculator .traceability-card,
 .stall-calculator .traceability-card,
-.climb-rate-calculator .traceability-card {
+.climb-rate-calculator .traceability-card,
+.weight-balance-calculator .traceability-card {
   border-color: var(--border-strong);
 }
 
@@ -1509,7 +1526,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-calculator .traceability-toolbar,
 .cruise-calculator .traceability-toolbar,
 .stall-calculator .traceability-toolbar,
-.climb-rate-calculator .traceability-toolbar {
+.climb-rate-calculator .traceability-toolbar,
+.weight-balance-calculator .traceability-toolbar {
   padding: 0.45rem;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -1527,7 +1545,9 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .stall-calculator .traceability-tabs,
 .stall-calculator .takeoff-chart-download,
 .climb-rate-calculator .traceability-tabs,
-.climb-rate-calculator .takeoff-chart-download {
+.climb-rate-calculator .takeoff-chart-download,
+.weight-balance-calculator .traceability-tabs,
+.weight-balance-calculator .takeoff-chart-download {
   border-radius: 9px;
 }
 
@@ -1536,7 +1556,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-calculator .traceability-tabs,
 .cruise-calculator .traceability-tabs,
 .stall-calculator .traceability-tabs,
-.climb-rate-calculator .traceability-tabs {
+.climb-rate-calculator .traceability-tabs,
+.weight-balance-calculator .traceability-tabs {
   border-color: var(--border-strong);
 }
 
@@ -1545,7 +1566,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-calculator .takeoff-chart-actions,
 .cruise-calculator .takeoff-chart-actions,
 .stall-calculator .takeoff-chart-actions,
-.climb-rate-calculator .takeoff-chart-actions {
+.climb-rate-calculator .takeoff-chart-actions,
+.weight-balance-calculator .takeoff-chart-actions {
   gap: 0.5rem;
 }
 
@@ -1554,7 +1576,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-calculator .takeoff-chart-download,
 .cruise-calculator .takeoff-chart-download,
 .stall-calculator .takeoff-chart-download,
-.climb-rate-calculator .takeoff-chart-download {
+.climb-rate-calculator .takeoff-chart-download,
+.weight-balance-calculator .takeoff-chart-download {
   min-height: 34px;
 }
 
@@ -1563,7 +1586,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .climb-calculator .takeoff-chart-legend,
 .cruise-calculator .takeoff-chart-legend,
 .stall-calculator .takeoff-chart-legend,
-.climb-rate-calculator .takeoff-chart-legend {
+.climb-rate-calculator .takeoff-chart-legend,
+.weight-balance-calculator .takeoff-chart-legend {
   padding-top: 0.35rem;
   border-top: 1px solid var(--border);
 }
@@ -2235,7 +2259,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 
   .takeoff-calculator .results,
   .landing-calculator .results,
-  .cruise-calculator .results {
+  .cruise-calculator .results,
+  .weight-balance-calculator .results {
     max-width: 1120px;
   }
 
@@ -2253,7 +2278,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   .climb-calculator .results > .card:not(.traceability-card),
   .cruise-calculator .results > .card:not(.traceability-card),
   .stall-calculator .results > .card:not(.traceability-card),
-  .climb-rate-calculator .results > .card:not(.traceability-card) {
+  .climb-rate-calculator .results > .card:not(.traceability-card),
+  .weight-balance-calculator .results > .card:not(.traceability-card) {
     padding: 0.72rem 0.8rem;
   }
 
@@ -2262,7 +2288,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   .climb-calculator .results > .card:not(.traceability-card) .card-title,
   .cruise-calculator .results > .card:not(.traceability-card) .card-title,
   .stall-calculator .results > .card:not(.traceability-card) .card-title,
-  .climb-rate-calculator .results > .card:not(.traceability-card) .card-title {
+  .climb-rate-calculator .results > .card:not(.traceability-card) .card-title,
+  .weight-balance-calculator .results > .card:not(.traceability-card) .card-title {
     margin-bottom: 0.5rem;
   }
 
@@ -2293,7 +2320,9 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   .cruise-calculator .atmos-item,
   .cruise-calculator .cruise-result-grid .result-item,
   .stall-calculator .stall-result-grid .result-item,
-  .climb-rate-calculator .climb-rate-result-grid .result-item {
+  .climb-rate-calculator .climb-rate-result-grid .result-item,
+  .weight-balance-calculator .weight-balance-result-grid .result-item,
+  .weight-balance-calculator .weight-balance-speed-results .speed-grid .result-item {
     padding: 0.68rem 0.75rem;
   }
 
@@ -2301,7 +2330,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   .landing-calculator .landing-primary-results .takeoff-summary-heading,
   .cruise-calculator .cruise-primary-results .takeoff-summary-heading,
   .stall-calculator .stall-primary-results .takeoff-summary-heading,
-  .climb-rate-calculator .climb-rate-primary-results .takeoff-summary-heading {
+  .climb-rate-calculator .climb-rate-primary-results .takeoff-summary-heading,
+  .weight-balance-calculator .weight-balance-primary-results .takeoff-summary-heading {
     margin-bottom: 0.62rem;
   }
 
@@ -2316,12 +2346,14 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   .climb-calculator .climb-result-grid .result-item-value,
   .cruise-calculator .cruise-result-grid .result-item-value,
   .stall-calculator .stall-result-grid .result-item-value,
-  .climb-rate-calculator .climb-rate-result-grid .result-item-value {
+  .climb-rate-calculator .climb-rate-result-grid .result-item-value,
+  .weight-balance-calculator .weight-balance-result-grid .result-item-value {
     font-size: clamp(1.95rem, 2.7vw, 2.45rem);
   }
 
   .takeoff-calculator .takeoff-primary-results .speed-grid .result-item-value,
-  .landing-calculator .landing-primary-results .speed-grid .result-item-value {
+  .landing-calculator .landing-primary-results .speed-grid .result-item-value,
+  .weight-balance-calculator .weight-balance-speed-results .speed-grid .result-item-value {
     font-size: clamp(1.28rem, 1.5vw, 1.55rem);
   }
 
@@ -2648,7 +2680,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   .climb-calculator .climb-primary-results,
   .cruise-calculator .cruise-primary-results,
   .stall-calculator .stall-primary-results,
-  .climb-rate-calculator .climb-rate-primary-results {
+  .climb-rate-calculator .climb-rate-primary-results,
+  .weight-balance-calculator .weight-balance-primary-results {
     padding: 0.9rem;
   }
 
@@ -2657,7 +2690,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   .climb-calculator .climb-result-grid,
   .cruise-calculator .cruise-result-grid,
   .stall-calculator .stall-result-grid,
-  .climb-rate-calculator .climb-rate-result-grid {
+  .climb-rate-calculator .climb-rate-result-grid,
+  .weight-balance-calculator .weight-balance-result-grid {
     gap: 0.6rem;
   }
 
@@ -2666,7 +2700,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   .climb-calculator .climb-result-grid .result-item,
   .cruise-calculator .cruise-result-grid .result-item,
   .stall-calculator .stall-result-grid .result-item,
-  .climb-rate-calculator .climb-rate-result-grid .result-item {
+  .climb-rate-calculator .climb-rate-result-grid .result-item,
+  .weight-balance-calculator .weight-balance-result-grid .result-item {
     padding: 0.78rem 0.82rem;
   }
 
@@ -2675,7 +2710,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   .climb-calculator .climb-result-grid .result-item-value,
   .cruise-calculator .cruise-result-grid .result-item-value,
   .stall-calculator .stall-result-grid .result-item-value,
-  .climb-rate-calculator .climb-rate-result-grid .result-item-value {
+  .climb-rate-calculator .climb-rate-result-grid .result-item-value,
+  .weight-balance-calculator .weight-balance-result-grid .result-item-value {
     font-size: 2rem;
   }
 
@@ -2684,7 +2720,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   .climb-calculator .traceability-toolbar,
   .cruise-calculator .traceability-toolbar,
   .stall-calculator .traceability-toolbar,
-  .climb-rate-calculator .traceability-toolbar {
+  .climb-rate-calculator .traceability-toolbar,
+  .weight-balance-calculator .traceability-toolbar {
     padding: 0.35rem;
   }
 

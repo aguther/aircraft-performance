@@ -247,6 +247,10 @@ export function WeightBalancePage() {
       landingFuelLiters,
     });
   }, [landingFuelLiters, landingResult.totalMassKg, plan.startFuelLiters, publishMasses, startResult.totalMassKg]);
+  useEffect(() => {
+    document.body.classList.add("weight-balance-calculator");
+    return () => document.body.classList.remove("weight-balance-calculator");
+  }, []);
 
   return (
     <div className="page-layout compact-calculator-layout">
@@ -306,13 +310,13 @@ export function WeightBalancePage() {
         </CalculatorInputSection>
       </aside>
       <main className="results">
-        <CalculatorCard title="Flugplanung">
+        <CalculatorCard title="Flugplanung" className="weight-balance-primary-results">
           <div className="takeoff-summary-heading">
             <Gauge aria-hidden="true" />
             <span>{plan.registration} · Start bis Landung</span>
           </div>
           <div className="wb-summary">
-            <div className="result-grid">
+            <div className="result-grid weight-balance-result-grid">
               <MetricItem
                 label="Startmasse"
                 value={startResult.totalMassKg.toFixed(1)}
@@ -358,7 +362,7 @@ export function WeightBalancePage() {
         <CalculatorCard title="Envelope · Start und Landung">
           <EnvelopeChart startResult={startResult} landingResult={landingResult} />
         </CalculatorCard>
-        <CalculatorCard title="Geschwindigkeiten">
+        <CalculatorCard title="Geschwindigkeiten" className="weight-balance-speed-results">
           <div className="speed-grid">
             <SpeedMetric
               label={
