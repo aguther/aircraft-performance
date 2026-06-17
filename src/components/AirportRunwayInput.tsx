@@ -136,6 +136,7 @@ export function AirportRunwayInput({
   const [weatherReloadKey, setWeatherReloadKey] = useState(0);
   const weatherRequestId = useRef(0);
   const autoImportSuppressedKey = useRef<string | null>(null);
+  const autoImportRequested = useRef(false);
 
   useEffect(() => {
     if (!savedSelection?.airportId) return;
@@ -195,7 +196,8 @@ export function AirportRunwayInput({
   }, [airport, onAirportChange, onRunwayChange, onWeatherValuesChange, runway, weatherValues]);
 
   useEffect(() => {
-    if (!autoImportKey || enabled || autoImportSuppressedKey.current === autoImportKey) return;
+    if (!autoImportKey || enabled || autoImportSuppressedKey.current === autoImportKey || !autoImportRequested.current) return;
+    autoImportRequested.current = false;
     onEnabledChange(true);
   }, [autoImportKey, enabled, onEnabledChange]);
 
@@ -261,7 +263,11 @@ export function AirportRunwayInput({
       setWeather(null);
       setAirport(selected);
       setRunwayId(selected?.runways[0]?.id ?? "");
-      if (selected) setWeatherReloadKey((current) => current + 1);
+      if (selected) {
+        autoImportRequested.current = true;
+        autoImportSuppressedKey.current = null;
+        setWeatherReloadKey((current) => current + 1);
+      }
       if (selected) setSearch("");
       else setError("Kein passender Flugplatz gefunden.");
     } catch (searchError) {
@@ -279,7 +285,21 @@ export function AirportRunwayInput({
     setWeather(null);
     setAirport(selected);
     setRunwayId(selected?.runways[0]?.id ?? "");
+    autoImportRequested.current = Boolean(selected);
+    autoImportSuppressedKey.current = null;
     setWeatherReloadKey((current) => current + 1);
+  };
+
+  const updateRunwayId = (nextRunwayId: string) => {
+    setRunwayId(nextRunwayId);
+    autoImportRequested.current = true;
+    autoImportSuppressedKey.current = null;
+  };
+
+  const updatePlannedAt = (nextPlannedAt: string) => {
+    setPlannedAt(nextPlannedAt);
+    autoImportRequested.current = true;
+    autoImportSuppressedKey.current = null;
   };
 
   const toggleImport = (nextEnabled: boolean) => {
@@ -398,7 +418,7 @@ export function AirportRunwayInput({
           </label>
           <label className="airport-field">
             <span>{operation === "departure" ? "Startbahn" : "Landebahn"}</span>
-            <select value={runway?.id ?? ""} disabled={!airport.runways.length} onChange={(event) => setRunwayId(event.target.value)}>
+            <select value={runway?.id ?? ""} disabled={!airport.runways.length} onChange={(event) => updateRunwayId(event.target.value)}>
               {airport.runways.map((candidate) => <option value={candidate.id} key={candidate.id}>{runwayLabel(candidate)}</option>)}
             </select>
           </label>
@@ -412,7 +432,7 @@ export function AirportRunwayInput({
                   value={plannedAt.slice(0, 10)}
                   required
                   disabled={weatherNow}
-                  onChange={(event) => setPlannedAt(`${event.target.value}T${plannedAt.slice(11)}`)}
+                  onChange={(event) => updatePlannedAt(`${event.target.value}T${plannedAt.slice(11)}`)}
                 />
                 <input
                   type="time"
@@ -420,7 +440,7 @@ export function AirportRunwayInput({
                   value={plannedAt.slice(11)}
                   required
                   disabled={weatherNow}
-                  onChange={(event) => setPlannedAt(`${plannedAt.slice(0, 10)}T${event.target.value}`)}
+                  onChange={(event) => updatePlannedAt(`${plannedAt.slice(0, 10)}T${event.target.value}`)}
                 />
               </span>
               <label className="import-toggle airport-now-toggle">

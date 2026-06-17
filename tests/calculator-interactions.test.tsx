@@ -385,6 +385,36 @@ describe("calculator interactions", () => {
     });
   });
 
+
+  it("does not re-enable takeoff airport imports when returning to a saved manual selection", async () => {
+    stubAirportSearch();
+    const user = userEvent.setup();
+    const firstRender = render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    await user.type(screen.getByRole("searchbox", { name: "Flugplatzsuche" }), "edfe");
+    await user.click(screen.getByRole("button", { name: "Suchen" }));
+    await waitFor(() => {
+      expect((screen.getByRole("checkbox", { name: "Werte übernommen" }) as HTMLInputElement).checked).toBe(true);
+    });
+
+    await user.click(screen.getByRole("checkbox", { name: "Werte übernommen" }));
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.imports.departureImport).toBe(false);
+    });
+
+    firstRender.unmount();
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    expect(await screen.findByText(/OpenAIP · Stand/)).toBeTruthy();
+    expect(await screen.findByText(/Aktuelle ICON-D2-Werte/)).toBeTruthy();
+    const importToggle = screen.getByRole("checkbox", { name: "Werte übernehmen" }) as HTMLInputElement;
+    expect(importToggle.checked).toBe(false);
+    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    const qnhField = within(atmosphereSection).getByText("QNH", { selector: ".field-label" }).parentElement!;
+    expect(qnhField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(false);
+  });
+
   it("retries transient weather failures before showing unavailable data", async () => {
     let weatherRequests = 0;
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
