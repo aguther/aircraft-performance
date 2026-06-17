@@ -1,6 +1,6 @@
 {
-  "name": "Grob G115B Performance",
-  "short_name": "G115B Perf",
+  "name": "Aircraft Performance",
+  "short_name": "Aircraft Performance",
   "description": "Installierbare Performance-Rechner für die Grob G115B.",
   "lang": "de",
   "start_url": "./index.html",

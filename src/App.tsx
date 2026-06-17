@@ -70,16 +70,13 @@ export function App() {
                 : "/";
 
   useEffect(() => {
-    document.title = `${aircraft.shortName} — ${pageTitle === "Performance" ? "Performance Calculators" : pageTitle}`;
-  }, [aircraft.shortName, pageTitle]);
+    document.title = pageTitle === "Performance" ? "Aircraft Performance" : `${pageTitle} - Aircraft Performance`;
+  }, [pageTitle]);
 
   return (
     <>
       <AppHeader
         aircraft={aircraft}
-        availableAircraft={availableAircraft}
-        onSelectAircraft={selectAircraft}
-        pageTitle={pageTitle}
         currentNavigationHref={currentCalculatorHref}
         onOpenUsageNotice={() => setUsageNoticeOpen(true)}
       />

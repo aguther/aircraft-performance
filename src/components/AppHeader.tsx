@@ -7,19 +7,14 @@ import { CalculatorIcon } from "./CalculatorIcon";
 
 type AppHeaderProps = {
   aircraft: AircraftDefinition;
-  availableAircraft: AircraftDefinition[];
-  pageTitle: string;
   currentNavigationHref?: string;
   onOpenUsageNotice: () => void;
-  onSelectAircraft: (aircraftId: string) => void;
 };
 
 export function AppHeader({
   aircraft,
-  availableAircraft,
   currentNavigationHref,
   onOpenUsageNotice,
-  onSelectAircraft,
 }: AppHeaderProps) {
   const availableCalculators = calculatorRegistry.filter((calculator) => aircraft.capabilities.includes(calculator.capability));
   const navigationRef = useRef<HTMLElement>(null);
@@ -34,8 +29,8 @@ export function AppHeader({
         <Link className="app-brand" to="/" aria-label="Zur Rechnerübersicht">
           <span className="app-brand-mark">G115</span>
           <span className="app-brand-copy">
-            <strong>Performance</strong>
-            <span>Flugplanung & Leistungsdaten</span>
+            <strong>{aircraft.shortName}</strong>
+            <span>Aircraft Performance</span>
           </span>
         </Link>
         <nav className="calculator-tabs" aria-label="Rechner" ref={navigationRef}>
@@ -55,15 +50,6 @@ export function AppHeader({
           </Link>
         </nav>
         <div className="app-actions">
-          <select
-            className="nav-aircraft-select"
-            aria-label="Flugzeugtyp"
-            value={aircraft.id}
-            disabled={availableAircraft.length < 2}
-            onChange={(event) => onSelectAircraft(event.target.value)}
-          >
-            {availableAircraft.map((option) => <option value={option.id} key={option.id}>{option.shortName}</option>)}
-          </select>
           <button className="app-icon-button" type="button" aria-label="Hinweis zur Nutzung" onClick={onOpenUsageNotice}>
             <Info aria-hidden="true" />
           </button>

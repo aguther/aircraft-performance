@@ -134,11 +134,8 @@ describe("calculator interactions", () => {
       <MemoryRouter>
         <AppHeader
           aircraft={defaultAircraft}
-          availableAircraft={[defaultAircraft]}
-          pageTitle="Takeoff"
           currentNavigationHref="/takeoff.html"
           onOpenUsageNotice={() => undefined}
-          onSelectAircraft={() => undefined}
         />
       </MemoryRouter>,
     );

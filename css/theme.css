@@ -364,27 +364,6 @@ a {
   min-width: 0;
 }
 
-.nav-aircraft-select {
-  width: auto;
-  max-width: 8rem;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--cyan);
-  text-align: center;
-  text-overflow: ellipsis;
-  cursor: pointer;
-}
-
-.nav-aircraft-select:disabled {
-  cursor: default;
-  opacity: 1;
-}
-
 .nav-title {
   max-width: 32rem;
   overflow: hidden;
@@ -749,7 +728,26 @@ html.usage-notice-active body {
     padding: 0 0.65rem;
   }
 
+  .app-brand {
+    gap: 0.45rem;
+  }
+
   .app-brand-copy {
+    display: flex;
+  }
+
+  .app-brand-copy strong {
+    max-width: 4.8rem;
+    overflow: hidden;
+    color: var(--cyan);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .app-brand-copy span {
     display: none;
   }
 
@@ -766,11 +764,6 @@ html.usage-notice-active body {
     height: 48px;
     flex-basis: 76px;
     padding-inline: 0.45rem;
-  }
-
-  .nav-aircraft-select {
-    max-width: 6.75rem;
-    font-size: 9px;
   }
 
   .nav-bar {
