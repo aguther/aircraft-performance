@@ -380,6 +380,45 @@
   height: 15px;
 }
 
+.settings-info-row {
+  cursor: default;
+}
+
+.settings-info-row:hover {
+  background: transparent;
+}
+
+.settings-meta-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.settings-meta-actions b {
+  white-space: nowrap;
+}
+
+.settings-meta-actions button {
+  min-height: 36px;
+  padding: 0.45rem 0.72rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-soft);
+  color: var(--text-sub);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.settings-meta-actions button:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-active);
+  color: var(--cyan);
+}
+
 .settings-page-row-danger strong,
 .settings-page-row-danger b,
 .settings-page-row-danger > svg {
@@ -408,8 +447,18 @@
     grid-template-columns: auto minmax(0, 1fr);
   }
 
+  .settings-info-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
   .settings-theme-options {
     grid-column: 1 / -1;
+  }
+
+  .settings-meta-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 }
 

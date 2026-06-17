@@ -90,7 +90,7 @@ describe("calculator interactions", () => {
     const onSelectTheme = vi.fn();
     render(
       <MemoryRouter>
-        <SettingsPage preference="auto" onSelectTheme={onSelectTheme} />
+        <SettingsPage preference="auto" onOpenUsageNotice={() => undefined} onSelectTheme={onSelectTheme} />
       </MemoryRouter>,
     );
 
@@ -129,20 +129,24 @@ describe("calculator interactions", () => {
     expect(confirmSpy).not.toHaveBeenCalled();
   });
 
-  it("keeps the important notice separate from the settings tab", () => {
+  it("keeps the important notice available from the settings tab", async () => {
+    const user = userEvent.setup();
+    const onOpenUsageNotice = vi.fn();
     render(
       <MemoryRouter>
         <AppHeader
           aircraft={defaultAircraft}
           currentNavigationHref="/takeoff.html"
-          onOpenUsageNotice={() => undefined}
         />
+        <SettingsPage preference="auto" onOpenUsageNotice={onOpenUsageNotice} onSelectTheme={() => undefined} />
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("button", { name: "Hinweis zur Nutzung" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Hinweis zur Nutzung" })).toBeNull();
     expect(screen.getByRole("link", { name: "Einstellungen" })).toBeTruthy();
-    expect(screen.queryByText("Nutzungshinweis erneut anzeigen")).toBeNull();
+    expect(screen.getByText(/^VERSION/)).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Disclaimer anzeigen" }));
+    expect(onOpenUsageNotice).toHaveBeenCalledTimes(1);
   });
 
   it("stores planned airport times explicitly as UTC", () => {

@@ -1,11 +1,14 @@
-import { Laptop, Moon, Settings, Sun } from "lucide-react";
+import { FileText, Laptop, Moon, Settings, Sun } from "lucide-react";
+import { buildInfo, formatBuildVersion } from "../app/buildInfo";
 import type { ThemePreference } from "../app/theme";
 
 export function SettingsPage({
   preference,
+  onOpenUsageNotice,
   onSelectTheme,
 }: {
   preference: ThemePreference;
+  onOpenUsageNotice: () => void;
   onSelectTheme: (preference: ThemePreference) => void;
 }) {
   const themeOptions = [
@@ -40,6 +43,16 @@ export function SettingsPage({
                 <span>{label}</span>
               </button>
             ))}
+          </div>
+        </div>
+        <div className="settings-page-row settings-info-row">
+          <FileText aria-hidden="true" />
+          <span><strong>Disclaimer</strong><small>Hinweis zur Nutzung und Version</small></span>
+          <div className="settings-meta-actions">
+            <b title={`Commit ${buildInfo.fullCommit}${buildInfo.dirty ? " · lokal verändert" : ""} · Build ${buildInfo.builtAt}`}>
+              {formatBuildVersion()}
+            </b>
+            <button type="button" onClick={onOpenUsageNotice}>Disclaimer anzeigen</button>
           </div>
         </div>
       </section>

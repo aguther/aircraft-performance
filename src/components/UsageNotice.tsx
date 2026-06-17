@@ -2,6 +2,7 @@ import { type SyntheticEvent, useEffect, useRef } from "react";
 import { buildInfo, formatBuildVersion } from "../app/buildInfo";
 
 const USAGE_NOTICE_STORAGE_KEY = "g115b-usage-notice-v2-accepted";
+const RANDOM_USAGE_NOTICE_PROBABILITY = 0.08;
 
 type UsageNoticeProps = {
   open: boolean;
@@ -10,6 +11,10 @@ type UsageNoticeProps = {
 
 export function hasAcceptedUsageNotice() {
   return localStorage.getItem(USAGE_NOTICE_STORAGE_KEY) === "true";
+}
+
+export function shouldShowUsageNoticeOnStartup() {
+  return !hasAcceptedUsageNotice() || Math.random() < RANDOM_USAGE_NOTICE_PROBABILITY;
 }
 
 export function UsageNotice({ open, onClose }: UsageNoticeProps) {

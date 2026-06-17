@@ -5,7 +5,7 @@ import { useFlightPlan } from "./app/FlightPlanContext";
 import { useTheme } from "./app/useTheme";
 import { AppHeader } from "./components/AppHeader";
 import {
-  hasAcceptedUsageNotice,
+  shouldShowUsageNoticeOnStartup,
   UsageNotice,
 } from "./components/UsageNotice";
 import { HomePage } from "./pages/HomePage";
@@ -24,7 +24,7 @@ export function App() {
   const { resetFlightPlan } = useFlightPlan();
   const { preference, resolvedTheme, setThemePreference } = useTheme();
   const [usageNoticeOpen, setUsageNoticeOpen] = useState(
-    () => !hasAcceptedUsageNotice(),
+    shouldShowUsageNoticeOnStartup,
   );
   const isWeightBalance = location.pathname === "/weight_balance.html";
   const isTakeoff = location.pathname === "/takeoff.html";
@@ -78,7 +78,6 @@ export function App() {
       <AppHeader
         aircraft={aircraft}
         currentNavigationHref={currentCalculatorHref}
-        onOpenUsageNotice={() => setUsageNoticeOpen(true)}
       />
       <Routes>
         <Route path="/" element={<HomePage aircraft={aircraft} availableAircraft={availableAircraft} onResetFlightPlan={resetFlightPlan} onSelectAircraft={selectAircraft} />} />
@@ -90,7 +89,7 @@ export function App() {
         <Route path="/climb.html" element={<ClimbPage />} />
         <Route path="/climb_rate.html" element={<ClimbRatePage />} />
         <Route path="/stall.html" element={<StallPage />} />
-        <Route path="/settings.html" element={<SettingsPage preference={preference} onSelectTheme={setThemePreference} />} />
+        <Route path="/settings.html" element={<SettingsPage preference={preference} onOpenUsageNotice={() => setUsageNoticeOpen(true)} onSelectTheme={setThemePreference} />} />
         <Route path="*" element={<HomePage aircraft={aircraft} availableAircraft={availableAircraft} onResetFlightPlan={resetFlightPlan} onSelectAircraft={selectAircraft} />} />
       </Routes>
       <UsageNotice
