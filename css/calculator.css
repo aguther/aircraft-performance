@@ -974,7 +974,8 @@
   gap: 0.4rem;
 }
 
-.airport-preview-item.airport-declared-combined {
+.airport-preview-item.airport-declared-combined,
+.airport-preview-item.airport-heading-combined {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
@@ -990,14 +991,6 @@
   min-width: 0;
 }
 
-.airport-heading-pair small {
-  display: block;
-  color: var(--text-dim);
-  font-size: 8.5px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-
 .airport-heading-pair strong {
   display: block;
   color: var(--text);
@@ -1007,6 +1000,7 @@
 }
 
 .airport-declared-combined > div,
+.airport-heading-pair > span,
 .airport-wind-components > div {
   display: flex;
   min-width: 0;
