@@ -1,12 +1,13 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Gauge, Weight } from "lucide-react";
 import { calculateWeightBalance, isPointInPolygon } from "../aircraft/g115b/calculators";
 import { g115bData } from "../aircraft/g115b/data";
-import { useFlightPlan } from "../app/FlightPlanContext";
+import { useFlightPlan, type WeightBalancePlan } from "../app/FlightPlanContext";
 import { interpolate1D, kilometersPerHourToKnots } from "../domain";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
 import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { SliderField } from "../components/SliderField";
+import { createPdfBlobFromCanvas, warmPdfExportModule } from "../export/pdf";
 
 type WeightBalanceResult = ReturnType<typeof calculateWeightBalance>;
 
@@ -219,6 +220,329 @@ function SpeedMetric({
   );
 }
 
+function timestamp(date: Date) {
+  return date.toISOString().replace("T", " ").replace(/:/g, "-").slice(0, 19);
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("PNG konnte nicht erzeugt werden.")), "image/png");
+  });
+}
+
+async function saveExportBlob(blob: Blob, fileName: string, type: string) {
+  const file = new File([blob], fileName, { type });
+  if (navigator.share && navigator.canShare?.({ files: [file] })) {
+    await navigator.share({ files: [file] });
+    return;
+  }
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = fileName;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+
+function exportText(
+  context: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  options: { color?: string; size?: number; weight?: number; align?: CanvasTextAlign } = {},
+) {
+  context.fillStyle = options.color || "#152235";
+  context.font = `${options.weight || 400} ${options.size || 24}px Arial, sans-serif`;
+  context.textAlign = options.align || "left";
+  context.fillText(text, x, y);
+}
+
+function drawExportField(context: CanvasRenderingContext2D, label: string, value: string, x: number, y: number, width: number) {
+  context.fillStyle = "#f7fafc";
+  context.strokeStyle = "#9aafc0";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.roundRect(x, y, width, 96, 14);
+  context.fill();
+  context.stroke();
+  exportText(context, label.toUpperCase(), x + 20, y + 34, { size: 18, weight: 700, color: "#607487" });
+  exportText(context, value, x + 20, y + 72, { size: 25, weight: 700 });
+}
+
+function drawExportTable(
+  context: CanvasRenderingContext2D,
+  rows: string[][],
+  x: number,
+  y: number,
+  widths: number[],
+  rowHeight: number,
+  headerRows = 1,
+) {
+  let rowY = y;
+  rows.forEach((row, rowIndex) => {
+    let cellX = x;
+    const isHeader = rowIndex < headerRows;
+    context.fillStyle = isHeader ? "#e9eef2" : "#ffffff";
+    context.fillRect(x, rowY, widths.reduce((sum, width) => sum + width, 0), rowHeight);
+    row.forEach((cell, cellIndex) => {
+      context.strokeStyle = "#152235";
+      context.lineWidth = isHeader || rowIndex === rows.length - 1 ? 3 : 2;
+      context.strokeRect(cellX, rowY, widths[cellIndex], rowHeight);
+      exportText(context, cell, cellX + 14, rowY + rowHeight * 0.64, {
+        size: isHeader ? 19 : 18,
+        weight: isHeader || rowIndex === rows.length - 1 ? 700 : 400,
+      });
+      cellX += widths[cellIndex];
+    });
+    rowY += rowHeight;
+  });
+}
+
+function drawExportEnvelope(
+  context: CanvasRenderingContext2D,
+  startResult: WeightBalanceResult,
+  landingResult: WeightBalanceResult,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  const envelope = g115bData.weightBalance.envelope;
+  const results = [startResult, landingResult];
+  const minMoment = Math.min(...envelope.map((point) => point.momentKgM), ...results.map((result) => result.totalMomentKgM)) - 8;
+  const maxMoment = Math.max(...envelope.map((point) => point.momentKgM), ...results.map((result) => result.totalMomentKgM)) + 8;
+  const minMass = Math.min(...envelope.map((point) => point.massKg), ...results.map((result) => result.totalMassKg)) - 14;
+  const maxMass = Math.max(...envelope.map((point) => point.massKg), ...results.map((result) => result.totalMassKg)) + 14;
+  const padding = { top: 52, right: 38, bottom: 64, left: 76 };
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+  const px = (moment: number) => x + padding.left + ((moment - minMoment) / (maxMoment - minMoment)) * plotWidth;
+  const py = (mass: number) => y + padding.top + (1 - (mass - minMass) / (maxMass - minMass)) * plotHeight;
+  const massTicks = [750, 840, 920];
+  const momentTicks = [150, 180, 210, 240, 270];
+
+  context.fillStyle = "#f7fafc";
+  context.strokeStyle = "#152235";
+  context.lineWidth = 3;
+  context.fillRect(x, y, width, height);
+  context.strokeRect(x, y, width, height);
+  exportText(context, "Envelope Start / Landung", x + 22, y + 32, { size: 22, weight: 700 });
+  exportText(context, "Masse [kg]", x + 22, y + height - 20, { size: 17, weight: 700, color: "#607487" });
+  exportText(context, "Moment [kg m]", x + width - 22, y + 32, { size: 17, weight: 700, align: "right", color: "#607487" });
+
+  context.strokeStyle = "#b9c4cc";
+  context.lineWidth = 1.5;
+  massTicks.forEach((tick) => {
+    context.beginPath();
+    context.moveTo(x + padding.left, py(tick));
+    context.lineTo(x + width - padding.right, py(tick));
+    context.stroke();
+    exportText(context, String(tick), x + 18, py(tick) + 6, { size: 16, color: "#607487" });
+  });
+  momentTicks.forEach((tick) => {
+    context.beginPath();
+    context.moveTo(px(tick), y + padding.top);
+    context.lineTo(px(tick), y + height - padding.bottom);
+    context.stroke();
+    exportText(context, String(tick), px(tick), y + height - 30, { size: 16, align: "center", color: "#607487" });
+  });
+
+  context.beginPath();
+  envelope.forEach((point, index) => index === 0 ? context.moveTo(px(point.momentKgM), py(point.massKg)) : context.lineTo(px(point.momentKgM), py(point.massKg)));
+  context.closePath();
+  context.fillStyle = "rgba(0, 111, 159, 0.10)";
+  context.fill();
+  context.strokeStyle = "#006f9f";
+  context.lineWidth = 4;
+  context.stroke();
+
+  context.strokeStyle = "#526274";
+  context.lineWidth = 3;
+  context.setLineDash([12, 8]);
+  context.beginPath();
+  context.moveTo(px(startResult.totalMomentKgM), py(startResult.totalMassKg));
+  context.lineTo(px(landingResult.totalMomentKgM), py(landingResult.totalMassKg));
+  context.stroke();
+  context.setLineDash([]);
+
+  [
+    { result: startResult, label: "Start", color: "#20a879" },
+    { result: landingResult, label: "Landung", color: "#006f9f" },
+  ].forEach(({ result, label, color }) => {
+    context.fillStyle = color;
+    context.beginPath();
+    context.arc(px(result.totalMomentKgM), py(result.totalMassKg), 12, 0, Math.PI * 2);
+    context.fill();
+    exportText(context, label, px(result.totalMomentKgM) + 18, py(result.totalMassKg) - 12, { size: 17, weight: 700, color });
+  });
+}
+
+async function createWeightBalanceExportCanvas(
+  plan: WeightBalancePlan,
+  startResult: WeightBalanceResult,
+  landingResult: WeightBalanceResult,
+  landingFuelLiters: number,
+) {
+  const exportDate = new Date();
+  const burnedFuelMassKg = startResult.fuelMassKg - landingResult.fuelMassKg;
+  const burnedFuelMomentKgM = startResult.totalMomentKgM - landingResult.totalMomentKgM;
+  const canvas = document.createElement("canvas");
+  canvas.width = 2200;
+  canvas.height = 1500;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
+
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.strokeStyle = "#152235";
+  context.lineWidth = 6;
+  context.strokeRect(48, 42, canvas.width - 96, 136);
+  exportText(context, `Grob G115B - ${plan.registration}`, canvas.width / 2, 100, { size: 38, weight: 700, align: "center" });
+  exportText(context, "Beladeplan", canvas.width / 2, 144, { size: 34, weight: 700, align: "center" });
+  exportText(context, `Revision ${startResult.emptyAircraft.revision}`, canvas.width - 210, 96, { size: 25, weight: 700, align: "center" });
+  exportText(context, startResult.emptyAircraft.revisionDate, canvas.width - 210, 136, { size: 25, align: "center" });
+  exportText(context, `${timestamp(exportDate)}Z`, 78, 144, { size: 22, color: "#607487" });
+
+  const fieldY = 220;
+  drawExportField(context, "Pilot", `${plan.pilotMassKg.toFixed(1)} kg`, 60, fieldY, 250);
+  drawExportField(context, "Co-Pilot", `${plan.copilotMassKg.toFixed(1)} kg`, 330, fieldY, 250);
+  drawExportField(context, "Gepäck", `${plan.baggageMassKg.toFixed(1)} kg`, 600, fieldY, 250);
+  drawExportField(context, "Startkraftstoff", `${plan.startFuelLiters.toFixed(1)} l`, 870, fieldY, 280);
+  drawExportField(context, "Verbrauch", `${plan.plannedFuelBurnLiters.toFixed(1)} l`, 1170, fieldY, 260);
+  drawExportField(context, "Landekraftstoff", `${landingFuelLiters.toFixed(1)} l`, 1450, fieldY, 290);
+
+  exportText(context, "Startbeladung", 60, 388, { size: 28, weight: 700, color: "#006f9f" });
+  drawExportTable(
+    context,
+    [
+      ["Position", "Masse [kg]", "Arm [m]", "Moment [kg m]"],
+      ...startResult.stations.map((station) => [station.label, station.massKg.toFixed(1), station.armM.toFixed(4), station.momentKgM.toFixed(2)]),
+      ["Abfluggewicht", startResult.totalMassKg.toFixed(1), startResult.cgArmM.toFixed(4), startResult.totalMomentKgM.toFixed(2)],
+    ],
+    60,
+    420,
+    [360, 170, 160, 210],
+    58,
+  );
+  exportText(context, "MTOW: 920 kg", 72, 840, { size: 24, weight: 700 });
+
+  exportText(context, "Landung", 60, 918, { size: 28, weight: 700, color: "#006f9f" });
+  drawExportTable(
+    context,
+    [
+      ["Position", "Masse [kg]", "Arm [m]", "Moment [kg m]"],
+      [`Kraftstoff-Verbrauch (${plan.plannedFuelBurnLiters.toFixed(1)} l)`, `-${burnedFuelMassKg.toFixed(1)}`, g115bData.weightBalance.stations.fuel.armM.toFixed(4), `-${burnedFuelMomentKgM.toFixed(2)}`],
+      ["Landegewicht", landingResult.totalMassKg.toFixed(1), landingResult.cgArmM.toFixed(4), landingResult.totalMomentKgM.toFixed(2)],
+    ],
+    60,
+    950,
+    [360, 170, 160, 210],
+    58,
+  );
+
+  exportText(context, "Status", 60, 1176, { size: 28, weight: 700, color: "#006f9f" });
+  const statusRows = [
+    ["Start", startResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope"],
+    ["Landung", landingResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope"],
+    ["Kraftstoffdichte", `${g115bData.weightBalance.fuelDensityKgPerLiter.toLocaleString("de-DE")} kg/l`],
+    ["Quelle", `${g115bData.weightBalance.source} · Wägung Revision ${startResult.emptyAircraft.revision} vom ${startResult.emptyAircraft.revisionDate}`],
+  ];
+  drawExportTable(context, statusRows, 60, 1210, [250, 650], 50, 0);
+
+  exportText(context, "Geschwindigkeiten", 1030, 388, { size: 28, weight: 700, color: "#006f9f" });
+  drawExportTable(
+    context,
+    [
+      ["Wert", "IAS [kt]", "IAS [km/h]"],
+      ["VR Rotate", kilometersPerHourToKnots(startResult.speeds.rotateSpeedKmh).toFixed(1), Math.round(startResult.speeds.rotateSpeedKmh).toString()],
+      ["in 15 m Höhe", kilometersPerHourToKnots(startResult.speeds.speedAt15mKmh).toFixed(1), Math.round(startResult.speeds.speedAt15mKmh).toString()],
+      ["VAPP Approach", kilometersPerHourToKnots(landingResult.speeds.approachSpeedKmh).toFixed(1), Math.round(landingResult.speeds.approachSpeedKmh).toString()],
+      ["VREF 1.3 x VS0", kilometersPerHourToKnots(landingResult.speeds.referenceSpeedKmh).toFixed(1), Math.round(landingResult.speeds.referenceSpeedKmh).toString()],
+      ["VS0 Leerlauf 40°", kilometersPerHourToKnots(landingResult.speeds.stallIdleFlaps40Kmh).toFixed(1), Math.round(landingResult.speeds.stallIdleFlaps40Kmh).toString()],
+    ],
+    1030,
+    420,
+    [320, 170, 190],
+    58,
+  );
+  drawExportEnvelope(context, startResult, landingResult, 1030, 820, 1040, 560);
+
+  return { canvas, exportDate };
+}
+
+async function exportWeightBalanceImage(
+  plan: WeightBalancePlan,
+  startResult: WeightBalanceResult,
+  landingResult: WeightBalanceResult,
+  landingFuelLiters: number,
+) {
+  const { canvas, exportDate } = await createWeightBalanceExportCanvas(plan, startResult, landingResult, landingFuelLiters);
+  const blob = await canvasToBlob(canvas);
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Beladeplan ${plan.registration}.png`, "image/png");
+}
+
+async function exportWeightBalancePdf(
+  plan: WeightBalancePlan,
+  startResult: WeightBalanceResult,
+  landingResult: WeightBalanceResult,
+  landingFuelLiters: number,
+) {
+  const { canvas, exportDate } = await createWeightBalanceExportCanvas(plan, startResult, landingResult, landingFuelLiters);
+  const blob = await createPdfBlobFromCanvas(canvas);
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Beladeplan ${plan.registration}.pdf`, "application/pdf");
+}
+
+function WeightBalanceExportCard({
+  landingFuelLiters,
+  landingResult,
+  plan,
+  startResult,
+}: {
+  landingFuelLiters: number;
+  landingResult: WeightBalanceResult;
+  plan: WeightBalancePlan;
+  startResult: WeightBalanceResult;
+}) {
+  const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
+  const saveImage = async () => {
+    setExporting("png");
+    try {
+      await exportWeightBalanceImage(plan, startResult, landingResult, landingFuelLiters);
+    } finally {
+      setExporting(null);
+    }
+  };
+  const savePdf = async () => {
+    setExporting("pdf");
+    try {
+      await exportWeightBalancePdf(plan, startResult, landingResult, landingFuelLiters);
+    } finally {
+      setExporting(null);
+    }
+  };
+  return (
+    <section className="card weight-balance-export-card traceability-card">
+      <div className="traceability-header">
+        <div>
+          <div className="card-title">Beladeplan exportieren</div>
+          <div className="traceability-description">Start, Landung, Revision und Envelope gemeinsam speichern</div>
+        </div>
+      </div>
+      <div className="traceability-toolbar">
+        <div className="takeoff-chart-actions">
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={saveImage}>
+            {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
+          </button>
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={savePdf}>
+            {exporting === "pdf" ? "PDF vorbereiten…" : "PDF speichern"}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function WeightBalancePage() {
   const { flightPlan, updateWeightBalance, publishMasses } = useFlightPlan();
   const plan = flightPlan.weightBalance;
@@ -313,7 +637,7 @@ export function WeightBalancePage() {
         <CalculatorCard title="Flugplanung" className="weight-balance-primary-results">
           <div className="takeoff-summary-heading">
             <Gauge aria-hidden="true" />
-            <span>{plan.registration} · Start bis Landung</span>
+            <span>{plan.registration} · Revision {startResult.emptyAircraft.revision} vom {startResult.emptyAircraft.revisionDate}</span>
           </div>
           <div className="wb-summary">
             <div className="result-grid weight-balance-result-grid">
@@ -338,6 +662,7 @@ export function WeightBalancePage() {
             </div>
             <div className="conditions-grid wb-planning-conditions">
               {startResult.conditions.map((condition) => <span key={condition}>{condition}</span>)}
+              <span>Wägung Revision {startResult.emptyAircraft.revision} vom {startResult.emptyAircraft.revisionDate}</span>
               <span>Landung = Start − geplanter Kraftstoffverbrauch</span>
             </div>
             {plan.plannedFuelBurnLiters > plan.startFuelLiters ? (
@@ -359,6 +684,7 @@ export function WeightBalancePage() {
             ) : null}
           </div>
         </CalculatorCard>
+        <WeightBalanceExportCard plan={plan} startResult={startResult} landingResult={landingResult} landingFuelLiters={landingFuelLiters} />
         <CalculatorCard title="Envelope · Start und Landung">
           <EnvelopeChart startResult={startResult} landingResult={landingResult} />
         </CalculatorCard>
