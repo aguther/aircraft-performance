@@ -231,12 +231,12 @@ export function StallPage() {
       </aside>
       <main className="results">
         <CalculatorCard title="Bedingungen"><div className="conditions-grid">{result.conditions.map((condition) => <span key={condition}>{condition}</span>)}</div></CalculatorCard>
-        <CalculatorCard title="Überziehgeschwindigkeit">
+        <CalculatorCard title="Überziehgeschwindigkeit" className="stall-primary-results">
           <div className="takeoff-summary-heading">
             <Gauge aria-hidden="true" />
             <span>{massKg} kg · {powerMode === "leerlauf" ? "Leerlauf" : "Vollast"} · Klappen {flapsDegrees}°</span>
           </div>
-          <div className="result-grid" style={{ gridTemplateColumns: "1fr" }}><MetricItem label={<span>Überziehgeschwindigkeit · <SpeedSymbol index={result.stallLabel.slice(1)} /></span>} value={result.stallSpeedKt.toFixed(1)} unit="kt" speedType="IAS" subtext={`${result.stallSpeedKmh.toFixed(1)} km/h`} /></div>
+          <div className="result-grid stall-result-grid" style={{ gridTemplateColumns: "1fr" }}><MetricItem label={<span>Überziehgeschwindigkeit · <SpeedSymbol index={result.stallLabel.slice(1)} /></span>} value={result.stallSpeedKt.toFixed(1)} unit="kt" speedType="IAS" subtext={`${result.stallSpeedKmh.toFixed(1)} km/h`} /></div>
         </CalculatorCard>
         <ChartCard inputs={inputs} result={result} />
       </main>
