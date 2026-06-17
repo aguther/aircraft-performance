@@ -1,7 +1,7 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 const FLIGHT_PLAN_STORAGE_KEY = "performance-calculators-flight-plan";
-const FLIGHT_PLAN_STORAGE_VERSION = 1;
+const FLIGHT_PLAN_STORAGE_VERSION = 2;
 
 export type WeightBalancePlan = {
   registration: string;
@@ -166,7 +166,7 @@ const defaultFlightPlan: FlightPlan = {
     arrivalImport: false,
     departureWeatherNow: true,
     arrivalWeatherNow: true,
-    takeoffMass: false,
+    takeoffMass: true,
     landingMass: false,
     climbStartFromTakeoff: false,
   },
@@ -183,14 +183,25 @@ function mergeFlightPlan(storedFlightPlan: Partial<FlightPlan>): FlightPlan {
   };
 }
 
+function withTakeoffMassDefault(storedFlightPlan: Partial<FlightPlan>): Partial<FlightPlan> {
+  return {
+    ...storedFlightPlan,
+    imports: { ...defaultFlightPlan.imports, ...storedFlightPlan.imports, takeoffMass: true },
+  };
+}
+
 function migrateStoredFlightPlan(parsed: unknown): FlightPlan {
   if (!parsed || typeof parsed !== "object") return defaultFlightPlan;
   const candidate = parsed as Partial<StoredFlightPlan> & Partial<FlightPlan>;
   if ("version" in candidate || "flightPlan" in candidate) {
-    if (candidate.version !== FLIGHT_PLAN_STORAGE_VERSION || !candidate.flightPlan) return defaultFlightPlan;
+    if (!candidate.flightPlan) return defaultFlightPlan;
+    if (candidate.version === 1) {
+      return mergeFlightPlan(withTakeoffMassDefault(candidate.flightPlan));
+    }
+    if (candidate.version !== FLIGHT_PLAN_STORAGE_VERSION) return defaultFlightPlan;
     return mergeFlightPlan(candidate.flightPlan);
   }
-  return mergeFlightPlan(candidate);
+  return mergeFlightPlan(withTakeoffMassDefault(candidate));
 }
 
 function loadFlightPlan(): FlightPlan {

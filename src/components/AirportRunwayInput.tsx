@@ -50,7 +50,7 @@ function RunwayHeadingPreview({ runway }: Readonly<{ runway: RunwayDirection }>)
     <div className="airport-preview-item airport-heading-combined">
       <div className="airport-heading-pair">
         <span>
-          <span className="airport-preview-label">TRUE</span>
+          <span className="airport-preview-label">RWY TRUE</span>
           <strong>{formatDirection(runway.trueHeadingDeg)}°</strong>
         </span>
         <span>
@@ -366,7 +366,7 @@ export function AirportRunwayInput({
             <div className="airport-preview-item airport-heading-combined">
               <div className="airport-heading-pair">
                 <span>
-                  <span className="airport-preview-label">TRUE</span>
+                  <span className="airport-preview-label">RWY TRUE</span>
                   <strong>–</strong>
                 </span>
                 <span>
