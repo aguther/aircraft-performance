@@ -14,7 +14,8 @@ describe("TakeoffPage", () => {
     expect(markup).toContain("grob115b-takeoff-chart.png");
     expect(markup).toContain("Rechenweg");
     expect(markup).toContain("Airport");
-    expect(markup).toContain("ICAO-Code oder Namen eingeben.");
+    expect(markup).toContain("Suchen");
+    expect(markup).toContain("Flugplatzdaten werden geladen…");
     expect(markup).toContain("Noch kein Flugplatz ausgewählt");
     expect(markup).toContain("Keine Bahn ausgewählt");
     expect(markup).toContain("Wetterdaten nach Flugplatzauswahl");

@@ -329,14 +329,14 @@ export function AirportRunwayInput({
             placeholder="ICAO oder Name"
             onChange={(event) => setSearch(event.target.value.toLocaleUpperCase("de-DE"))}
           />
-          {!airport && !error && !loading ? <small aria-hidden="true">ICAO-Code oder Namen eingeben.</small> : null}
         </label>
-        <span className="airport-search-status">
-          <LoadingIndicator active={loading} label="Flugplatzsuche läuft" />
-        </span>
         <button type="submit" disabled={loading}>
-          <span>{loading ? "Lädt…" : "Suchen"}</span>
+          <span>Suchen</span>
         </button>
+        <span className={`airport-search-status${loading ? " active" : ""}`} aria-live="polite">
+          <LoadingIndicator active={loading} label="Flugplatzsuche läuft" />
+          <span>Flugplatzdaten werden geladen…</span>
+        </span>
       </form>
       {error ? <div className="airport-status error">{error}</div> : null}
       {!airport && !error ? (
