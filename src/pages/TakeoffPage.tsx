@@ -65,7 +65,7 @@ function formatAtmosphereSummary({
   weatherValues?: { qnhHpa?: number; oatC?: number };
 }) {
   if (mode === "airport") {
-    const airportLabel = airport ? `${airport.icaoCode ? `${airport.icaoCode} · ` : ""}${airport.name}` : "Noch kein Flugplatz";
+    const airportLabel = airport ? (airport.icaoCode || airport.name) : "Noch kein Flugplatz";
     const runwayLabelText = runway ? ` · RWY ${runway.designator}` : "";
     const displayElevationFt = airport?.elevationFt ?? elevationFt;
     const displayQnhHpa = weatherValues?.qnhHpa ?? qnhHpa;

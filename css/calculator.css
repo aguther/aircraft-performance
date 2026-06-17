@@ -1432,7 +1432,7 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 }
 
 .takeoff-distance-grid .result-item-value {
-  font-size: clamp(2.45rem, 4.4vw, 3.45rem);
+  font-size: clamp(2.05rem, 3.2vw, 2.7rem);
   letter-spacing: 0;
 }
 
@@ -1448,7 +1448,7 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 }
 
 .takeoff-primary-results .speed-grid .result-item-value {
-  font-size: clamp(1.55rem, 2.1vw, 2rem);
+  font-size: clamp(1.35rem, 1.8vw, 1.7rem);
 }
 
 .takeoff-calculator .traceability-card {
@@ -2153,6 +2153,10 @@ input[type="range"]:focus-visible::-moz-range-thumb {
     grid-column: 1 / -1;
   }
 
+  .takeoff-calculator .results > .takeoff-chart-card {
+    max-width: 1120px;
+  }
+
   .sidebar {
     max-height: none;
     overflow-y: visible;
@@ -2482,7 +2486,7 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   }
 
   .takeoff-calculator .takeoff-distance-grid .result-item-value {
-    font-size: 2.25rem;
+    font-size: 2rem;
   }
 
   .takeoff-calculator .traceability-toolbar {

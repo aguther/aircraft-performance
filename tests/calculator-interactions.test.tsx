@@ -362,7 +362,8 @@ describe("calculator interactions", () => {
       expect((screen.getByRole("checkbox", { name: "Werte übernommen" }) as HTMLInputElement).checked).toBe(true);
     });
     await user.click(screen.getByRole("button", { name: /Atmosphäre/ }));
-    const atmosphereButton = screen.getByRole("button", { name: /EDFE · Frankfurt-Egelsbach · RWY 08/ });
+    const atmosphereButton = screen.getByRole("button", { name: /EDFE · RWY 08/ });
+    expect(atmosphereButton.textContent).not.toContain("Frankfurt-Egelsbach");
     expect(atmosphereButton.textContent).toContain("Elev 384 ft");
     expect(atmosphereButton.textContent).toContain("QNH 1016 hPa");
     await user.click(atmosphereButton);
