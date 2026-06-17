@@ -981,9 +981,14 @@
   gap: 0.5rem;
 }
 
+.airport-preview-item.airport-heading-combined {
+  display: block;
+}
+
 .airport-heading-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
   gap: 0.45rem;
 }
 
@@ -994,14 +999,6 @@
 .airport-heading-pair > span:last-child {
   align-items: flex-end;
   text-align: right;
-}
-
-.airport-heading-pair strong {
-  display: block;
-  color: var(--text);
-  font-size: 12.5px;
-  font-weight: 800;
-  line-height: 1.25;
 }
 
 .airport-declared-combined > div,

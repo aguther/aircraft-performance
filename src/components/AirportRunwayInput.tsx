@@ -51,11 +51,11 @@ function RunwayHeadingPreview({ runway }: Readonly<{ runway: RunwayDirection }>)
       <div className="airport-heading-pair">
         <span>
           <span className="airport-preview-label">RWY TRUE</span>
-          <strong>{formatDirection(runway.trueHeadingDeg)}°</strong>
+          <strong className="airport-preview-value">{formatDirection(runway.trueHeadingDeg)}°</strong>
         </span>
         <span>
           <span className="airport-preview-label">MAG</span>
-          <strong>{formatDirection(runway.magneticHeadingDeg)}°</strong>
+          <strong className="airport-preview-value">{formatDirection(runway.magneticHeadingDeg)}°</strong>
         </span>
       </div>
     </div>
@@ -367,11 +367,11 @@ export function AirportRunwayInput({
               <div className="airport-heading-pair">
                 <span>
                   <span className="airport-preview-label">RWY TRUE</span>
-                  <strong>–</strong>
+                  <strong className="airport-preview-value">–</strong>
                 </span>
                 <span>
                   <span className="airport-preview-label">MAG</span>
-                  <strong>–</strong>
+                  <strong className="airport-preview-value">–</strong>
                 </span>
               </div>
             </div>
