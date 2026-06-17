@@ -17,7 +17,6 @@ type AppHeaderProps = {
 export function AppHeader({
   aircraft,
   availableAircraft,
-  pageTitle,
   currentNavigationHref,
   onOpenUsageNotice,
   onSelectAircraft,
@@ -31,7 +30,7 @@ export function AppHeader({
 
   return (
     <header className="app-shell-header">
-      <div className="app-topbar">
+      <div className="app-header-row">
         <Link className="app-brand" to="/" aria-label="Zur Rechnerübersicht">
           <span className="app-brand-mark">G115</span>
           <span className="app-brand-copy">
@@ -39,7 +38,23 @@ export function AppHeader({
             <span>Flugplanung & Leistungsdaten</span>
           </span>
         </Link>
-        <div className="app-page-context">
+        <nav className="calculator-tabs" aria-label="Rechner" ref={navigationRef}>
+          <Link className={`calculator-tab${currentNavigationHref === "/" ? " current" : ""}`} to="/">
+            <LayoutGrid aria-hidden="true" />
+            <span>Übersicht</span>
+          </Link>
+          {availableCalculators.map((calculator) => (
+            <Link className={`calculator-tab${calculator.href === currentNavigationHref ? " current" : ""}`} to={calculator.href} key={calculator.href}>
+              <CalculatorIcon capability={calculator.capability} />
+              <span>{calculator.navTitle}</span>
+            </Link>
+          ))}
+          <Link className={`calculator-tab${currentNavigationHref === "/settings.html" ? " current" : ""}`} to="/settings.html">
+            <Settings aria-hidden="true" />
+            <span>Einstellungen</span>
+          </Link>
+        </nav>
+        <div className="app-actions">
           <select
             className="nav-aircraft-select"
             aria-label="Flugzeugtyp"
@@ -49,30 +64,11 @@ export function AppHeader({
           >
             {availableAircraft.map((option) => <option value={option.id} key={option.id}>{option.shortName}</option>)}
           </select>
-          <div className="nav-title">{pageTitle}</div>
-        </div>
-        <div className="app-actions">
           <button className="app-icon-button" type="button" aria-label="Hinweis zur Nutzung" onClick={onOpenUsageNotice}>
             <Info aria-hidden="true" />
           </button>
         </div>
       </div>
-      <nav className="calculator-tabs" aria-label="Rechner" ref={navigationRef}>
-        <Link className={`calculator-tab${currentNavigationHref === "/" ? " current" : ""}`} to="/">
-          <LayoutGrid aria-hidden="true" />
-          <span>Übersicht</span>
-        </Link>
-        {availableCalculators.map((calculator) => (
-          <Link className={`calculator-tab${calculator.href === currentNavigationHref ? " current" : ""}`} to={calculator.href} key={calculator.href}>
-            <CalculatorIcon capability={calculator.capability} />
-            <span>{calculator.navTitle}</span>
-          </Link>
-        ))}
-        <Link className={`calculator-tab${currentNavigationHref === "/settings.html" ? " current" : ""}`} to="/settings.html">
-          <Settings aria-hidden="true" />
-          <span>Einstellungen</span>
-        </Link>
-      </nav>
     </header>
   );
 }
