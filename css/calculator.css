@@ -987,13 +987,18 @@
 
 .airport-heading-pair {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: auto auto;
+  justify-content: space-between;
   width: 100%;
   gap: 0.45rem;
 }
 
 .airport-heading-pair span {
   min-width: 0;
+}
+
+.airport-heading-pair .airport-preview-label {
+  white-space: nowrap;
 }
 
 .airport-heading-pair > span:last-child {
@@ -2118,6 +2123,49 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   .results > .warnings,
   .results > .takeoff-chart-card {
     grid-column: 1 / -1;
+  }
+
+  .takeoff-calculator .results {
+    max-width: 1120px;
+  }
+
+  .takeoff-calculator .results > .card:not(.traceability-card) {
+    padding: 0.72rem 0.8rem;
+  }
+
+  .takeoff-calculator .results > .card:not(.traceability-card) .card-title {
+    margin-bottom: 0.5rem;
+  }
+
+  .takeoff-calculator .context-card-body {
+    gap: 0.58rem;
+  }
+
+  .takeoff-calculator .context-card-block {
+    gap: 0.48rem;
+  }
+
+  .takeoff-calculator .atmos-item,
+  .takeoff-calculator .takeoff-distance-grid .result-item,
+  .takeoff-calculator .takeoff-primary-results .speed-grid .result-item {
+    padding: 0.68rem 0.75rem;
+  }
+
+  .takeoff-calculator .takeoff-primary-results .takeoff-summary-heading {
+    margin-bottom: 0.62rem;
+  }
+
+  .takeoff-calculator .takeoff-summary-divider {
+    margin: 0.62rem 0 0.45rem;
+    padding-top: 0.55rem;
+  }
+
+  .takeoff-calculator .takeoff-distance-grid .result-item-value {
+    font-size: clamp(1.95rem, 2.7vw, 2.45rem);
+  }
+
+  .takeoff-calculator .takeoff-primary-results .speed-grid .result-item-value {
+    font-size: clamp(1.28rem, 1.5vw, 1.55rem);
   }
 
   .takeoff-calculator .results > .takeoff-chart-card {
