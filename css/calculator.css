@@ -167,18 +167,35 @@
   opacity: 0.65;
 }
 
-.takeoff-chart-scroll {
+.takeoff-chart-scroll,
+.climb-chart-scroll,
+.stall-chart-scroll {
   width: 100%;
   min-width: 0;
-  overflow-x: auto;
   margin-top: 0.85rem;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: #fff;
 }
 
-.takeoff-chart-stage {
+.takeoff-chart-scroll,
+.climb-chart-scroll {
+  overflow-x: auto;
+}
+
+.stall-chart-scroll {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.takeoff-chart-stage,
+.climb-chart-stage,
+.stall-chart-stage {
   position: relative;
+  background: #fff;
+}
+
+.takeoff-chart-stage {
   min-width: 760px;
   aspect-ratio: 1516 / 1038;
 }
@@ -216,7 +233,11 @@
 }
 
 .takeoff-chart-image,
-.takeoff-chart-overlay {
+.takeoff-chart-overlay,
+.climb-chart-image,
+.climb-chart-overlay,
+.stall-chart-image,
+.stall-chart-overlay {
   position: absolute;
   inset: 0;
   display: block;
@@ -224,11 +245,15 @@
   height: 100%;
 }
 
-.takeoff-chart-image {
+.takeoff-chart-image,
+.climb-chart-image,
+.stall-chart-image {
   object-fit: contain;
 }
 
-.takeoff-chart-overlay {
+.takeoff-chart-overlay,
+.climb-chart-overlay,
+.stall-chart-overlay {
   pointer-events: none;
 }
 
@@ -256,7 +281,9 @@
   vector-effect: non-scaling-stroke;
 }
 
-.takeoff-chart-stage.overlay-hidden .takeoff-chart-overlay {
+.takeoff-chart-stage.overlay-hidden .takeoff-chart-overlay,
+.climb-chart-stage.overlay-hidden .climb-chart-overlay,
+.stall-chart-stage.overlay-hidden .stall-chart-overlay {
   display: none;
 }
 
@@ -327,33 +354,6 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-}
-
-@media (max-width: 900px) {
-  .page-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    position: static;
-    max-height: none;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .results {
-    min-height: auto;
-  }
-
-  .takeoff-chart-scroll {
-    overflow-x: hidden;
-  }
-
-  .takeoff-chart-stage {
-    min-width: 0;
-    width: 100%;
-  }
-
 }
 
 @media (max-width: 1100px) {
@@ -1781,84 +1781,18 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   text-align: center;
 }
 
-.climb-chart-scroll {
-  width: 100%;
-  margin-top: 0.85rem;
-  overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: #fff;
-}
-
 .climb-chart-stage {
-  position: relative;
   width: 100%;
   min-width: 0;
   max-width: 100%;
   aspect-ratio: 929 / 1400;
-  background: #fff;
-}
-
-.climb-chart-image,
-.climb-chart-overlay {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.climb-chart-image {
-  object-fit: contain;
-}
-
-.climb-chart-overlay {
-  pointer-events: none;
-}
-
-.climb-chart-stage.overlay-hidden .climb-chart-overlay {
-  display: none;
-}
-
-.stall-chart-scroll {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  margin-top: 0.85rem;
-  overflow-x: hidden;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: #fff;
 }
 
 .stall-chart-stage {
-  position: relative;
   width: 100%;
   min-width: 0;
   max-width: 100%;
   aspect-ratio: 937 / 1367;
-  background: #fff;
-}
-
-.stall-chart-image,
-.stall-chart-overlay {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.stall-chart-image {
-  object-fit: contain;
-}
-
-.stall-chart-overlay {
-  pointer-events: none;
-}
-
-.stall-chart-stage.overlay-hidden .stall-chart-overlay {
-  display: none;
 }
 
 .stall-chart-path {
