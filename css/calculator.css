@@ -2253,7 +2253,8 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   }
 
   .results > .warnings,
-  .results > .takeoff-chart-card {
+  .results > .takeoff-chart-card,
+  .results > .cruise-export-card {
     grid-column: 1 / -1;
   }
 
@@ -2360,6 +2361,10 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   .takeoff-calculator .results > .takeoff-chart-card,
   .landing-calculator .results > .takeoff-chart-card,
   .cruise-calculator .results > .takeoff-chart-card {
+    max-width: 1120px;
+  }
+
+  .cruise-calculator .results > .cruise-export-card {
     max-width: 1120px;
   }
 
