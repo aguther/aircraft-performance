@@ -1,137 +1,49 @@
-import type { ResolvedTheme, ThemePreference } from "../app/theme";
-import { useEffect, useRef, useState } from "react";
+import { LayoutGrid, Settings } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { calculatorRegistry } from "../app/calculators";
 import type { AircraftDefinition } from "../app/aircraft";
+import { CalculatorIcon } from "./CalculatorIcon";
 
 type AppHeaderProps = {
   aircraft: AircraftDefinition;
-  availableAircraft: AircraftDefinition[];
-  pageTitle: string;
-  currentCalculatorHref?: string;
-  showNavigation?: boolean;
-  themePreference: ThemePreference;
-  resolvedTheme: ResolvedTheme;
-  onOpenUsageNotice: () => void;
-  onSelectAircraft: (aircraftId: string) => void;
-  onToggleTheme: () => void;
+  currentNavigationHref?: string;
 };
 
 export function AppHeader({
   aircraft,
-  availableAircraft,
-  pageTitle,
-  currentCalculatorHref,
-  showNavigation = false,
-  themePreference,
-  resolvedTheme,
-  onOpenUsageNotice,
-  onSelectAircraft,
-  onToggleTheme,
+  currentNavigationHref,
 }: AppHeaderProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const themeLabel =
-    themePreference === "auto"
-      ? "Auto"
-      : resolvedTheme === "dark"
-        ? "Dark"
-        : "Light";
+  const availableCalculators = calculatorRegistry.filter((calculator) => aircraft.capabilities.includes(calculator.capability));
+  const navigationRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const closeMenu = (event: MouseEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
-    };
-
-    document.addEventListener("click", closeMenu);
-    return () => document.removeEventListener("click", closeMenu);
-  }, []);
+    navigationRef.current?.querySelector(".calculator-tab.current")?.scrollIntoView?.({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [currentNavigationHref]);
 
   return (
-    <nav className="nav-bar">
-      <div
-        className={`nav-left${showNavigation ? "" : " nav-left-placeholder"}`}
-        aria-hidden={showNavigation ? undefined : "true"}
-      >
-        <Link className="nav-back" to="/">
-          <span className="nav-back-arrow">←</span>
-          <span>Zurück</span>
+    <header className="app-shell-header">
+      <div className="app-header-row">
+        <Link className="app-brand" to="/" aria-label="Zur Rechnerübersicht">
+          <span className="app-brand-mark">{aircraft.shortName.replace("115B", "115")}</span>
         </Link>
-        {showNavigation ? (
-          <div className="nav-menu-wrap" ref={menuRef}>
-            <button
-              className="nav-menu-btn"
-              type="button"
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen((current) => !current)}
-            >
-              <span className="nav-back-arrow">☰</span>
-              <span>Rechner</span>
-            </button>
-            <div className={`nav-dropdown${menuOpen ? " open" : ""}`}>
-              <Link className="nav-dropdown-home" to="/" onClick={() => setMenuOpen(false)}>
-                Übersicht
-              </Link>
-              {calculatorRegistry.filter((calculator) => aircraft.capabilities.includes(calculator.capability)).map((calculator) => (
-                <Link
-                  className={calculator.href === currentCalculatorHref ? "current" : undefined}
-                  to={calculator.href}
-                  key={calculator.href}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {calculator.title} · {calculator.tag}
-                </Link>
-              ))}
-            </div>
-          </div>
-        ) : null}
+        <nav className="calculator-tabs" aria-label="Rechner" ref={navigationRef}>
+          <Link className={`calculator-tab${currentNavigationHref === "/" ? " current" : ""}`} to="/">
+            <LayoutGrid aria-hidden="true" />
+            <span>Übersicht</span>
+          </Link>
+          {availableCalculators.map((calculator) => (
+            <Link className={`calculator-tab${calculator.href === currentNavigationHref ? " current" : ""}`} to={calculator.href} key={calculator.href}>
+              <CalculatorIcon capability={calculator.capability} />
+              <span>{calculator.navTitle}</span>
+            </Link>
+          ))}
+          <Link className={`calculator-tab${currentNavigationHref === "/settings.html" ? " current" : ""}`} to="/settings.html">
+            <Settings aria-hidden="true" />
+            <span>Einstellungen</span>
+          </Link>
+        </nav>
       </div>
-      <div className="nav-center">
-        <select
-          className="nav-aircraft-select"
-          aria-label="Flugzeugtyp"
-          value={aircraft.id}
-          disabled={availableAircraft.length < 2}
-          onChange={(event) => onSelectAircraft(event.target.value)}
-        >
-          {availableAircraft.map((option) => <option value={option.id} key={option.id}>{option.shortName}</option>)}
-        </select>
-        <div className="nav-title">{pageTitle}</div>
-      </div>
-      <div className="nav-right">
-        <button
-          className="usage-notice-open"
-          type="button"
-          aria-label="Hinweis zur Nutzung"
-          onClick={onOpenUsageNotice}
-        >
-          <span className="usage-notice-open-icon" aria-hidden="true">
-            i
-          </span>
-          <span className="usage-notice-open-label">Hinweis</span>
-        </button>
-        <button
-          className="theme-toggle"
-          type="button"
-          data-theme-mode={themePreference}
-          data-resolved-theme={resolvedTheme}
-          aria-label={`Theme: ${themeLabel}`}
-          onClick={onToggleTheme}
-        >
-          <span
-            className="toggle-track"
-            data-theme-mode={themePreference}
-            data-resolved-theme={resolvedTheme}
-          >
-            <span
-              className="toggle-thumb"
-              data-theme-mode={themePreference}
-              data-resolved-theme={resolvedTheme}
-            />
-          </span>
-          <span>{themeLabel}</span>
-        </button>
-      </div>
-    </nav>
+    </header>
   );
 }

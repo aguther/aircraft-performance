@@ -1,6 +1,13 @@
+// @vitest-environment jsdom
+
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
-import { UsageNotice } from "../src/components/UsageNotice";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { shouldShowUsageNoticeOnStartup, UsageNotice } from "../src/components/UsageNotice";
+
+afterEach(() => {
+  window.localStorage.clear();
+  vi.restoreAllMocks();
+});
 
 describe("UsageNotice", () => {
   it("renders the complete mandatory usage disclaimer", () => {
@@ -15,5 +22,16 @@ describe("UsageNotice", () => {
     expect(markup).toContain("usage-notice-header");
     expect(markup).toContain("usage-notice-body");
     expect(markup).toContain("usage-notice-footer");
+  });
+
+  it("shows the disclaimer on first start and sometimes after acceptance", () => {
+    expect(shouldShowUsageNoticeOnStartup()).toBe(true);
+
+    window.localStorage.setItem("g115b-usage-notice-v2-accepted", "true");
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.05);
+    expect(shouldShowUsageNoticeOnStartup()).toBe(true);
+
+    randomSpy.mockReturnValue(0.5);
+    expect(shouldShowUsageNoticeOnStartup()).toBe(false);
   });
 });

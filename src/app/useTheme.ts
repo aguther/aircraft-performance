@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   applyTheme,
   getStoredThemePreference,
-  nextThemePreference,
   resolveTheme,
   THEME_STORAGE_KEY,
   type ResolvedTheme,
@@ -33,7 +32,6 @@ export function useTheme() {
   return {
     preference,
     resolvedTheme,
-    toggleTheme: () => setPreference((current) => nextThemePreference(current)),
+    setThemePreference: setPreference,
   };
 }
-

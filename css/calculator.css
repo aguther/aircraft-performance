@@ -6,21 +6,23 @@
   align-content: start;
   width: min(1720px, 100%);
   margin: 0 auto;
-  min-height: calc(100vh - 58px);
+  min-height: calc(100vh - 109px);
 }
 
 .sidebar {
   position: sticky;
-  top: 58px;
-  max-height: calc(100vh - 58px);
+  top: 109px;
+  max-height: calc(100vh - 109px);
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--bg-soft);
   border-right: 1px solid var(--border);
   backdrop-filter: blur(18px);
+  -webkit-overflow-scrolling: touch;
 }
 
 .results {
-  min-height: calc(100vh - 58px);
+  min-height: calc(100vh - 109px);
   padding: 1rem 1.15rem 1.25rem;
   display: flex;
   flex-direction: column;
@@ -31,11 +33,11 @@
 @supports (min-height: 100dvh) {
   .page-layout,
   .results {
-    min-height: calc(100dvh - 58px);
+    min-height: calc(100dvh - 109px);
   }
 
   .sidebar {
-    max-height: calc(100dvh - 58px);
+    max-height: calc(100dvh - 109px);
   }
 }
 
@@ -53,12 +55,79 @@
 .takeoff-chart-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 1rem;
 }
 
 .takeoff-chart-header .card-title {
   margin-bottom: 0;
+}
+
+.traceability-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.traceability-header > div:first-child {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.traceability-header .card-title {
+  margin-bottom: 0;
+}
+
+.traceability-description {
+  color: var(--text-dim);
+  font-size: 10px;
+}
+
+.traceability-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.traceability-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: hidden;
+  min-width: 220px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-soft);
+}
+
+.traceability-tabs button {
+  padding: 0.55rem 0.75rem;
+  border: 0;
+  border-right: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  outline: none;
+}
+
+.traceability-tabs button:last-child {
+  border-right: 0;
+}
+
+.traceability-tabs button.active {
+  background: var(--cyan-bg);
+  color: var(--cyan);
+}
+
+.traceability-tabs button:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--cyan);
 }
 
 .takeoff-chart-actions {
@@ -98,18 +167,35 @@
   opacity: 0.65;
 }
 
-.takeoff-chart-scroll {
+.takeoff-chart-scroll,
+.climb-chart-scroll,
+.stall-chart-scroll {
   width: 100%;
   min-width: 0;
-  overflow-x: auto;
   margin-top: 0.85rem;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: #fff;
 }
 
-.takeoff-chart-stage {
+.takeoff-chart-scroll,
+.climb-chart-scroll {
+  overflow-x: auto;
+}
+
+.stall-chart-scroll {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.takeoff-chart-stage,
+.climb-chart-stage,
+.stall-chart-stage {
   position: relative;
+  background: #fff;
+}
+
+.takeoff-chart-stage {
   min-width: 760px;
   aspect-ratio: 1516 / 1038;
 }
@@ -147,7 +233,11 @@
 }
 
 .takeoff-chart-image,
-.takeoff-chart-overlay {
+.takeoff-chart-overlay,
+.climb-chart-image,
+.climb-chart-overlay,
+.stall-chart-image,
+.stall-chart-overlay {
   position: absolute;
   inset: 0;
   display: block;
@@ -155,11 +245,15 @@
   height: 100%;
 }
 
-.takeoff-chart-image {
+.takeoff-chart-image,
+.climb-chart-image,
+.stall-chart-image {
   object-fit: contain;
 }
 
-.takeoff-chart-overlay {
+.takeoff-chart-overlay,
+.climb-chart-overlay,
+.stall-chart-overlay {
   pointer-events: none;
 }
 
@@ -187,7 +281,9 @@
   vector-effect: non-scaling-stroke;
 }
 
-.takeoff-chart-stage.overlay-hidden .takeoff-chart-overlay {
+.takeoff-chart-stage.overlay-hidden .takeoff-chart-overlay,
+.climb-chart-stage.overlay-hidden .climb-chart-overlay,
+.stall-chart-stage.overlay-hidden .stall-chart-overlay {
   display: none;
 }
 
@@ -260,33 +356,6 @@
   text-transform: uppercase;
 }
 
-@media (max-width: 900px) {
-  .page-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    position: static;
-    max-height: none;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .results {
-    min-height: auto;
-  }
-
-  .takeoff-chart-scroll {
-    overflow-x: hidden;
-  }
-
-  .takeoff-chart-stage {
-    min-width: 0;
-    width: 100%;
-  }
-
-}
-
 @media (max-width: 1100px) {
   .runway-calculator .page-layout {
     grid-template-columns: 1fr;
@@ -342,6 +411,123 @@
 
 .sidebar-section:last-child {
   border-bottom: none;
+}
+
+.compact-input-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 0.75rem;
+  background: var(--bg);
+}
+
+.calculator-input-section {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg-soft);
+  box-shadow: var(--shadow-soft);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.calculator-input-section.collapsed {
+  background: var(--bg-card);
+}
+
+.calculator-input-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.72rem 0.8rem;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.calculator-input-section.collapsed .calculator-input-header {
+  border-bottom-color: transparent;
+}
+
+.calculator-input-header:hover {
+  background: var(--cyan-bg);
+}
+
+.calculator-input-header:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: -2px;
+}
+
+.calculator-input-heading {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.calculator-input-header strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.calculator-input-header small {
+  color: var(--text-dim);
+  font-size: 9.5px;
+}
+
+.calculator-input-subline {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calculator-input-section.collapsed .calculator-input-subline {
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.calculator-input-icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--cyan-bg);
+  color: var(--cyan);
+}
+
+.calculator-input-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.calculator-input-chevron {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: var(--text-dim);
+  transition: transform 160ms ease;
+}
+
+.calculator-input-section.open .calculator-input-chevron {
+  transform: rotate(180deg);
+}
+
+.calculator-input-body {
+  padding: 0.75rem 0.8rem 0.8rem;
+}
+
+.calculator-input-body > .field:last-child {
+  margin-bottom: 0;
 }
 
 .section-header {
@@ -597,6 +783,12 @@
   gap: 0.6rem;
 }
 
+.airport-empty-state {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
 .airport-manual-weather {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
@@ -605,22 +797,45 @@
 
 .airport-search {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 132px;
   align-items: end;
-  gap: 0.5rem;
+  column-gap: 0.8rem;
+  row-gap: 0.35rem;
+}
+
+.airport-search-status {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 18px;
+  visibility: hidden;
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.airport-search-status.active {
+  visibility: visible;
 }
 
 .airport-search button {
-  min-height: 38px;
-  padding: 0.65rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 40px;
+  padding: 0.58rem 0.7rem;
   border: 1px solid var(--border-strong);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--cyan-bg);
   color: var(--cyan);
   font-family: inherit;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
   cursor: pointer;
+  line-height: 1;
 }
 
 .airport-search button:disabled {
@@ -629,12 +844,21 @@
 }
 
 .airport-status {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   padding: 0.65rem 0.7rem;
   border: 1px dashed var(--border);
   border-radius: 10px;
   color: var(--text-dim);
   font-size: 10.5px;
   line-height: 1.45;
+}
+
+.airport-status.loading {
+  border-style: solid;
+  color: var(--cyan);
+  background: var(--cyan-bg);
 }
 
 .airport-status.error {
@@ -671,6 +895,21 @@
   font-size: 12px;
   font-weight: 700;
   text-transform: none;
+}
+
+.airport-field small {
+  color: var(--text-dim);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.3;
+  text-transform: none;
+}
+
+.airport-field input:disabled,
+.airport-field select:disabled {
+  color: var(--text-dim);
+  opacity: 1;
 }
 
 .airport-time {
@@ -766,6 +1005,32 @@
   gap: 0.5rem;
 }
 
+.airport-heading-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.airport-heading-pair span {
+  min-width: 0;
+}
+
+.airport-heading-pair small {
+  display: block;
+  color: var(--text-dim);
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.airport-heading-pair strong {
+  display: block;
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
 .airport-declared-combined > div,
 .airport-wind-components > div {
   display: flex;
@@ -786,11 +1051,43 @@
 }
 
 .airport-weather-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   color: var(--cyan);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+.airport-loading-indicator {
+  display: inline-grid;
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
+  place-items: center;
+  color: currentColor;
+}
+
+.airport-loading-indicator svg {
+  width: 1em;
+  height: 1em;
+  animation: airport-loading-spin 900ms linear infinite;
+}
+
+.airport-loading-indicator.idle {
+  visibility: hidden;
+}
+
+.airport-loading-indicator.idle svg {
+  animation: none;
+}
+
+@keyframes airport-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .airport-preview-item {
@@ -1223,6 +1520,45 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   flex-direction: column;
 }
 
+.calculation-path-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.calculation-path-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-soft);
+}
+
+.calculation-path-index {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--bg-active);
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.calculation-path-row .step-name {
+  margin-bottom: 0.08rem;
+}
+
+.calculation-path-row .step-val {
+  padding: 0;
+  font-size: 14px;
+}
+
 .step {
   display: grid;
   grid-template-columns: 24px 1fr auto;
@@ -1305,6 +1641,33 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .result-item.warn {
   border-color: var(--warn-border);
   background: var(--warn-bg);
+}
+
+.takeoff-summary-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: -0.1rem 0 0.7rem;
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.takeoff-summary-heading svg {
+  width: 15px;
+  height: 15px;
+  color: var(--cyan);
+}
+
+.takeoff-summary-divider {
+  margin: 0.8rem 0 0.55rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .wb-summary {
@@ -1418,84 +1781,18 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   text-align: center;
 }
 
-.climb-chart-scroll {
-  width: 100%;
-  margin-top: 0.85rem;
-  overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: #fff;
-}
-
 .climb-chart-stage {
-  position: relative;
   width: 100%;
   min-width: 0;
   max-width: 100%;
   aspect-ratio: 929 / 1400;
-  background: #fff;
-}
-
-.climb-chart-image,
-.climb-chart-overlay {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.climb-chart-image {
-  object-fit: contain;
-}
-
-.climb-chart-overlay {
-  pointer-events: none;
-}
-
-.climb-chart-stage.overlay-hidden .climb-chart-overlay {
-  display: none;
-}
-
-.stall-chart-scroll {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  margin-top: 0.85rem;
-  overflow-x: hidden;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: #fff;
 }
 
 .stall-chart-stage {
-  position: relative;
   width: 100%;
   min-width: 0;
   max-width: 100%;
   aspect-ratio: 937 / 1367;
-  background: #fff;
-}
-
-.stall-chart-image,
-.stall-chart-overlay {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.stall-chart-image {
-  object-fit: contain;
-}
-
-.stall-chart-overlay {
-  pointer-events: none;
-}
-
-.stall-chart-stage.overlay-hidden .stall-chart-overlay {
-  display: none;
 }
 
 .stall-chart-path {
@@ -1721,7 +2018,7 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   font-weight: 800;
 }
 
-@media (min-width: 1280px) and (min-height: 820px) {
+@media (min-width: 1366px) and (min-height: 820px) {
   .page-layout {
     grid-template-columns: minmax(336px, 372px) minmax(0, 1fr);
   }
@@ -1750,6 +2047,14 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 
   .sidebar-section {
     padding: 0.75rem 0.8rem 0.8rem;
+  }
+
+  .compact-calculator-layout {
+    grid-template-columns: minmax(390px, 430px) minmax(0, 1fr);
+  }
+
+  .compact-input-panel {
+    padding: 0.7rem;
   }
 
   .section-header {
@@ -1820,6 +2125,80 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   }
 }
 
+@media (max-width: 900px) {
+  .page-layout,
+  .compact-calculator-layout,
+  .runway-calculator .page-layout,
+  .cruise-calculator .page-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar,
+  .runway-calculator .sidebar,
+  .cruise-calculator .sidebar {
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .results,
+  .runway-calculator .results {
+    min-height: auto;
+  }
+
+  .takeoff-chart-scroll,
+  .runway-calculator .takeoff-chart-scroll,
+  .cruise-calculator .takeoff-chart-scroll {
+    overflow-x: hidden;
+  }
+
+  .takeoff-chart-stage,
+  .runway-calculator .takeoff-chart-stage,
+  .cruise-calculator .takeoff-chart-stage {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1365px) and (orientation: landscape) {
+  .page-layout,
+  .compact-calculator-layout,
+  .runway-calculator .page-layout,
+  .cruise-calculator .page-layout {
+    grid-template-columns: minmax(390px, 430px) minmax(0, 1fr);
+  }
+
+  .sidebar,
+  .runway-calculator .sidebar,
+  .cruise-calculator .sidebar {
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+    border-right: 1px solid var(--border);
+    border-bottom: 0;
+  }
+
+  .results,
+  .runway-calculator .results {
+    min-height: auto;
+  }
+
+  .takeoff-chart-scroll,
+  .runway-calculator .takeoff-chart-scroll,
+  .cruise-calculator .takeoff-chart-scroll {
+    overflow-x: auto;
+  }
+
+  .takeoff-chart-stage,
+  .runway-calculator .takeoff-chart-stage,
+  .cruise-calculator .takeoff-chart-stage {
+    width: auto;
+    min-width: 760px;
+  }
+}
+
 .breakdown-table td:first-child {
   color: var(--text-sub);
 }
@@ -1831,8 +2210,28 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 }
 
 @media (max-width: 640px) {
+  .input-wrap input[type="number"],
+  .input-wrap input[type="text"],
+  .airport-field input,
+  .airport-field select,
+  .airport-datetime-control input,
+  textarea:not(:disabled) {
+    font-size: 16px;
+  }
+
   .airport-search {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(112px, 34%);
+    column-gap: 0.65rem;
+  }
+
+  .airport-search-status {
+    grid-column: 1 / -1;
+    margin-top: 0;
+  }
+
+  .airport-search button {
+    margin-top: 0;
+    width: 100%;
   }
 
   .stall-calculator,
@@ -1860,6 +2259,21 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 
   .sidebar-section {
     padding: 0.95rem 1rem 1rem;
+  }
+
+  .compact-input-panel {
+    gap: 0.6rem;
+    padding: 0.65rem;
+  }
+
+  .calculator-input-section {
+    border-radius: 16px;
+  }
+
+  .calculator-input-header,
+  .calculator-input-body {
+    padding-right: 0.7rem;
+    padding-left: 0.7rem;
   }
 
   .results {
@@ -1906,15 +2320,39 @@ input[type="range"]:focus-visible::-moz-range-thumb {
     align-items: stretch;
   }
 
-  .takeoff-chart-actions {
-    width: 100%;
+  .traceability-header {
+    align-items: stretch;
     flex-direction: column;
+  }
+
+  .traceability-tabs {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .traceability-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .calculation-path-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .takeoff-chart-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
     align-items: stretch;
   }
 
+  .takeoff-chart-toggle {
+    grid-column: 1 / -1;
+  }
+
   .takeoff-chart-download {
-    width: auto;
-    align-self: flex-start;
+    width: 100%;
+    min-width: 0;
     padding: 0.65rem 0.75rem;
   }
 

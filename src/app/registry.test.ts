@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { aircraftRegistry, defaultAircraft } from "./aircraft";
-import { calculatorRegistry } from "./calculators";
+import {
+  calculatorRegistry,
+  navigationHrefForPath,
+  pageTitleForPath,
+  settingsNavigationHref,
+} from "./calculators";
 
 describe("aircraft registry", () => {
   it("contains a valid default aircraft", () => {
@@ -22,6 +27,17 @@ describe("aircraft registry", () => {
   it("uses unique calculator links", () => {
     const links = calculatorRegistry.map((calculator) => calculator.href);
     expect(new Set(links).size).toBe(links.length);
+  });
+
+  it("derives navigation hrefs and document titles from registered paths", () => {
+    expect(navigationHrefForPath("/index.html")).toBe("/");
+    expect(navigationHrefForPath("/takeoff.html")).toBe("/takeoff.html");
+    expect(navigationHrefForPath(settingsNavigationHref)).toBe(settingsNavigationHref);
+    expect(navigationHrefForPath("/unknown.html")).toBe("/");
+
+    expect(pageTitleForPath("/takeoff.html")).toBe("Takeoff");
+    expect(pageTitleForPath(settingsNavigationHref)).toBe("Einstellungen");
+    expect(pageTitleForPath("/unknown.html")).toBe("Performance");
   });
 
 });

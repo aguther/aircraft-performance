@@ -26,9 +26,3 @@ export function applyTheme(preference: ThemePreference): ResolvedTheme {
     ?.setAttribute("content", resolvedTheme === "dark" ? "#08131d" : "#005f8a");
   return resolvedTheme;
 }
-
-export function nextThemePreference(preference: ThemePreference): ThemePreference {
-  if (preference === "auto") return "light";
-  if (preference === "light") return "dark";
-  return "auto";
-}

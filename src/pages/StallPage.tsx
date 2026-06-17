@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
+import { Gauge, Plane, Settings } from "lucide-react";
 import { calculateStall } from "../aircraft/g115b/calculators";
 import { g115bData } from "../aircraft/g115b/data";
 import type { StallInputs } from "../aircraft/g115b/types";
+import { useFlightPlan } from "../app/FlightPlanContext";
 import { interpolate1D } from "../domain";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
+import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { SliderField } from "../components/SliderField";
+import { createPdfBlobFromCanvas, warmPdfExportModule } from "../export/pdf";
 
 type StallResult = ReturnType<typeof calculateStall>;
 type ChartPoint = readonly [number, number];
@@ -70,6 +74,18 @@ function timestamp(date: Date) {
 }
 
 async function exportChart(inputs: StallInputs, result: StallResult) {
+  const { canvas, exportDate } = await createStallExportCanvas(inputs, result);
+  const blob = await canvasToBlob(canvas);
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Überziehgeschwindigkeit.png`, "image/png");
+}
+
+async function exportChartPdf(inputs: StallInputs, result: StallResult) {
+  const { canvas, exportDate } = await createStallExportCanvas(inputs, result);
+  const blob = await createPdfBlobFromCanvas(canvas);
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Überziehgeschwindigkeit.pdf`, "application/pdf");
+}
+
+async function createStallExportCanvas(inputs: StallInputs, result: StallResult) {
   const exportDate = new Date();
   const canvas = document.createElement("canvas");
   canvas.width = 1200;
@@ -105,11 +121,14 @@ async function exportChart(inputs: StallInputs, result: StallResult) {
   });
   context.restore();
   drawText(context, `Quelle: ${g115bData.stall.source} · Originaldiagramm mit grafischem Rechenweg`, 40, 2150, { size: 14, color: "#687b8d" });
-  const blob = await canvasToBlob(canvas);
-  const fileName = `${timestamp(exportDate)}Z Grob G115B Überziehgeschwindigkeit.png`;
-  const file = new File([blob], fileName, { type: "image/png" });
+
+  return { canvas, exportDate };
+}
+
+async function saveExportBlob(blob: Blob, fileName: string, type: string) {
+  const file = new File([blob], fileName, { type });
   if (navigator.share && navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ files: [file], title: "Grob G115B Überziehgeschwindigkeit" });
+    await navigator.share({ files: [file] });
     return;
   }
   const link = document.createElement("a");
@@ -123,14 +142,37 @@ async function exportChart(inputs: StallInputs, result: StallResult) {
 
 function ChartCard({ inputs, result }: { inputs: StallInputs; result: StallResult }) {
   const [overlayVisible, setOverlayVisible] = useState(true);
-  const [exporting, setExporting] = useState(false);
-  const save = async () => {
-    setExporting(true);
-    try { await exportChart(inputs, result); } finally { setExporting(false); }
+  const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
+  const saveImage = async () => {
+    setExporting("png");
+    try { await exportChart(inputs, result); } finally { setExporting(null); }
+  };
+  const savePdf = async () => {
+    setExporting("pdf");
+    try { await exportChartPdf(inputs, result); } finally { setExporting(null); }
   };
   return (
-    <section className="card takeoff-chart-card stall-chart-card">
-      <div className="takeoff-chart-header"><div className="card-title">Grafische Nachvollziehbarkeit</div><div className="takeoff-chart-actions"><label className="takeoff-chart-toggle"><input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} /><span>Rechenweg</span></label><button className="takeoff-chart-download" type="button" disabled={exporting} onClick={save}>{exporting ? "Erzeuge PNG…" : "Als Bild speichern"}</button></div></div>
+    <section className="card takeoff-chart-card stall-chart-card traceability-card">
+      <div className="traceability-header">
+        <div>
+          <div className="card-title">Nachvollziehbarkeit</div>
+          <div className="traceability-description">Rechenweg im originalen Flughandbuchdiagramm</div>
+        </div>
+      </div>
+      <div className="traceability-toolbar">
+        <div className="takeoff-chart-actions">
+          <label className="takeoff-chart-toggle">
+            <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
+            <span>Rechenweg</span>
+          </label>
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={saveImage}>
+            {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
+          </button>
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={savePdf}>
+            {exporting === "pdf" ? "PDF vorbereiten…" : "PDF speichern"}
+          </button>
+        </div>
+      </div>
       <div className="stall-chart-scroll"><div className={`stall-chart-stage${overlayVisible ? "" : " overlay-hidden"}`}><img className="stall-chart-image" src={CHART_SOURCE} alt="Originales Flughandbuchdiagramm Bild 5.3.4 Überziehgeschwindigkeiten" width={g115bData.stall.chart.width} height={g115bData.stall.chart.height} /><StallOverlay inputs={inputs} /></div></div>
       <div className="takeoff-chart-legend"><span>{inputs.powerMode === "leerlauf" ? "Leerlauf" : "Vollast"} · Klappen {inputs.flapsDegrees}°</span><span>{inputs.massKg} kg</span><span>IAS · {result.stallSpeedKt.toFixed(1)} kt · {result.stallSpeedKmh.toFixed(1)} km/h</span></div>
     </section>
@@ -138,9 +180,11 @@ function ChartCard({ inputs, result }: { inputs: StallInputs; result: StallResul
 }
 
 export function StallPage() {
-  const [massKg, setMassKg] = useState(920);
-  const [powerMode, setPowerMode] = useState<StallInputs["powerMode"]>("leerlauf");
-  const [flapsDegrees, setFlapsDegrees] = useState<StallInputs["flapsDegrees"]>(40);
+  const { flightPlan, updateStallCalculator } = useFlightPlan();
+  const savedCalculator = flightPlan.stallCalculator;
+  const [massKg, setMassKg] = useState(savedCalculator?.massKg ?? 920);
+  const [powerMode, setPowerMode] = useState<StallInputs["powerMode"]>(savedCalculator?.powerMode ?? "leerlauf");
+  const [flapsDegrees, setFlapsDegrees] = useState<StallInputs["flapsDegrees"]>(savedCalculator?.flapsDegrees ?? 40);
   const inputs = useMemo<StallInputs>(() => ({ massKg, powerMode, flapsDegrees }), [massKg, powerMode, flapsDegrees]);
   const result = useMemo(() => calculateStall(inputs), [inputs]);
 
@@ -148,17 +192,55 @@ export function StallPage() {
     document.body.classList.add("runway-calculator", "stall-calculator");
     return () => document.body.classList.remove("runway-calculator", "stall-calculator");
   }, []);
+  useEffect(() => {
+    updateStallCalculator({ massKg, powerMode, flapsDegrees });
+  }, [flapsDegrees, massKg, powerMode, updateStallCalculator]);
 
   return (
-    <div className="page-layout">
-      <aside className="sidebar">
-        <div className="sidebar-section"><div className="section-header">Flugzeug</div><SliderField label="Flugmasse" unit="kg" value={massKg} min={750} max={920} hint="MTOW 920 kg · Minimalgewicht ca. 750 kg" onChange={setMassKg} /></div>
-        <div className="sidebar-section"><div className="section-header">Triebwerk</div><div className="field"><div className="field-label">Leistungsstellung</div><div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr" }}>{(["leerlauf", "vollast"] as const).map((mode) => <button className={`mode-btn${powerMode === mode ? " active" : ""}`} type="button" onClick={() => setPowerMode(mode)} key={mode}>{mode === "leerlauf" ? "Leerlauf" : "Vollast"}</button>)}</div><div className="hint">Leerlauf = kritischer Fall für Landung<br />Vollast = Durchstartbedingung</div></div></div>
-        <div className="sidebar-section"><div className="section-header">Klappenstellung</div><div className="field"><div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>{([0, 12, 40] as const).map((flaps) => <button className={`mode-btn${flapsDegrees === flaps ? " active" : ""}`} type="button" onClick={() => setFlapsDegrees(flaps)} key={flaps}>{flaps}°</button>)}</div><div className="hint">40° = Landung (VSO) · 0° = Reiseflug (VS1)</div></div></div>
+    <div className="page-layout compact-calculator-layout">
+      <aside className="sidebar compact-input-panel">
+        <CalculatorInputSection
+          icon={<Plane aria-hidden="true" />}
+          title="Flugzeug"
+          description="Flugmasse"
+          summary={`${massKg} kg`}
+        >
+          <SliderField label="Flugmasse" unit="kg" value={massKg} min={750} max={920} hint="MTOW 920 kg · Minimalgewicht ca. 750 kg" onChange={setMassKg} />
+        </CalculatorInputSection>
+        <CalculatorInputSection
+          defaultOpen={false}
+          icon={<Settings aria-hidden="true" />}
+          title="Konfiguration"
+          description="Leistung und Klappenstellung"
+          summary={`${powerMode === "leerlauf" ? "Leerlauf" : "Vollast"} · Klappen ${flapsDegrees}°`}
+        >
+          <div className="field">
+            <div className="field-label">Leistungsstellung</div>
+            <div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr" }}>
+              {(["leerlauf", "vollast"] as const).map((mode) => (
+                <button className={`mode-btn${powerMode === mode ? " active" : ""}`} type="button" onClick={() => setPowerMode(mode)} key={mode}>{mode === "leerlauf" ? "Leerlauf" : "Vollast"}</button>
+              ))}
+            </div>
+            <div className="hint">Leerlauf = kritischer Fall für Landung<br />Vollast = Durchstartbedingung</div>
+          </div>
+          <div className="field">
+            <div className="field-label">Klappenstellung</div>
+            <div className="mode-toggle" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
+              {([0, 12, 40] as const).map((flaps) => (
+                <button className={`mode-btn${flapsDegrees === flaps ? " active" : ""}`} type="button" onClick={() => setFlapsDegrees(flaps)} key={flaps}>{flaps}°</button>
+              ))}
+            </div>
+            <div className="hint">40° = Landung (VSO) · 0° = Reiseflug (VS1)</div>
+          </div>
+        </CalculatorInputSection>
       </aside>
       <main className="results">
         <CalculatorCard title="Bedingungen"><div className="conditions-grid">{result.conditions.map((condition) => <span key={condition}>{condition}</span>)}</div></CalculatorCard>
-        <CalculatorCard title={`Ergebnis - ${massKg} kg · ${powerMode === "leerlauf" ? "Leerlauf" : "Vollast"} · Klappen ${flapsDegrees}°`}>
+        <CalculatorCard title="Überziehgeschwindigkeit">
+          <div className="takeoff-summary-heading">
+            <Gauge aria-hidden="true" />
+            <span>{massKg} kg · {powerMode === "leerlauf" ? "Leerlauf" : "Vollast"} · Klappen {flapsDegrees}°</span>
+          </div>
           <div className="result-grid" style={{ gridTemplateColumns: "1fr" }}><MetricItem label={<span>Überziehgeschwindigkeit · <SpeedSymbol index={result.stallLabel.slice(1)} /></span>} value={result.stallSpeedKt.toFixed(1)} unit="kt" speedType="IAS" subtext={`${result.stallSpeedKmh.toFixed(1)} km/h`} /></div>
         </CalculatorCard>
         <ChartCard inputs={inputs} result={result} />

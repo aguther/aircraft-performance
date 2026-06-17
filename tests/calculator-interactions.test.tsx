@@ -16,6 +16,12 @@ import { StallPage } from "../src/pages/StallPage";
 import { WeightBalancePage } from "../src/pages/WeightBalancePage";
 import { TakeoffPage } from "../src/pages/TakeoffPage";
 import { LandingPage } from "../src/pages/LandingPage";
+import { CruisePage } from "../src/pages/CruisePage";
+import { ClimbRatePage } from "../src/pages/ClimbRatePage";
+import { AppHeader } from "../src/components/AppHeader";
+import { defaultAircraft } from "../src/app/aircraft";
+import { SettingsPage } from "../src/pages/SettingsPage";
+import { HomePage } from "../src/pages/HomePage";
 
 afterEach(() => {
   cleanup();
@@ -66,18 +72,83 @@ function AircraftContextHarness() {
 }
 
 function FlightPlanContextHarness() {
-  const { flightPlan, updateWeightBalance, publishMasses } = useFlightPlan();
+  const { flightPlan, updateWeightBalance, publishMasses, resetFlightPlan } = useFlightPlan();
   return (
     <>
       <span>{flightPlan.weightBalance.pilotMassKg} kg</span>
       <span>{flightPlan.masses?.startMassKg ?? "Keine Masse"}</span>
       <button type="button" onClick={() => updateWeightBalance({ pilotMassKg: 90 })}>Pilot ändern</button>
       <button type="button" onClick={() => publishMasses({ startMassKg: 850, landingMassKg: 820, startFuelLiters: 60, landingFuelLiters: 18 })}>Massen veröffentlichen</button>
+      <button type="button" onClick={resetFlightPlan}>Neue Flugplanung</button>
     </>
   );
 }
 
 describe("calculator interactions", () => {
+  it("selects the theme directly in settings", async () => {
+    const user = userEvent.setup();
+    const onSelectTheme = vi.fn();
+    render(
+      <MemoryRouter>
+        <SettingsPage preference="auto" onOpenUsageNotice={() => undefined} onSelectTheme={onSelectTheme} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("button", { name: "Automatisch" }).getAttribute("aria-pressed")).toBe("true");
+    await user.click(screen.getByRole("button", { name: "Dunkel" }));
+
+    expect(onSelectTheme).toHaveBeenCalledWith("dark");
+  });
+
+  it("selects the concrete aircraft and resets planning data on the overview", async () => {
+    const user = userEvent.setup();
+    const onResetFlightPlan = vi.fn();
+    render(
+      <MemoryRouter>
+        <FlightPlanProvider>
+          <HomePage
+            aircraft={defaultAircraft}
+            availableAircraft={[defaultAircraft]}
+            onResetFlightPlan={onResetFlightPlan}
+            onSelectAircraft={vi.fn()}
+          />
+        </FlightPlanProvider>
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "D-ELWF" }));
+    expect(screen.getByRole("button", { name: "D-ELWF" }).getAttribute("aria-pressed")).toBe("true");
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.weightBalance.registration).toBe("D-ELWF");
+    });
+
+    const confirmSpy = vi.spyOn(window, "confirm");
+    await user.click(screen.getByRole("button", { name: "Neue Planung" }));
+    expect(onResetFlightPlan).toHaveBeenCalledTimes(1);
+    expect(confirmSpy).not.toHaveBeenCalled();
+  });
+
+  it("keeps the important notice available from the settings tab", async () => {
+    const user = userEvent.setup();
+    const onOpenUsageNotice = vi.fn();
+    render(
+      <MemoryRouter>
+        <AppHeader
+          aircraft={defaultAircraft}
+          currentNavigationHref="/takeoff.html"
+        />
+        <SettingsPage preference="auto" onOpenUsageNotice={onOpenUsageNotice} onSelectTheme={() => undefined} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByRole("button", { name: "Hinweis zur Nutzung" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Einstellungen" })).toBeTruthy();
+    expect(screen.getByText(/^VERSION/)).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Disclaimer anzeigen" }));
+    expect(onOpenUsageNotice).toHaveBeenCalledTimes(1);
+  });
+
   it("stores planned airport times explicitly as UTC", () => {
     expect(utcDateTimeValue("2026-06-14T18:30:00.000Z")).toBe("2026-06-14T18:30");
     expect(utcDateTimeIso("2026-06-14T18:30")).toBe("2026-06-14T18:30:00.000Z");
@@ -103,6 +174,19 @@ describe("calculator interactions", () => {
     expect(screen.getByText("90 kg")).toBeTruthy();
     expect(screen.getByText("850")).toBeTruthy();
     expect(window.localStorage.getItem("performance-calculators-flight-plan")).toContain('"landingMassKg":820');
+  });
+
+  it("resets all central flight planning data", async () => {
+    const user = userEvent.setup();
+    render(<FlightPlanProvider><FlightPlanContextHarness /></FlightPlanProvider>);
+
+    await user.click(screen.getByRole("button", { name: "Pilot ändern" }));
+    await user.click(screen.getByRole("button", { name: "Massen veröffentlichen" }));
+    await user.click(screen.getByRole("button", { name: "Neue Flugplanung" }));
+
+    expect(screen.getByText("85 kg")).toBeTruthy();
+    expect(screen.getByText("Keine Masse")).toBeTruthy();
+    await waitFor(() => expect(window.localStorage.getItem("performance-calculators-flight-plan")).not.toContain('"masses"'));
   });
 
   it("publishes a lower landing mass after planned fuel burn", async () => {
@@ -142,6 +226,7 @@ describe("calculator interactions", () => {
 
     expect(screen.getByText("850.3 kg")).toBeTruthy();
     expect(screen.getByText(/Übernahme konservativ als 851 kg/)).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: /Flugzeug & Betrieb/ }));
     await user.click(screen.getByRole("checkbox", { name: "Masse übernehmen" }));
     const massField = screen.getByText("Masse", { selector: ".field-label" }).parentElement!;
     const massInput = massField.querySelector('input[type="number"]')!;
@@ -154,6 +239,7 @@ describe("calculator interactions", () => {
     });
     view.unmount();
     render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+    await user.click(screen.getByRole("button", { name: /Flugzeug & Betrieb/ }));
     expect(screen.getByRole("checkbox", { name: "Masse übernommen" }).hasAttribute("checked")).toBe(true);
     const restoredMassField = screen.getByText("Masse", { selector: ".field-label" }).parentElement!;
     const restoredMassInput = restoredMassField.querySelector('input[type="number"]')!;
@@ -173,7 +259,7 @@ describe("calculator interactions", () => {
 
   it("keeps the supported decimal precision in slope input", () => {
     render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
-    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".section-header" }).parentElement!;
+    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
     const slopeField = within(runwaySection).getByText("Slope", { selector: ".field-label" }).parentElement!;
     const slopeInput = slopeField.querySelector('input[inputmode="decimal"]')!;
 
@@ -181,6 +267,19 @@ describe("calculator interactions", () => {
     fireEvent.change(slopeInput, { target: { value: "1" } });
     fireEvent.blur(slopeInput);
     expect(slopeInput.getAttribute("value")).toBe("1.0");
+  });
+
+  it("switches between takeoff chart and compact calculation path", async () => {
+    const user = userEvent.setup();
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    expect(screen.getByRole("tab", { name: "Diagramm" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByAltText("Originales Flughandbuchdiagramm Bild 5.3.7 Startstrecke")).toBeTruthy();
+
+    await user.click(screen.getByRole("tab", { name: "Rechenweg" }));
+    expect(screen.getByRole("tab", { name: "Rechenweg" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByText("Schritt 1 - Atmosphäre")).toBeTruthy();
+    expect(screen.queryByAltText("Originales Flughandbuchdiagramm Bild 5.3.7 Startstrecke")).toBeNull();
   });
 
   const airport: Airport = {
@@ -226,7 +325,7 @@ describe("calculator interactions", () => {
     expect(weatherValuesForRunway(weather, airport.runways[0])).toEqual({
       qnhHpa: 1016,
       oatC: 17,
-      windKt: 7,
+      windKt: 8,
     });
   });
 
@@ -241,19 +340,38 @@ describe("calculator interactions", () => {
     await user.click(screen.getByRole("button", { name: "Suchen" }));
     expect(await screen.findByText(/OpenAIP · Stand/)).toBeTruthy();
     expect(searchInput.getAttribute("value")).toBe("");
-    expect(await screen.findByText(/ICON-D2-Prognose/)).toBeTruthy();
+    expect(await screen.findByText(/Aktuelle ICON-D2-Werte/)).toBeTruthy();
     expect(screen.getByText("HW")).toBeTruthy();
     expect(screen.getByText("XW")).toBeTruthy();
-    expect(screen.getByText(/082° \/ 7.8 G 12.4/)).toBeTruthy();
+    expect(screen.getByText(/082° \/ 8 G 12/)).toBeTruthy();
     expect(screen.getByText("TORA")).toBeTruthy();
     expect(screen.getByText("TODA")).toBeTruthy();
     expect(screen.getByText("Geplante Startzeit · UTC · 24 h")).toBeTruthy();
-    await user.click(screen.getByRole("checkbox", { name: "Werte übernehmen" }));
+    expect(screen.getByText("TRUE")).toBeTruthy();
+    expect(screen.getByText("MAG")).toBeTruthy();
+    let atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    await waitFor(() => {
+      expect(atmosphereSection.querySelector('input[type="number"][value="1016"]')).toBeTruthy();
+      expect(atmosphereSection.querySelector('input[type="number"][value="17"]')).toBeTruthy();
+    });
+    let runwaySection = screen.getByText("Pistenbedingungen", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    await user.click(within(runwaySection).getByRole("button", { name: /Pistenbedingungen/ }));
+    expect(runwaySection.querySelector('input[type="number"][value="8"]')).toBeTruthy();
+    await user.click(within(runwaySection).getByRole("button", { name: /Pistenbedingungen/ }));
+    await waitFor(() => {
+      expect((screen.getByRole("checkbox", { name: "Werte übernommen" }) as HTMLInputElement).checked).toBe(true);
+    });
+    await user.click(screen.getByRole("button", { name: /Atmosphäre/ }));
+    const atmosphereButton = screen.getByRole("button", { name: /EDFE · Frankfurt-Egelsbach · RWY 08/ });
+    expect(atmosphereButton.textContent).toContain("Elev 384 ft");
+    expect(atmosphereButton.textContent).toContain("QNH 1016 hPa");
+    await user.click(atmosphereButton);
     expect(screen.getByRole("button", { name: "Elevation" }).hasAttribute("disabled")).toBe(true);
-    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;
+    atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
     const qnhField = within(atmosphereSection).getByText("QNH", { selector: ".field-label" }).parentElement!;
     expect(qnhField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(true);
-    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".section-header" }).parentElement!;
+    runwaySection = screen.getByText("Pistenbedingungen", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    await user.click(within(runwaySection).getByRole("button", { name: /Pistenbedingungen/ }));
     const windField = within(runwaySection).getByText("Wind", { selector: ".field-label" }).parentElement!;
     expect(windField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(true);
     await user.click(screen.getByRole("checkbox", { name: "Werte übernommen" }));
@@ -271,6 +389,92 @@ describe("calculator interactions", () => {
     });
   });
 
+
+  it("does not re-enable takeoff airport imports when returning to a saved manual selection", async () => {
+    stubAirportSearch();
+    const user = userEvent.setup();
+    const firstRender = render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    await user.type(screen.getByRole("searchbox", { name: "Flugplatzsuche" }), "edfe");
+    await user.click(screen.getByRole("button", { name: "Suchen" }));
+    await waitFor(() => {
+      expect((screen.getByRole("checkbox", { name: "Werte übernommen" }) as HTMLInputElement).checked).toBe(true);
+    });
+
+    await user.click(screen.getByRole("checkbox", { name: "Werte übernommen" }));
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.imports.departureImport).toBe(false);
+    });
+
+    firstRender.unmount();
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    expect(await screen.findByText(/OpenAIP · Stand/)).toBeTruthy();
+    expect(await screen.findByText(/Aktuelle ICON-D2-Werte/)).toBeTruthy();
+    const importToggle = screen.getByRole("checkbox", { name: "Werte übernehmen" }) as HTMLInputElement;
+    expect(importToggle.checked).toBe(false);
+    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    const qnhField = within(atmosphereSection).getByText("QNH", { selector: ".field-label" }).parentElement!;
+    expect(qnhField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(false);
+  });
+
+  it("keeps manual takeoff values after leaving and returning to the page", async () => {
+    const firstRender = render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    const qnhField = within(atmosphereSection).getByText("QNH", { selector: ".field-label" }).parentElement!;
+    fireEvent.change(qnhField.querySelector('input[type="number"]')!, { target: { value: "1001" } });
+    const oatField = within(atmosphereSection).getByText("OAT", { selector: ".field-label" }).parentElement!;
+    fireEvent.change(oatField.querySelector('input[type="number"]')!, { target: { value: "23" } });
+    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    await userEvent.setup().click(within(runwaySection).getByRole("button", { name: /Pistenbedingungen/ }));
+    const windField = within(runwaySection).getByText("Wind", { selector: ".field-label" }).parentElement!;
+    fireEvent.change(windField.querySelector('input[type="number"]')!, { target: { value: "6" } });
+
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.takeoffCalculator.qnhHpa).toBe(1001);
+      expect(storedPlan.takeoffCalculator.oatC).toBe(23);
+      expect(storedPlan.takeoffCalculator.windKt).toBe(6);
+    });
+
+    firstRender.unmount();
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    const restoredAtmosphere = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    const restoredQnhField = within(restoredAtmosphere).getByText("QNH", { selector: ".field-label" }).parentElement!;
+    const restoredOatField = within(restoredAtmosphere).getByText("OAT", { selector: ".field-label" }).parentElement!;
+    expect(restoredQnhField.querySelector('input[type="number"]')?.getAttribute("value")).toBe("1001");
+    expect(restoredOatField.querySelector('input[type="number"]')?.getAttribute("value")).toBe("23");
+    const restoredRunway = screen.getByText("Pistenbedingungen", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    await userEvent.setup().click(within(restoredRunway).getByRole("button", { name: /Pistenbedingungen/ }));
+    const restoredWindField = within(restoredRunway).getByText("Wind", { selector: ".field-label" }).parentElement!;
+    expect(restoredWindField.querySelector('input[type="number"]')?.getAttribute("value")).toBe("6");
+  });
+
+  it("retries transient weather failures before showing unavailable data", async () => {
+    let weatherRequests = 0;
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/weather?")) {
+        weatherRequests += 1;
+        if (weatherRequests === 1) return Response.json({ error: "Kurz nicht verfügbar" }, { status: 503 });
+        return Response.json(weather);
+      }
+      return Response.json(url.includes("/api/airports?") ? { items: [airport], totalCount: 1 } : airport);
+    }));
+    const user = userEvent.setup();
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    await user.type(screen.getByRole("searchbox", { name: "Flugplatzsuche" }), "EDFE");
+    await user.click(screen.getByRole("button", { name: "Suchen" }));
+
+    expect(await screen.findByText(/Aktuelle ICON-D2-Werte/, undefined, { timeout: 2500 })).toBeTruthy();
+    expect(screen.queryByText("Kurz nicht verfügbar")).toBeNull();
+    expect(weatherRequests).toBe(2);
+  });
+
   it("applies real OpenAIP destination airport data to landing", async () => {
     stubAirportSearch();
     const user = userEvent.setup();
@@ -281,18 +485,18 @@ describe("calculator interactions", () => {
     expect(await screen.findByText("Landebahn")).toBeTruthy();
     expect(screen.getByText("Geplante Landezeit · UTC · 24 h")).toBeTruthy();
     const plannedTime = screen.getByText("Geplante Landezeit · UTC · 24 h").parentElement!.querySelector("input")!;
-    expect(plannedTime.hasAttribute("disabled")).toBe(false);
-    await user.click(screen.getByRole("checkbox", { name: "Jetzt" }));
     expect(plannedTime.hasAttribute("disabled")).toBe(true);
     await waitFor(() => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
       expect(storedPlan.imports.arrivalWeatherNow).toBe(true);
     });
-    await user.click(screen.getByRole("checkbox", { name: "Werte übernehmen" }));
+    await waitFor(() => {
+      expect((screen.getByRole("checkbox", { name: "Werte übernommen" }) as HTMLInputElement).checked).toBe(true);
+    });
     await user.click(screen.getByRole("checkbox", { name: "Werte übernommen" }));
     await user.click(screen.getByRole("button", { name: "Elevation" }));
 
-    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".section-header" }).parentElement!;
+    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
     expect(within(atmosphereSection).getByDisplayValue("384")).toBeTruthy();
     await waitFor(() => {
       const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
@@ -315,6 +519,74 @@ describe("calculator interactions", () => {
 
     expect(screen.getByText("Ground Roll · Startrollstrecke").parentElement?.classList.contains("danger")).toBe(true);
     expect(screen.getByText("Takeoff Distance · Startstrecke über 15 m").parentElement?.classList.contains("warn")).toBe(true);
+  });
+
+  it("expands compact takeoff input sections and keeps their summary current", async () => {
+    const user = userEvent.setup();
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    const aircraftButton = screen.getByRole("button", { name: /Flugzeug & Betrieb/ });
+    expect(aircraftButton.getAttribute("aria-expanded")).toBe("false");
+    expect(aircraftButton.textContent).toContain("920 kg");
+    const runwayButton = screen.getByRole("button", { name: /Pistenbedingungen/ });
+    expect(runwayButton.textContent).toContain("Zuschlag 15%");
+
+    await user.click(aircraftButton);
+    expect(aircraftButton.getAttribute("aria-expanded")).toBe("true");
+    const aircraftSection = aircraftButton.closest(".calculator-input-section")!;
+    fireEvent.change(aircraftSection.querySelector('input[type="number"][value="920"]')!, { target: { value: "880" } });
+    await user.click(aircraftButton);
+
+    expect(aircraftButton.textContent).toContain("880 kg");
+    expect(runwayButton.textContent).toContain("Zuschlag 15%");
+  });
+
+  it("persists manual cruise, climb rate, and stall planning inputs", async () => {
+    const cruiseRender = render(<FlightPlanProvider><CruisePage /></FlightPlanProvider>);
+    const cruisePowerButton = screen.getByRole("button", { name: /Leistung/ });
+    await userEvent.setup().click(cruisePowerButton);
+    const cruisePowerSection = cruisePowerButton.closest(".calculator-input-section")!;
+    fireEvent.change(cruisePowerSection.querySelector('input[type="number"]')!, { target: { value: "72" } });
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.cruiseCalculator.powerPercent).toBe(72);
+    });
+    cruiseRender.unmount();
+    render(<FlightPlanProvider><CruisePage /></FlightPlanProvider>);
+    await userEvent.setup().click(screen.getByRole("button", { name: /Leistung/ }));
+    const restoredCruisePower = screen.getByRole("button", { name: /Leistung/ }).closest(".calculator-input-section")!;
+    expect(restoredCruisePower.querySelector('input[type="number"]')?.getAttribute("value")).toBe("72");
+    cleanup();
+
+    const climbRateRender = render(<FlightPlanProvider><ClimbRatePage /></FlightPlanProvider>);
+    const climbRateMassButton = screen.getByRole("button", { name: /Flugzeug/ });
+    await userEvent.setup().click(climbRateMassButton);
+    const climbRateMassSection = climbRateMassButton.closest(".calculator-input-section")!;
+    fireEvent.change(climbRateMassSection.querySelector('input[type="number"]')!, { target: { value: "870" } });
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.climbRateCalculator.massKg).toBe(870);
+    });
+    climbRateRender.unmount();
+    render(<FlightPlanProvider><ClimbRatePage /></FlightPlanProvider>);
+    await userEvent.setup().click(screen.getByRole("button", { name: /Flugzeug/ }));
+    const restoredClimbRateMass = screen.getByRole("button", { name: /Flugzeug/ }).closest(".calculator-input-section")!;
+    expect(restoredClimbRateMass.querySelector('input[type="number"]')?.getAttribute("value")).toBe("870");
+    cleanup();
+
+    const stallRender = render(<FlightPlanProvider><StallPage /></FlightPlanProvider>);
+    const stallConfigButton = screen.getByRole("button", { name: /Konfiguration/ });
+    await userEvent.setup().click(stallConfigButton);
+    await userEvent.setup().click(screen.getByRole("button", { name: "Vollast" }));
+    await userEvent.setup().click(screen.getByRole("button", { name: "12°" }));
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.stallCalculator.powerMode).toBe("vollast");
+      expect(storedPlan.stallCalculator.flapsDegrees).toBe(12);
+    });
+    stallRender.unmount();
+    render(<FlightPlanProvider><StallPage /></FlightPlanProvider>);
+    expect(screen.getAllByText("Vollast · Klappen 12°").length).toBeGreaterThan(0);
   });
 
   it("colors landing result distances when LDA is exceeded", async () => {
@@ -348,8 +620,10 @@ describe("calculator interactions", () => {
 
   it("shows an error when the climb destination is below the departure", async () => {
     const user = userEvent.setup();
-    render(<ClimbPage />);
-    const destinationSection = screen.getByText("Ziel", { selector: ".section-header" }).parentElement!;
+    render(<FlightPlanProvider><ClimbPage /></FlightPlanProvider>);
+    const destinationButton = screen.getByRole("button", { name: /Ziel/ });
+    await user.click(destinationButton);
+    const destinationSection = screen.getByText("Ziel", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
 
     await user.click(within(destinationSection).getByRole("button", { name: "Density Alt." }));
     const destinationAltitude = within(destinationSection).getByDisplayValue("4500");
@@ -361,14 +635,18 @@ describe("calculator interactions", () => {
 
   it("updates the stall result when power and flap settings change", async () => {
     const user = userEvent.setup();
-    render(<StallPage />);
+    render(<FlightPlanProvider><StallPage /></FlightPlanProvider>);
 
-    await user.click(screen.getByRole("button", { name: "Vollast" }));
-    await user.click(screen.getByRole("button", { name: "0°" }));
+    const configurationButton = screen.getByRole("button", { name: /Konfiguration/ });
+    await user.click(configurationButton);
+    const configurationSection = screen.getByText("Konfiguration", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
 
-    expect(screen.getByText("Ergebnis - 920 kg · Vollast · Klappen 0°")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Vollast" }).classList.contains("active")).toBe(true);
-    expect(screen.getByRole("button", { name: "0°" }).classList.contains("active")).toBe(true);
+    await user.click(within(configurationSection).getByRole("button", { name: "Vollast" }));
+    await user.click(within(configurationSection).getByRole("button", { name: "0°" }));
+
+    expect(screen.getByText("920 kg · Vollast · Klappen 0°")).toBeTruthy();
+    expect(within(configurationSection).getByRole("button", { name: "Vollast" }).classList.contains("active")).toBe(true);
+    expect(within(configurationSection).getByRole("button", { name: "0°" }).classList.contains("active")).toBe(true);
     expect(screen.getByText("Vollast · Klappen 0°")).toBeTruthy();
   });
 });
