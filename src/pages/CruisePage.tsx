@@ -166,7 +166,7 @@ async function exportCharts(inputs: CruiseViewInputs, charts: readonly CruiseCha
 
 async function exportChartsPdf(inputs: CruiseViewInputs, charts: readonly CruiseChart[]) {
   const { canvas, time } = await createCruiseExportCanvas(inputs, charts);
-  const blob = await createPdfBlobFromCanvas(canvas);
+  const blob = await createPdfBlobFromCanvas(canvas, { maxDimensionPx: 3600 });
   await saveExportBlob(blob, `${time}Z Grob G115B Reiseflugberechnung.pdf`, "application/pdf");
 }
 

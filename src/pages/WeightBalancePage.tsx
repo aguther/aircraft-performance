@@ -258,18 +258,6 @@ function exportText(
   context.fillText(text, x, y);
 }
 
-function drawExportField(context: CanvasRenderingContext2D, label: string, value: string, x: number, y: number, width: number) {
-  context.fillStyle = "#f7fafc";
-  context.strokeStyle = "#9aafc0";
-  context.lineWidth = 2;
-  context.beginPath();
-  context.roundRect(x, y, width, 96, 14);
-  context.fill();
-  context.stroke();
-  exportText(context, label.toUpperCase(), x + 20, y + 34, { size: 18, weight: 700, color: "#607487" });
-  exportText(context, value, x + 20, y + 72, { size: 25, weight: 700 });
-}
-
 function drawExportTable(
   context: CanvasRenderingContext2D,
   rows: string[][],
@@ -297,6 +285,14 @@ function drawExportTable(
     });
     rowY += rowHeight;
   });
+}
+
+function speedRowsForResult(result: WeightBalanceResult, phase: "Start" | "Landung") {
+  return [
+    ["Vₐₚₚ Approach", phase, kilometersPerHourToKnots(result.speeds.approachSpeedKmh).toFixed(1), Math.round(result.speeds.approachSpeedKmh).toString()],
+    ["Vᵣₑf 1.3 x Vₛ₀", phase, kilometersPerHourToKnots(result.speeds.referenceSpeedKmh).toFixed(1), Math.round(result.speeds.referenceSpeedKmh).toString()],
+    ["Vₛ₀ Leerlauf 40°", phase, kilometersPerHourToKnots(result.speeds.stallIdleFlaps40Kmh).toFixed(1), Math.round(result.speeds.stallIdleFlaps40Kmh).toString()],
+  ];
 }
 
 function drawExportEnvelope(
@@ -399,20 +395,12 @@ async function createWeightBalanceExportCanvas(
   context.lineWidth = 6;
   context.strokeRect(48, 42, canvas.width - 96, 136);
   exportText(context, `Grob G115B - ${plan.registration}`, canvas.width / 2, 100, { size: 38, weight: 700, align: "center" });
-  exportText(context, "Beladeplan", canvas.width / 2, 144, { size: 34, weight: 700, align: "center" });
+  exportText(context, `Beladeplan · basierend auf ${g115bData.weightBalance.source}`, canvas.width / 2, 144, { size: 30, weight: 700, align: "center" });
   exportText(context, `Revision ${startResult.emptyAircraft.revision}`, canvas.width - 210, 96, { size: 25, weight: 700, align: "center" });
   exportText(context, startResult.emptyAircraft.revisionDate, canvas.width - 210, 136, { size: 25, align: "center" });
   exportText(context, `${timestamp(exportDate)}Z`, 78, 144, { size: 22, color: "#607487" });
 
-  const fieldY = 220;
-  drawExportField(context, "Pilot", `${plan.pilotMassKg.toFixed(1)} kg`, 60, fieldY, 250);
-  drawExportField(context, "Co-Pilot", `${plan.copilotMassKg.toFixed(1)} kg`, 330, fieldY, 250);
-  drawExportField(context, "Gepäck", `${plan.baggageMassKg.toFixed(1)} kg`, 600, fieldY, 250);
-  drawExportField(context, "Startkraftstoff", `${plan.startFuelLiters.toFixed(1)} l`, 870, fieldY, 280);
-  drawExportField(context, "Verbrauch", `${plan.plannedFuelBurnLiters.toFixed(1)} l`, 1170, fieldY, 260);
-  drawExportField(context, "Landekraftstoff", `${landingFuelLiters.toFixed(1)} l`, 1450, fieldY, 290);
-
-  exportText(context, "Startbeladung", 60, 388, { size: 28, weight: 700, color: "#006f9f" });
+  exportText(context, "Startbeladung", 60, 286, { size: 28, weight: 700, color: "#006f9f" });
   drawExportTable(
     context,
     [
@@ -421,13 +409,13 @@ async function createWeightBalanceExportCanvas(
       ["Abfluggewicht", startResult.totalMassKg.toFixed(1), startResult.cgArmM.toFixed(4), startResult.totalMomentKgM.toFixed(2)],
     ],
     60,
-    420,
+    318,
     [360, 170, 160, 210],
     58,
   );
-  exportText(context, "MTOW: 920 kg", 72, 840, { size: 24, weight: 700 });
+  exportText(context, "MTOW: 920 kg", 72, 750, { size: 24, weight: 700 });
 
-  exportText(context, "Landung", 60, 918, { size: 28, weight: 700, color: "#006f9f" });
+  exportText(context, "Landung", 60, 828, { size: 28, weight: 700, color: "#006f9f" });
   drawExportTable(
     context,
     [
@@ -436,37 +424,36 @@ async function createWeightBalanceExportCanvas(
       ["Landegewicht", landingResult.totalMassKg.toFixed(1), landingResult.cgArmM.toFixed(4), landingResult.totalMomentKgM.toFixed(2)],
     ],
     60,
-    950,
+    860,
     [360, 170, 160, 210],
     58,
   );
 
-  exportText(context, "Status", 60, 1176, { size: 28, weight: 700, color: "#006f9f" });
+  exportText(context, "Status", 60, 1170, { size: 28, weight: 700, color: "#006f9f" });
   const statusRows = [
     ["Start", startResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope"],
     ["Landung", landingResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope"],
     ["Kraftstoffdichte", `${g115bData.weightBalance.fuelDensityKgPerLiter.toLocaleString("de-DE")} kg/l`],
-    ["Quelle", `${g115bData.weightBalance.source} · Wägung Revision ${startResult.emptyAircraft.revision} vom ${startResult.emptyAircraft.revisionDate}`],
+    ["Quelle", `${g115bData.weightBalance.source} · Beladeplan Revision ${startResult.emptyAircraft.revision} vom ${startResult.emptyAircraft.revisionDate}`],
   ];
-  drawExportTable(context, statusRows, 60, 1210, [250, 650], 50, 0);
+  drawExportTable(context, statusRows, 60, 1208, [250, 650], 43, 0);
 
-  exportText(context, "Geschwindigkeiten", 1030, 388, { size: 28, weight: 700, color: "#006f9f" });
+  exportText(context, "Geschwindigkeiten", 1030, 286, { size: 28, weight: 700, color: "#006f9f" });
   drawExportTable(
     context,
     [
-      ["Wert", "IAS [kt]", "IAS [km/h]"],
-      ["VR Rotate", kilometersPerHourToKnots(startResult.speeds.rotateSpeedKmh).toFixed(1), Math.round(startResult.speeds.rotateSpeedKmh).toString()],
-      ["in 15 m Höhe", kilometersPerHourToKnots(startResult.speeds.speedAt15mKmh).toFixed(1), Math.round(startResult.speeds.speedAt15mKmh).toString()],
-      ["VAPP Approach", kilometersPerHourToKnots(landingResult.speeds.approachSpeedKmh).toFixed(1), Math.round(landingResult.speeds.approachSpeedKmh).toString()],
-      ["VREF 1.3 x VS0", kilometersPerHourToKnots(landingResult.speeds.referenceSpeedKmh).toFixed(1), Math.round(landingResult.speeds.referenceSpeedKmh).toString()],
-      ["VS0 Leerlauf 40°", kilometersPerHourToKnots(landingResult.speeds.stallIdleFlaps40Kmh).toFixed(1), Math.round(landingResult.speeds.stallIdleFlaps40Kmh).toString()],
+      ["Wert", "Masse", "IAS [kt]", "IAS [km/h]"],
+      ["Vᵣ Rotate", "Start", kilometersPerHourToKnots(startResult.speeds.rotateSpeedKmh).toFixed(1), Math.round(startResult.speeds.rotateSpeedKmh).toString()],
+      ["V₁₅m", "Start", kilometersPerHourToKnots(startResult.speeds.speedAt15mKmh).toFixed(1), Math.round(startResult.speeds.speedAt15mKmh).toString()],
+      ...speedRowsForResult(startResult, "Start"),
+      ...speedRowsForResult(landingResult, "Landung"),
     ],
     1030,
-    420,
-    [320, 170, 190],
-    58,
+    318,
+    [290, 150, 140, 160],
+    48,
   );
-  drawExportEnvelope(context, startResult, landingResult, 1030, 820, 1040, 560);
+  drawExportEnvelope(context, startResult, landingResult, 1030, 780, 1040, 600);
 
   return { canvas, exportDate };
 }
@@ -489,7 +476,7 @@ async function exportWeightBalancePdf(
   landingFuelLiters: number,
 ) {
   const { canvas, exportDate } = await createWeightBalanceExportCanvas(plan, startResult, landingResult, landingFuelLiters);
-  const blob = await createPdfBlobFromCanvas(canvas);
+  const blob = await createPdfBlobFromCanvas(canvas, { orientation: "landscape", maxDimensionPx: 2400 });
   await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Beladeplan ${plan.registration}.pdf`, "application/pdf");
 }
 
@@ -662,7 +649,7 @@ export function WeightBalancePage() {
             </div>
             <div className="conditions-grid wb-planning-conditions">
               {startResult.conditions.map((condition) => <span key={condition}>{condition}</span>)}
-              <span>Wägung Revision {startResult.emptyAircraft.revision} vom {startResult.emptyAircraft.revisionDate}</span>
+              <span>Beladeplan Revision {startResult.emptyAircraft.revision} vom {startResult.emptyAircraft.revisionDate}</span>
               <span>Landung = Start − geplanter Kraftstoffverbrauch</span>
             </div>
             {plan.plannedFuelBurnLiters > plan.startFuelLiters ? (
@@ -699,30 +686,12 @@ export function WeightBalancePage() {
               speedKmh={startResult.speeds.rotateSpeedKmh}
             />
             <SpeedMetric label="in 15 m Höhe" speedKmh={startResult.speeds.speedAt15mKmh} />
-            <SpeedMetric
-              label={
-                <span>
-                  <SpeedSymbol index="APP" /> · Approach
-                </span>
-              }
-              speedKmh={landingResult.speeds.approachSpeedKmh}
-            />
-            <SpeedMetric
-              label={
-                <span>
-                  <SpeedSymbol index="REF" /> · 1.3 × <SpeedSymbol index="S0" />
-                </span>
-              }
-              speedKmh={landingResult.speeds.referenceSpeedKmh}
-            />
-            <SpeedMetric
-              label={
-                <span>
-                  <SpeedSymbol index="S0" /> · Leerlauf 40°
-                </span>
-              }
-              speedKmh={landingResult.speeds.stallIdleFlaps40Kmh}
-            />
+            <SpeedMetric label={<span><SpeedSymbol index="APP" /> · Start</span>} speedKmh={startResult.speeds.approachSpeedKmh} />
+            <SpeedMetric label={<span><SpeedSymbol index="REF" /> · Start</span>} speedKmh={startResult.speeds.referenceSpeedKmh} />
+            <SpeedMetric label={<span><SpeedSymbol index="S0" /> · Start</span>} speedKmh={startResult.speeds.stallIdleFlaps40Kmh} />
+            <SpeedMetric label={<span><SpeedSymbol index="APP" /> · Landung</span>} speedKmh={landingResult.speeds.approachSpeedKmh} />
+            <SpeedMetric label={<span><SpeedSymbol index="REF" /> · Landung</span>} speedKmh={landingResult.speeds.referenceSpeedKmh} />
+            <SpeedMetric label={<span><SpeedSymbol index="S0" /> · Landung</span>} speedKmh={landingResult.speeds.stallIdleFlaps40Kmh} />
           </div>
         </CalculatorCard>
         <CalculatorCard title="Beladung · Start bis Landung">
