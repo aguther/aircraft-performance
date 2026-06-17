@@ -30,6 +30,73 @@ export type FlightPlanTakeoffStart = {
   updatedAt: string;
 };
 
+export type FlightPlanAtmosphereMode = "airport" | "qnh" | "direct";
+export type FlightPlanAltitudeMode = "alt" | "fl" | "da";
+
+export type FlightPlanAltitude = {
+  mode: FlightPlanAltitudeMode;
+  altitudeFt: number;
+  flightLevel: number;
+  densityAltitudeFt: number;
+  oatC: number;
+  qnhHpa: number;
+};
+
+export type FlightPlanTakeoffCalculator = {
+  pressureAltitudeMode: FlightPlanAtmosphereMode;
+  elevationFt: number;
+  qnhHpa: number;
+  directPressureAltitudeFt: number;
+  oatC: number;
+  massKg: number;
+  slopePercent: number;
+  windKt: number;
+  safetyMarginPercent: number;
+  updatedAt: string;
+};
+
+export type FlightPlanLandingCalculator = {
+  pressureAltitudeMode: FlightPlanAtmosphereMode;
+  elevationFt: number;
+  qnhHpa: number;
+  directPressureAltitudeFt: number;
+  oatC: number;
+  massKg: number;
+  windKt: number;
+  safetyMarginPercent: number;
+  updatedAt: string;
+};
+
+export type FlightPlanClimbCalculator = {
+  from: FlightPlanAltitude;
+  to: FlightPlanAltitude;
+  updatedAt: string;
+};
+
+export type FlightPlanCruiseCalculator = {
+  mode: FlightPlanAltitudeMode;
+  altitudeFt: number;
+  flightLevel: number;
+  directDensityAltitudeFt: number;
+  qnhHpa: number;
+  oatC: number;
+  powerPercent: number;
+  updatedAt: string;
+};
+
+export type FlightPlanClimbRateCalculator = {
+  altitude: FlightPlanAltitude;
+  massKg: number;
+  updatedAt: string;
+};
+
+export type FlightPlanStallCalculator = {
+  massKg: number;
+  powerMode: "leerlauf" | "vollast";
+  flapsDegrees: 0 | 12 | 40;
+  updatedAt: string;
+};
+
 export type FlightPlanAirportSelection = {
   airportId: string;
   runwayId: string;
@@ -52,6 +119,12 @@ export type FlightPlan = {
   imports: FlightPlanImports;
   masses?: FlightPlanMasses;
   takeoffStart?: FlightPlanTakeoffStart;
+  takeoffCalculator?: FlightPlanTakeoffCalculator;
+  landingCalculator?: FlightPlanLandingCalculator;
+  climbCalculator?: FlightPlanClimbCalculator;
+  cruiseCalculator?: FlightPlanCruiseCalculator;
+  climbRateCalculator?: FlightPlanClimbRateCalculator;
+  stallCalculator?: FlightPlanStallCalculator;
   departure?: FlightPlanAirportSelection;
   arrival?: FlightPlanAirportSelection;
 };
@@ -63,6 +136,12 @@ type FlightPlanContextValue = {
   publishTakeoffStart: (takeoffStart: Omit<FlightPlanTakeoffStart, "updatedAt">) => void;
   updateDeparture: (departure: Omit<FlightPlanAirportSelection, "updatedAt">) => void;
   updateArrival: (arrival: Omit<FlightPlanAirportSelection, "updatedAt">) => void;
+  updateTakeoffCalculator: (takeoffCalculator: Omit<FlightPlanTakeoffCalculator, "updatedAt">) => void;
+  updateLandingCalculator: (landingCalculator: Omit<FlightPlanLandingCalculator, "updatedAt">) => void;
+  updateClimbCalculator: (climbCalculator: Omit<FlightPlanClimbCalculator, "updatedAt">) => void;
+  updateCruiseCalculator: (cruiseCalculator: Omit<FlightPlanCruiseCalculator, "updatedAt">) => void;
+  updateClimbRateCalculator: (climbRateCalculator: Omit<FlightPlanClimbRateCalculator, "updatedAt">) => void;
+  updateStallCalculator: (stallCalculator: Omit<FlightPlanStallCalculator, "updatedAt">) => void;
   updateImports: (change: Partial<FlightPlanImports>) => void;
   resetFlightPlan: () => void;
 };
@@ -128,6 +207,30 @@ export function FlightPlanProvider({ children }: { children: ReactNode }) {
     ...current,
     arrival: { ...arrival, updatedAt: new Date().toISOString() },
   })), []);
+  const updateTakeoffCalculator = useCallback((takeoffCalculator: Omit<FlightPlanTakeoffCalculator, "updatedAt">) => setFlightPlan((current) => ({
+    ...current,
+    takeoffCalculator: { ...takeoffCalculator, updatedAt: new Date().toISOString() },
+  })), []);
+  const updateLandingCalculator = useCallback((landingCalculator: Omit<FlightPlanLandingCalculator, "updatedAt">) => setFlightPlan((current) => ({
+    ...current,
+    landingCalculator: { ...landingCalculator, updatedAt: new Date().toISOString() },
+  })), []);
+  const updateClimbCalculator = useCallback((climbCalculator: Omit<FlightPlanClimbCalculator, "updatedAt">) => setFlightPlan((current) => ({
+    ...current,
+    climbCalculator: { ...climbCalculator, updatedAt: new Date().toISOString() },
+  })), []);
+  const updateCruiseCalculator = useCallback((cruiseCalculator: Omit<FlightPlanCruiseCalculator, "updatedAt">) => setFlightPlan((current) => ({
+    ...current,
+    cruiseCalculator: { ...cruiseCalculator, updatedAt: new Date().toISOString() },
+  })), []);
+  const updateClimbRateCalculator = useCallback((climbRateCalculator: Omit<FlightPlanClimbRateCalculator, "updatedAt">) => setFlightPlan((current) => ({
+    ...current,
+    climbRateCalculator: { ...climbRateCalculator, updatedAt: new Date().toISOString() },
+  })), []);
+  const updateStallCalculator = useCallback((stallCalculator: Omit<FlightPlanStallCalculator, "updatedAt">) => setFlightPlan((current) => ({
+    ...current,
+    stallCalculator: { ...stallCalculator, updatedAt: new Date().toISOString() },
+  })), []);
   const updateImports = useCallback((change: Partial<FlightPlanImports>) => setFlightPlan((current) => ({
     ...current,
     imports: { ...current.imports, ...change },
@@ -149,9 +252,15 @@ export function FlightPlanProvider({ children }: { children: ReactNode }) {
     publishTakeoffStart,
     updateDeparture,
     updateArrival,
+    updateTakeoffCalculator,
+    updateLandingCalculator,
+    updateClimbCalculator,
+    updateCruiseCalculator,
+    updateClimbRateCalculator,
+    updateStallCalculator,
     updateImports,
     resetFlightPlan,
-  }), [flightPlan, publishMasses, publishTakeoffStart, resetFlightPlan, updateArrival, updateDeparture, updateImports, updateWeightBalance]);
+  }), [flightPlan, publishMasses, publishTakeoffStart, resetFlightPlan, updateArrival, updateClimbCalculator, updateClimbRateCalculator, updateCruiseCalculator, updateDeparture, updateImports, updateLandingCalculator, updateStallCalculator, updateTakeoffCalculator, updateWeightBalance]);
 
   return <FlightPlanContext.Provider value={value}>{children}</FlightPlanContext.Provider>;
 }

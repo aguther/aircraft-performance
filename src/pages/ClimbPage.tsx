@@ -310,9 +310,10 @@ function ChartCard({ from, to, inputs, result }: { from: LegState; to: LegState;
 }
 
 export function ClimbPage() {
-  const { flightPlan, updateImports } = useFlightPlan();
-  const [from, setFrom] = useState<LegState>({ mode: "alt", altitudeFt: 0, flightLevel: 0, densityAltitudeFt: 0, oatC: 15, qnhHpa: 1013 });
-  const [to, setTo] = useState<LegState>({ mode: "alt", altitudeFt: 4500, flightLevel: 45, densityAltitudeFt: 4500, oatC: 6, qnhHpa: 1013 });
+  const { flightPlan, updateClimbCalculator, updateImports } = useFlightPlan();
+  const savedCalculator = flightPlan.climbCalculator;
+  const [from, setFrom] = useState<LegState>(savedCalculator?.from ?? { mode: "alt", altitudeFt: 0, flightLevel: 0, densityAltitudeFt: 0, oatC: 15, qnhHpa: 1013 });
+  const [to, setTo] = useState<LegState>(savedCalculator?.to ?? { mode: "alt", altitudeFt: 4500, flightLevel: 45, densityAltitudeFt: 4500, oatC: 6, qnhHpa: 1013 });
   const takeoffStart = flightPlan.takeoffStart;
   const takeoffStartLeg = useMemo(() => takeoffStart ? takeoffStartToLeg(takeoffStart) : undefined, [takeoffStart]);
   const activeFrom = flightPlan.imports.climbStartFromTakeoff && takeoffStartLeg ? takeoffStartLeg : from;
@@ -328,6 +329,9 @@ export function ClimbPage() {
     document.body.classList.add("runway-calculator", "climb-calculator");
     return () => document.body.classList.remove("runway-calculator", "climb-calculator");
   }, []);
+  useEffect(() => {
+    updateClimbCalculator({ from, to });
+  }, [from, to, updateClimbCalculator]);
 
   return (
     <div className="page-layout compact-calculator-layout">

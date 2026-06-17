@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Gauge, Mountain, Plane } from "lucide-react";
 import { calculateClimbRate } from "../aircraft/g115b/calculators";
+import { useFlightPlan } from "../app/FlightPlanContext";
 import { kilometersPerHourToKnots } from "../domain";
 import { AltitudeInput, type AltitudeInputValue, resolveAltitudeInput } from "../components/AltitudeInput";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
@@ -15,7 +16,9 @@ function describeAltitude(altitude: AltitudeInputValue, densityAltitudeFt: numbe
 }
 
 export function ClimbRatePage() {
-  const [altitude, setAltitude] = useState<AltitudeInputValue>({
+  const { flightPlan, updateClimbRateCalculator } = useFlightPlan();
+  const savedCalculator = flightPlan.climbRateCalculator;
+  const [altitude, setAltitude] = useState<AltitudeInputValue>(savedCalculator?.altitude ?? {
     mode: "alt",
     altitudeFt: 4500,
     flightLevel: 45,
@@ -23,13 +26,16 @@ export function ClimbRatePage() {
     qnhHpa: 1013,
     oatC: 6,
   });
-  const [massKg, setMassKg] = useState(920);
+  const [massKg, setMassKg] = useState(savedCalculator?.massKg ?? 920);
   const resolvedAltitude = useMemo(() => resolveAltitudeInput(altitude), [altitude]);
   const { atmosphere, densityAltitudeFt, pressureAltitudeFt: referencePressureAltitudeFt } = resolvedAltitude;
   const result = useMemo(
     () => calculateClimbRate({ massKg, densityAltitudeFt, referencePressureAltitudeFt }),
     [massKg, densityAltitudeFt, referencePressureAltitudeFt],
   );
+  useEffect(() => {
+    updateClimbRateCalculator({ altitude, massKg });
+  }, [altitude, massKg, updateClimbRateCalculator]);
 
   return (
     <div className="page-layout compact-calculator-layout">

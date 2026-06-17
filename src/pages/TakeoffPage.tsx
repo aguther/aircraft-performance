@@ -401,16 +401,17 @@ function TraceabilityCard({ inputs, result, exportContext }: { inputs: TakeoffIn
 }
 
 export function TakeoffPage() {
-  const { flightPlan, publishTakeoffStart, updateImports } = useFlightPlan();
-  const [pressureAltitudeMode, setPressureAltitudeMode] = useState<PressureAltitudeMode>("airport");
-  const [elevationFt, setElevationFt] = useState(0);
-  const [qnhHpa, setQnhHpa] = useState(1013);
-  const [directPressureAltitudeFt, setDirectPressureAltitudeFt] = useState(0);
-  const [oatC, setOatC] = useState(15);
-  const [massKg, setMassKg] = useState(920);
-  const [slopePercent, setSlopePercent] = useState(0);
-  const [windKt, setWindKt] = useState(0);
-  const [safetyMarginPercent, setSafetyMarginPercent] = useState(15);
+  const { flightPlan, publishTakeoffStart, updateImports, updateTakeoffCalculator } = useFlightPlan();
+  const savedCalculator = flightPlan.takeoffCalculator;
+  const [pressureAltitudeMode, setPressureAltitudeMode] = useState<PressureAltitudeMode>(savedCalculator?.pressureAltitudeMode ?? "airport");
+  const [elevationFt, setElevationFt] = useState(savedCalculator?.elevationFt ?? 0);
+  const [qnhHpa, setQnhHpa] = useState(savedCalculator?.qnhHpa ?? 1013);
+  const [directPressureAltitudeFt, setDirectPressureAltitudeFt] = useState(savedCalculator?.directPressureAltitudeFt ?? 0);
+  const [oatC, setOatC] = useState(savedCalculator?.oatC ?? 15);
+  const [massKg, setMassKg] = useState(savedCalculator?.massKg ?? 920);
+  const [slopePercent, setSlopePercent] = useState(savedCalculator?.slopePercent ?? 0);
+  const [windKt, setWindKt] = useState(savedCalculator?.windKt ?? 0);
+  const [safetyMarginPercent, setSafetyMarginPercent] = useState(savedCalculator?.safetyMarginPercent ?? 15);
   const [selectedAirport, setSelectedAirport] = useState<Airport>();
   const [selectedRunway, setSelectedRunway] = useState<RunwayDirection>();
   const [selectedWeatherValues, setSelectedWeatherValues] = useState<{ qnhHpa?: number; oatC?: number }>();
@@ -445,6 +446,19 @@ export function TakeoffPage() {
     document.body.classList.add("runway-calculator");
     return () => document.body.classList.remove("runway-calculator");
   }, []);
+  useEffect(() => {
+    updateTakeoffCalculator({
+      pressureAltitudeMode,
+      elevationFt,
+      qnhHpa,
+      directPressureAltitudeFt,
+      oatC,
+      massKg,
+      slopePercent,
+      windKt,
+      safetyMarginPercent,
+    });
+  }, [directPressureAltitudeFt, elevationFt, massKg, oatC, pressureAltitudeMode, qnhHpa, safetyMarginPercent, slopePercent, updateTakeoffCalculator, windKt]);
   useEffect(() => {
     if (flightPlan.imports.departureImport) setPressureAltitudeMode("airport");
   }, [flightPlan.imports.departureImport]);

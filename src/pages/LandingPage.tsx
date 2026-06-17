@@ -406,15 +406,16 @@ function TraceabilityCard({ inputs, result, exportContext }: { inputs: LandingIn
 }
 
 export function LandingPage() {
-  const { flightPlan, updateImports } = useFlightPlan();
-  const [pressureAltitudeMode, setPressureAltitudeMode] = useState<PressureAltitudeMode>("airport");
-  const [elevationFt, setElevationFt] = useState(0);
-  const [qnhHpa, setQnhHpa] = useState(1013);
-  const [directPressureAltitudeFt, setDirectPressureAltitudeFt] = useState(0);
-  const [oatC, setOatC] = useState(15);
-  const [massKg, setMassKg] = useState(920);
-  const [windKt, setWindKt] = useState(0);
-  const [safetyMarginPercent, setSafetyMarginPercent] = useState(40);
+  const { flightPlan, updateImports, updateLandingCalculator } = useFlightPlan();
+  const savedCalculator = flightPlan.landingCalculator;
+  const [pressureAltitudeMode, setPressureAltitudeMode] = useState<PressureAltitudeMode>(savedCalculator?.pressureAltitudeMode ?? "airport");
+  const [elevationFt, setElevationFt] = useState(savedCalculator?.elevationFt ?? 0);
+  const [qnhHpa, setQnhHpa] = useState(savedCalculator?.qnhHpa ?? 1013);
+  const [directPressureAltitudeFt, setDirectPressureAltitudeFt] = useState(savedCalculator?.directPressureAltitudeFt ?? 0);
+  const [oatC, setOatC] = useState(savedCalculator?.oatC ?? 15);
+  const [massKg, setMassKg] = useState(savedCalculator?.massKg ?? 920);
+  const [windKt, setWindKt] = useState(savedCalculator?.windKt ?? 0);
+  const [safetyMarginPercent, setSafetyMarginPercent] = useState(savedCalculator?.safetyMarginPercent ?? 40);
   const [selectedAirport, setSelectedAirport] = useState<Airport>();
   const [selectedRunway, setSelectedRunway] = useState<RunwayDirection>();
   const [selectedWeatherValues, setSelectedWeatherValues] = useState<{ qnhHpa?: number; oatC?: number }>();
@@ -444,6 +445,18 @@ export function LandingPage() {
     document.body.classList.add("runway-calculator");
     return () => document.body.classList.remove("runway-calculator");
   }, []);
+  useEffect(() => {
+    updateLandingCalculator({
+      pressureAltitudeMode,
+      elevationFt,
+      qnhHpa,
+      directPressureAltitudeFt,
+      oatC,
+      massKg,
+      windKt,
+      safetyMarginPercent,
+    });
+  }, [directPressureAltitudeFt, elevationFt, massKg, oatC, pressureAltitudeMode, qnhHpa, safetyMarginPercent, updateLandingCalculator, windKt]);
   useEffect(() => {
     if (flightPlan.imports.arrivalImport) setPressureAltitudeMode("airport");
   }, [flightPlan.imports.arrivalImport]);

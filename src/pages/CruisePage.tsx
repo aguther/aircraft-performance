@@ -12,6 +12,7 @@ import { CalculatorCard, MetricItem } from "../components/CalculatorCard";
 import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
+import { useFlightPlan } from "../app/FlightPlanContext";
 
 type CruiseMode = "alt" | "fl" | "da";
 type ChartPoint = readonly [number, number];
@@ -290,13 +291,15 @@ const chartBase = {
 };
 
 export function CruisePage() {
-  const [mode, setMode] = useState<CruiseMode>("alt");
-  const [altitudeFt, setAltitudeFt] = useState(4500);
-  const [flightLevel, setFlightLevel] = useState(45);
-  const [directDensityAltitudeFt, setDirectDensityAltitudeFt] = useState(4500);
-  const [qnhHpa, setQnhHpa] = useState(1013);
-  const [oatC, setOatC] = useState(6);
-  const [powerPercent, setPowerPercent] = useState(65);
+  const { flightPlan, updateCruiseCalculator } = useFlightPlan();
+  const savedCalculator = flightPlan.cruiseCalculator;
+  const [mode, setMode] = useState<CruiseMode>(savedCalculator?.mode ?? "alt");
+  const [altitudeFt, setAltitudeFt] = useState(savedCalculator?.altitudeFt ?? 4500);
+  const [flightLevel, setFlightLevel] = useState(savedCalculator?.flightLevel ?? 45);
+  const [directDensityAltitudeFt, setDirectDensityAltitudeFt] = useState(savedCalculator?.directDensityAltitudeFt ?? 4500);
+  const [qnhHpa, setQnhHpa] = useState(savedCalculator?.qnhHpa ?? 1013);
+  const [oatC, setOatC] = useState(savedCalculator?.oatC ?? 6);
+  const [powerPercent, setPowerPercent] = useState(savedCalculator?.powerPercent ?? 65);
   const inputs = useMemo<CruiseViewInputs>(() => {
     if (mode === "da") return { mode, densityAltitudeFt: directDensityAltitudeFt, powerPercent };
     const pressureAltitudeFt = mode === "alt" ? pressureAltitudeFromQnh(altitudeFt, qnhHpa) : flightLevelToFeet(flightLevel);
@@ -319,6 +322,17 @@ export function CruisePage() {
     document.body.classList.add("cruise-calculator");
     return () => document.body.classList.remove("cruise-calculator");
   }, []);
+  useEffect(() => {
+    updateCruiseCalculator({
+      mode,
+      altitudeFt,
+      flightLevel,
+      directDensityAltitudeFt,
+      qnhHpa,
+      oatC,
+      powerPercent,
+    });
+  }, [altitudeFt, directDensityAltitudeFt, flightLevel, mode, oatC, powerPercent, qnhHpa, updateCruiseCalculator]);
 
   const speedChart: CruiseChart = {
     ...chartBase,

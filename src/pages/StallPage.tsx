@@ -3,6 +3,7 @@ import { Gauge, Plane, Settings } from "lucide-react";
 import { calculateStall } from "../aircraft/g115b/calculators";
 import { g115bData } from "../aircraft/g115b/data";
 import type { StallInputs } from "../aircraft/g115b/types";
+import { useFlightPlan } from "../app/FlightPlanContext";
 import { interpolate1D } from "../domain";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
 import { CalculatorInputSection } from "../components/CalculatorInputSection";
@@ -186,9 +187,11 @@ function ChartCard({ inputs, result }: { inputs: StallInputs; result: StallResul
 }
 
 export function StallPage() {
-  const [massKg, setMassKg] = useState(920);
-  const [powerMode, setPowerMode] = useState<StallInputs["powerMode"]>("leerlauf");
-  const [flapsDegrees, setFlapsDegrees] = useState<StallInputs["flapsDegrees"]>(40);
+  const { flightPlan, updateStallCalculator } = useFlightPlan();
+  const savedCalculator = flightPlan.stallCalculator;
+  const [massKg, setMassKg] = useState(savedCalculator?.massKg ?? 920);
+  const [powerMode, setPowerMode] = useState<StallInputs["powerMode"]>(savedCalculator?.powerMode ?? "leerlauf");
+  const [flapsDegrees, setFlapsDegrees] = useState<StallInputs["flapsDegrees"]>(savedCalculator?.flapsDegrees ?? 40);
   const inputs = useMemo<StallInputs>(() => ({ massKg, powerMode, flapsDegrees }), [massKg, powerMode, flapsDegrees]);
   const result = useMemo(() => calculateStall(inputs), [inputs]);
 
@@ -196,6 +199,9 @@ export function StallPage() {
     document.body.classList.add("runway-calculator", "stall-calculator");
     return () => document.body.classList.remove("runway-calculator", "stall-calculator");
   }, []);
+  useEffect(() => {
+    updateStallCalculator({ massKg, powerMode, flapsDegrees });
+  }, [flapsDegrees, massKg, powerMode, updateStallCalculator]);
 
   return (
     <div className="page-layout compact-calculator-layout">

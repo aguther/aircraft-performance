@@ -16,6 +16,8 @@ import { StallPage } from "../src/pages/StallPage";
 import { WeightBalancePage } from "../src/pages/WeightBalancePage";
 import { TakeoffPage } from "../src/pages/TakeoffPage";
 import { LandingPage } from "../src/pages/LandingPage";
+import { CruisePage } from "../src/pages/CruisePage";
+import { ClimbRatePage } from "../src/pages/ClimbRatePage";
 import { AppHeader } from "../src/components/AppHeader";
 import { defaultAircraft } from "../src/app/aircraft";
 import { SettingsPage } from "../src/pages/SettingsPage";
@@ -415,6 +417,40 @@ describe("calculator interactions", () => {
     expect(qnhField.querySelector('input[type="number"]')?.hasAttribute("disabled")).toBe(false);
   });
 
+  it("keeps manual takeoff values after leaving and returning to the page", async () => {
+    const firstRender = render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    const atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    const qnhField = within(atmosphereSection).getByText("QNH", { selector: ".field-label" }).parentElement!;
+    fireEvent.change(qnhField.querySelector('input[type="number"]')!, { target: { value: "1001" } });
+    const oatField = within(atmosphereSection).getByText("OAT", { selector: ".field-label" }).parentElement!;
+    fireEvent.change(oatField.querySelector('input[type="number"]')!, { target: { value: "23" } });
+    const runwaySection = screen.getByText("Pistenbedingungen", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    await userEvent.setup().click(within(runwaySection).getByRole("button", { name: /Pistenbedingungen/ }));
+    const windField = within(runwaySection).getByText("Wind", { selector: ".field-label" }).parentElement!;
+    fireEvent.change(windField.querySelector('input[type="number"]')!, { target: { value: "6" } });
+
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.takeoffCalculator.qnhHpa).toBe(1001);
+      expect(storedPlan.takeoffCalculator.oatC).toBe(23);
+      expect(storedPlan.takeoffCalculator.windKt).toBe(6);
+    });
+
+    firstRender.unmount();
+    render(<MemoryRouter><FlightPlanProvider><TakeoffPage /></FlightPlanProvider></MemoryRouter>);
+
+    const restoredAtmosphere = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    const restoredQnhField = within(restoredAtmosphere).getByText("QNH", { selector: ".field-label" }).parentElement!;
+    const restoredOatField = within(restoredAtmosphere).getByText("OAT", { selector: ".field-label" }).parentElement!;
+    expect(restoredQnhField.querySelector('input[type="number"]')?.getAttribute("value")).toBe("1001");
+    expect(restoredOatField.querySelector('input[type="number"]')?.getAttribute("value")).toBe("23");
+    const restoredRunway = screen.getByText("Pistenbedingungen", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
+    await userEvent.setup().click(within(restoredRunway).getByRole("button", { name: /Pistenbedingungen/ }));
+    const restoredWindField = within(restoredRunway).getByText("Wind", { selector: ".field-label" }).parentElement!;
+    expect(restoredWindField.querySelector('input[type="number"]')?.getAttribute("value")).toBe("6");
+  });
+
   it("retries transient weather failures before showing unavailable data", async () => {
     let weatherRequests = 0;
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
@@ -503,6 +539,54 @@ describe("calculator interactions", () => {
     expect(runwayButton.textContent).toContain("Zuschlag 15%");
   });
 
+  it("persists manual cruise, climb rate, and stall planning inputs", async () => {
+    const cruiseRender = render(<FlightPlanProvider><CruisePage /></FlightPlanProvider>);
+    const cruisePowerButton = screen.getByRole("button", { name: /Leistung/ });
+    await userEvent.setup().click(cruisePowerButton);
+    const cruisePowerSection = cruisePowerButton.closest(".calculator-input-section")!;
+    fireEvent.change(cruisePowerSection.querySelector('input[type="number"]')!, { target: { value: "72" } });
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.cruiseCalculator.powerPercent).toBe(72);
+    });
+    cruiseRender.unmount();
+    render(<FlightPlanProvider><CruisePage /></FlightPlanProvider>);
+    await userEvent.setup().click(screen.getByRole("button", { name: /Leistung/ }));
+    const restoredCruisePower = screen.getByRole("button", { name: /Leistung/ }).closest(".calculator-input-section")!;
+    expect(restoredCruisePower.querySelector('input[type="number"]')?.getAttribute("value")).toBe("72");
+    cleanup();
+
+    const climbRateRender = render(<FlightPlanProvider><ClimbRatePage /></FlightPlanProvider>);
+    const climbRateMassButton = screen.getByRole("button", { name: /Flugzeug/ });
+    await userEvent.setup().click(climbRateMassButton);
+    const climbRateMassSection = climbRateMassButton.closest(".calculator-input-section")!;
+    fireEvent.change(climbRateMassSection.querySelector('input[type="number"]')!, { target: { value: "870" } });
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.climbRateCalculator.massKg).toBe(870);
+    });
+    climbRateRender.unmount();
+    render(<FlightPlanProvider><ClimbRatePage /></FlightPlanProvider>);
+    await userEvent.setup().click(screen.getByRole("button", { name: /Flugzeug/ }));
+    const restoredClimbRateMass = screen.getByRole("button", { name: /Flugzeug/ }).closest(".calculator-input-section")!;
+    expect(restoredClimbRateMass.querySelector('input[type="number"]')?.getAttribute("value")).toBe("870");
+    cleanup();
+
+    const stallRender = render(<FlightPlanProvider><StallPage /></FlightPlanProvider>);
+    const stallConfigButton = screen.getByRole("button", { name: /Konfiguration/ });
+    await userEvent.setup().click(stallConfigButton);
+    await userEvent.setup().click(screen.getByRole("button", { name: "Vollast" }));
+    await userEvent.setup().click(screen.getByRole("button", { name: "12°" }));
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(storedPlan.stallCalculator.powerMode).toBe("vollast");
+      expect(storedPlan.stallCalculator.flapsDegrees).toBe(12);
+    });
+    stallRender.unmount();
+    render(<FlightPlanProvider><StallPage /></FlightPlanProvider>);
+    expect(screen.getAllByText("Vollast · Klappen 12°").length).toBeGreaterThan(0);
+  });
+
   it("colors landing result distances when LDA is exceeded", async () => {
     stubAirportSearch({
       ...airport,
@@ -549,7 +633,7 @@ describe("calculator interactions", () => {
 
   it("updates the stall result when power and flap settings change", async () => {
     const user = userEvent.setup();
-    render(<StallPage />);
+    render(<FlightPlanProvider><StallPage /></FlightPlanProvider>);
 
     const configurationButton = screen.getByRole("button", { name: /Konfiguration/ });
     await user.click(configurationButton);
