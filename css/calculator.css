@@ -1375,6 +1375,119 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   background: var(--cyan);
 }
 
+/* TAKEOFF POLISH */
+.takeoff-calculator .calculator-input-section,
+.takeoff-calculator .card {
+  border-radius: 14px;
+}
+
+.takeoff-calculator .calculator-input-section {
+  box-shadow: none;
+}
+
+.takeoff-calculator .calculator-input-section.open {
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--bg-soft) 82%, var(--bg-card));
+}
+
+.takeoff-calculator .calculator-input-header {
+  min-height: 54px;
+}
+
+.takeoff-calculator .calculator-input-icon {
+  border-radius: 8px;
+}
+
+.takeoff-calculator .card-title {
+  margin-bottom: 0.62rem;
+  letter-spacing: 0.1em;
+}
+
+.takeoff-primary-results {
+  border-color: var(--border-strong);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cyan-bg) 55%, transparent), transparent 52%),
+    var(--bg-card);
+}
+
+.takeoff-primary-results .takeoff-summary-heading {
+  margin-bottom: 0.85rem;
+  color: var(--text-sub);
+}
+
+.takeoff-distance-grid {
+  gap: 0.85rem;
+}
+
+.takeoff-distance-grid .result-item {
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cyan-bg) 78%, transparent), transparent),
+    var(--bg-soft);
+}
+
+.takeoff-distance-grid .result-item-label {
+  color: var(--text-sub);
+  letter-spacing: 0.06em;
+}
+
+.takeoff-distance-grid .result-item-value {
+  font-size: clamp(2.45rem, 4.4vw, 3.45rem);
+  letter-spacing: 0;
+}
+
+.takeoff-primary-results .speed-grid {
+  gap: 0.6rem;
+}
+
+.takeoff-primary-results .speed-grid .result-item {
+  padding: 0.78rem 0.9rem;
+  border-color: var(--border);
+  border-radius: 12px;
+  background: var(--bg-soft);
+}
+
+.takeoff-primary-results .speed-grid .result-item-value {
+  font-size: clamp(1.55rem, 2.1vw, 2rem);
+}
+
+.takeoff-calculator .traceability-card {
+  border-color: var(--border-strong);
+}
+
+.takeoff-calculator .traceability-toolbar {
+  padding: 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-soft);
+}
+
+.takeoff-calculator .traceability-tabs,
+.takeoff-calculator .takeoff-chart-download {
+  border-radius: 9px;
+}
+
+.takeoff-calculator .traceability-tabs {
+  border-color: var(--border-strong);
+}
+
+.takeoff-calculator .takeoff-chart-actions {
+  gap: 0.5rem;
+}
+
+.takeoff-calculator .takeoff-chart-toggle {
+  padding: 0 0.15rem;
+}
+
+.takeoff-calculator .takeoff-chart-download {
+  min-height: 34px;
+}
+
+.takeoff-calculator .takeoff-chart-legend {
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--border);
+}
+
 /* WARNINGS */
 .warnings {
   display: flex;
@@ -2354,6 +2467,26 @@ input[type="range"]:focus-visible::-moz-range-thumb {
     width: 100%;
     min-width: 0;
     padding: 0.65rem 0.75rem;
+  }
+
+  .takeoff-calculator .takeoff-primary-results {
+    padding: 0.9rem;
+  }
+
+  .takeoff-calculator .takeoff-distance-grid {
+    gap: 0.6rem;
+  }
+
+  .takeoff-calculator .takeoff-distance-grid .result-item {
+    padding: 0.78rem 0.82rem;
+  }
+
+  .takeoff-calculator .takeoff-distance-grid .result-item-value {
+    font-size: 2.25rem;
+  }
+
+  .takeoff-calculator .traceability-toolbar {
+    padding: 0.35rem;
   }
 
   .speed-grid .result-item-sub {

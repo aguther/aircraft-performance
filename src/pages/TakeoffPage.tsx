@@ -436,8 +436,8 @@ export function TakeoffPage() {
     || (availableTodaM != null && result.takeoffDistanceMeters > availableTodaM);
 
   useEffect(() => {
-    document.body.classList.add("runway-calculator");
-    return () => document.body.classList.remove("runway-calculator");
+    document.body.classList.add("runway-calculator", "takeoff-calculator");
+    return () => document.body.classList.remove("runway-calculator", "takeoff-calculator");
   }, []);
   useEffect(() => {
     updateTakeoffCalculator({
@@ -561,12 +561,12 @@ export function TakeoffPage() {
       </aside>
       <main className="results">
         <CalculatorContextCard atmosphere={result.atmosphere} warnings={warnings} conditions={result.conditions} />
-        <CalculatorCard title="Startleistung">
+        <CalculatorCard title="Startleistung" className="takeoff-primary-results">
           <div className="takeoff-summary-heading">
             <Gauge aria-hidden="true" />
             <span>Berechnete Strecken und Geschwindigkeiten</span>
           </div>
-          <div className="result-grid">
+          <div className="result-grid takeoff-distance-grid">
             <MetricItem label="Ground Roll · Startrollstrecke" value={String(result.groundRollMeters)} unit="m" danger={groundRollExceedsTora} />
             <MetricItem label="Takeoff Distance · Startstrecke über 15 m" value={String(result.takeoffDistanceMeters)} unit="m" warn={takeoffDistanceExceedsLimit} />
           </div>
