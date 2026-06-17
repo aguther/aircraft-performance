@@ -347,8 +347,8 @@ export function ClimbPage() {
       <main className="results">
         {result.warnings.length ? <div className="warnings">{result.warnings.map((warning) => <div className={`warn-item${warning.danger ? " danger" : ""}`} key={warning.text}>{warning.text}</div>)}</div> : null}
         <ContextCard inputs={inputs} result={result} />
-        <CalculatorCard title={valid ? `Ergebnis - ${inputs.departureDensityAltitudeFt.toLocaleString("de-DE")} → ${inputs.destinationDensityAltitudeFt.toLocaleString("de-DE")} ft DA` : "Ergebnis - Eingabe prüfen"}>
-          <div className="result-grid">
+        <CalculatorCard title={valid ? `Ergebnis - ${inputs.departureDensityAltitudeFt.toLocaleString("de-DE")} → ${inputs.destinationDensityAltitudeFt.toLocaleString("de-DE")} ft DA` : "Ergebnis - Eingabe prüfen"} className="climb-primary-results">
+          <div className="result-grid climb-result-grid">
             <MetricItem label="Steigzeit · Climb Time" value={valid ? result.climbTimeMinutes!.toFixed(1) : "—"} unit={valid ? "min" : ""} />
             <MetricItem label="Kraftstoff · Fuel" value={valid ? result.climbFuelLiters!.toFixed(1) : "—"} unit={valid ? "l" : ""} />
             <MetricItem label="Strecke · Distance" value={valid ? result.climbDistanceNm!.toFixed(1) : "—"} unit={valid ? "nm" : ""} subtext={valid ? `${result.climbDistanceKm!.toFixed(1)} km` : undefined} />
