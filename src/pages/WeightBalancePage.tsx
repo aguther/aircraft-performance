@@ -266,20 +266,22 @@ function drawExportTable(
   widths: number[],
   rowHeight: number,
   headerRows = 1,
+  footerRows = 1,
 ) {
   let rowY = y;
   rows.forEach((row, rowIndex) => {
     let cellX = x;
     const isHeader = rowIndex < headerRows;
+    const isFooter = footerRows > 0 && rowIndex >= rows.length - footerRows;
     context.fillStyle = isHeader ? "#e9eef2" : "#ffffff";
     context.fillRect(x, rowY, widths.reduce((sum, width) => sum + width, 0), rowHeight);
     row.forEach((cell, cellIndex) => {
       context.strokeStyle = "#152235";
-      context.lineWidth = isHeader || rowIndex === rows.length - 1 ? 3 : 2;
+      context.lineWidth = isHeader || isFooter ? 3 : 2;
       context.strokeRect(cellX, rowY, widths[cellIndex], rowHeight);
       exportText(context, cell, cellX + 14, rowY + rowHeight * 0.64, {
         size: isHeader ? 19 : 18,
-        weight: isHeader || rowIndex === rows.length - 1 ? 700 : 400,
+        weight: isHeader || isFooter ? 700 : 400,
       });
       cellX += widths[cellIndex];
     });
@@ -287,12 +289,124 @@ function drawExportTable(
   });
 }
 
-function speedRowsForResult(result: WeightBalanceResult, phase: "Start" | "Landung") {
+type StatusExportRow = {
+  danger: boolean;
+  label: string;
+  value: string;
+};
+
+function drawStatusExportTable(
+  context: CanvasRenderingContext2D,
+  rows: StatusExportRow[],
+  x: number,
+  y: number,
+  widths: number[],
+  rowHeight: number,
+) {
+  let rowY = y;
+  rows.forEach((row) => {
+    let cellX = x;
+    context.fillStyle = row.danger ? "#fff1f0" : "#ffffff";
+    context.fillRect(x, rowY, widths.reduce((sum, width) => sum + width, 0), rowHeight);
+    [row.label, row.value].forEach((cell, cellIndex) => {
+      context.strokeStyle = row.danger ? "#b42318" : "#152235";
+      context.lineWidth = row.danger ? 3 : 2;
+      context.strokeRect(cellX, rowY, widths[cellIndex], rowHeight);
+      exportText(context, cell, cellX + 14, rowY + rowHeight * 0.64, {
+        color: row.danger ? "#b42318" : "#152235",
+        size: 18,
+        weight: row.danger ? 700 : 400,
+      });
+      cellX += widths[cellIndex];
+    });
+    rowY += rowHeight;
+  });
+}
+
+type SpeedExportRow = {
+  detail?: string;
+  group?: never;
+  kmh: string;
+  kt: string;
+  suffixSymbolSubscript?: string;
+  suffixText?: string;
+  subscript: string;
+};
+
+type SpeedExportGroupRow = {
+  group: string;
+};
+
+function speedRowsForResult(result: WeightBalanceResult): SpeedExportRow[] {
   return [
-    ["Vₐₚₚ Approach", phase, kilometersPerHourToKnots(result.speeds.approachSpeedKmh).toFixed(1), Math.round(result.speeds.approachSpeedKmh).toString()],
-    ["Vᵣₑf 1.3 x Vₛ₀", phase, kilometersPerHourToKnots(result.speeds.referenceSpeedKmh).toFixed(1), Math.round(result.speeds.referenceSpeedKmh).toString()],
-    ["Vₛ₀ Leerlauf 40°", phase, kilometersPerHourToKnots(result.speeds.stallIdleFlaps40Kmh).toFixed(1), Math.round(result.speeds.stallIdleFlaps40Kmh).toString()],
+    { detail: "Approach", kmh: Math.round(result.speeds.approachSpeedKmh).toString(), kt: kilometersPerHourToKnots(result.speeds.approachSpeedKmh).toFixed(1), subscript: "APP" },
+    { kmh: Math.round(result.speeds.referenceSpeedKmh).toString(), kt: kilometersPerHourToKnots(result.speeds.referenceSpeedKmh).toFixed(1), subscript: "REF", suffixSymbolSubscript: "S0", suffixText: "1.3 x" },
+    { detail: "Leerlauf 40°", kmh: Math.round(result.speeds.stallIdleFlaps40Kmh).toString(), kt: kilometersPerHourToKnots(result.speeds.stallIdleFlaps40Kmh).toFixed(1), subscript: "S0" },
   ];
+}
+
+function drawSpeedSymbol(context: CanvasRenderingContext2D, x: number, y: number, subscript: string) {
+  exportText(context, "V", x, y, { size: 20, weight: 400 });
+  exportText(context, subscript, x + 15, y + 5, { size: 10, weight: 400 });
+  return x + 18 + context.measureText(subscript).width;
+}
+
+function drawSpeedLabel(context: CanvasRenderingContext2D, row: SpeedExportRow, x: number, y: number) {
+  let nextX = drawSpeedSymbol(context, x, y, row.subscript);
+  if (row.suffixText && row.suffixSymbolSubscript) {
+    exportText(context, ` ${row.suffixText} `, nextX, y, { size: 17 });
+    nextX += context.measureText(` ${row.suffixText} `).width;
+    nextX = drawSpeedSymbol(context, nextX, y, row.suffixSymbolSubscript);
+  }
+  if (row.detail) exportText(context, ` ${row.detail}`, nextX + 4, y, { size: 17 });
+}
+
+function drawSpeedExportTable(
+  context: CanvasRenderingContext2D,
+  rows: Array<SpeedExportRow | SpeedExportGroupRow>,
+  x: number,
+  y: number,
+  widths: number[],
+  rowHeight: number,
+) {
+  const header = ["Wert", "IAS [kt]", "IAS [km/h]"];
+  const groupHeight = 28;
+  const tableWidth = widths.reduce((sum, width) => sum + width, 0);
+  let rowY = y;
+  [header, ...rows].forEach((row, rowIndex) => {
+    let cellX = x;
+    const isHeader = rowIndex === 0;
+    const isGroup = !Array.isArray(row) && "group" in row;
+    const currentRowHeight = isGroup ? groupHeight : rowHeight;
+    context.fillStyle = isHeader ? "#e9eef2" : "#ffffff";
+    context.fillRect(x, rowY, tableWidth, currentRowHeight);
+    if (isGroup) {
+      context.fillStyle = "#f2f6f8";
+      context.fillRect(x, rowY, tableWidth, currentRowHeight);
+      context.strokeStyle = "#152235";
+      context.lineWidth = 2;
+      context.strokeRect(x, rowY, tableWidth, currentRowHeight);
+      exportText(context, row.group ?? "", x + 14, rowY + 19, { size: 15, weight: 700, color: "#006f9f" });
+      rowY += currentRowHeight;
+      return;
+    }
+    widths.forEach((width, cellIndex) => {
+      context.strokeStyle = "#152235";
+      context.lineWidth = isHeader ? 3 : 2;
+      context.strokeRect(cellX, rowY, width, currentRowHeight);
+      if (isHeader) {
+        exportText(context, header[cellIndex] ?? "", cellX + 14, rowY + currentRowHeight * 0.64, { size: 19, weight: 700 });
+      } else {
+        const speedRow = row as SpeedExportRow;
+        const textY = rowY + currentRowHeight * 0.64;
+        if (cellIndex === 0) drawSpeedLabel(context, speedRow, cellX + 14, textY);
+        if (cellIndex === 1) exportText(context, speedRow.kt, cellX + 14, textY, { size: 18 });
+        if (cellIndex === 2) exportText(context, speedRow.kmh, cellX + 14, textY, { size: 18 });
+      }
+      cellX += width;
+    });
+    rowY += currentRowHeight;
+  });
 }
 
 function drawExportEnvelope(
@@ -363,14 +477,14 @@ function drawExportEnvelope(
   context.setLineDash([]);
 
   [
-    { result: startResult, label: "Start", color: "#20a879" },
-    { result: landingResult, label: "Landung", color: "#006f9f" },
-  ].forEach(({ result, label, color }) => {
+    { dx: 18, dy: -12, result: startResult, label: "Start", color: "#20a879" },
+    { dx: 28, dy: 34, result: landingResult, label: "Landung", color: "#006f9f" },
+  ].forEach(({ dx, dy, result, label, color }) => {
     context.fillStyle = color;
     context.beginPath();
     context.arc(px(result.totalMomentKgM), py(result.totalMassKg), 12, 0, Math.PI * 2);
     context.fill();
-    exportText(context, label, px(result.totalMomentKgM) + 18, py(result.totalMassKg) - 12, { size: 17, weight: 700, color });
+    exportText(context, label, px(result.totalMomentKgM) + dx, py(result.totalMassKg) + dy, { size: 17, weight: 700, color });
   });
 }
 
@@ -395,7 +509,7 @@ async function createWeightBalanceExportCanvas(
   context.lineWidth = 6;
   context.strokeRect(48, 42, canvas.width - 96, 136);
   exportText(context, `Grob G115B - ${plan.registration}`, canvas.width / 2, 100, { size: 38, weight: 700, align: "center" });
-  exportText(context, `Beladeplan · basierend auf ${g115bData.weightBalance.source}`, canvas.width / 2, 144, { size: 30, weight: 700, align: "center" });
+  exportText(context, "Beladeplan", canvas.width / 2, 144, { size: 34, weight: 700, align: "center" });
   exportText(context, `Revision ${startResult.emptyAircraft.revision}`, canvas.width - 210, 96, { size: 25, weight: 700, align: "center" });
   exportText(context, startResult.emptyAircraft.revisionDate, canvas.width - 210, 136, { size: 25, align: "center" });
   exportText(context, `${timestamp(exportDate)}Z`, 78, 144, { size: 22, color: "#607487" });
@@ -430,28 +544,33 @@ async function createWeightBalanceExportCanvas(
   );
 
   exportText(context, "Status", 60, 1170, { size: 28, weight: 700, color: "#006f9f" });
+  const envelopeStatusRows = [
+    { danger: !startResult.withinEnvelope, label: "Start", value: startResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope" },
+    { danger: !landingResult.withinEnvelope, label: "Landung", value: landingResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope" },
+  ];
+  drawStatusExportTable(context, envelopeStatusRows, 60, 1208, [250, 650], 43);
   const statusRows = [
-    ["Start", startResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope"],
-    ["Landung", landingResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope"],
     ["Kraftstoffdichte", `${g115bData.weightBalance.fuelDensityKgPerLiter.toLocaleString("de-DE")} kg/l`],
     ["Quelle", `${g115bData.weightBalance.source} · Beladeplan Revision ${startResult.emptyAircraft.revision} vom ${startResult.emptyAircraft.revisionDate}`],
   ];
-  drawExportTable(context, statusRows, 60, 1208, [250, 650], 43, 0);
+  drawExportTable(context, statusRows, 60, 1294, [250, 650], 43, 0, 0);
 
   exportText(context, "Geschwindigkeiten", 1030, 286, { size: 28, weight: 700, color: "#006f9f" });
-  drawExportTable(
+  drawSpeedExportTable(
     context,
     [
-      ["Wert", "Masse", "IAS [kt]", "IAS [km/h]"],
-      ["Vᵣ Rotate", "Start", kilometersPerHourToKnots(startResult.speeds.rotateSpeedKmh).toFixed(1), Math.round(startResult.speeds.rotateSpeedKmh).toString()],
-      ["V₁₅m", "Start", kilometersPerHourToKnots(startResult.speeds.speedAt15mKmh).toFixed(1), Math.round(startResult.speeds.speedAt15mKmh).toString()],
-      ...speedRowsForResult(startResult, "Start"),
-      ...speedRowsForResult(landingResult, "Landung"),
+      { group: "Start Speeds" },
+      { detail: "Rotate", kmh: Math.round(startResult.speeds.rotateSpeedKmh).toString(), kt: kilometersPerHourToKnots(startResult.speeds.rotateSpeedKmh).toFixed(1), subscript: "R" },
+      { kmh: Math.round(startResult.speeds.speedAt15mKmh).toString(), kt: kilometersPerHourToKnots(startResult.speeds.speedAt15mKmh).toFixed(1), subscript: "15m" },
+      { group: "Approach direkt nach Start" },
+      ...speedRowsForResult(startResult),
+      { group: "Approach mit geplantem Landegewicht" },
+      ...speedRowsForResult(landingResult),
     ],
     1030,
     318,
-    [290, 150, 140, 160],
-    48,
+    [390, 160, 180],
+    40,
   );
   drawExportEnvelope(context, startResult, landingResult, 1030, 780, 1040, 600);
 
@@ -652,6 +771,16 @@ export function WeightBalancePage() {
               <span>Beladeplan Revision {startResult.emptyAircraft.revision} vom {startResult.emptyAircraft.revisionDate}</span>
               <span>Landung = Start − geplanter Kraftstoffverbrauch</span>
             </div>
+            <div className="wb-status-grid">
+              <div className={`wb-status-pill${startResult.withinEnvelope ? "" : " danger"}`}>
+                <span>Start</span>
+                <strong>{startResult.withinEnvelope ? "Envelope OK" : "Außerhalb Envelope"}</strong>
+              </div>
+              <div className={`wb-status-pill${landingResult.withinEnvelope ? "" : " danger"}`}>
+                <span>Landung</span>
+                <strong>{landingResult.withinEnvelope ? "Envelope OK" : "Außerhalb Envelope"}</strong>
+              </div>
+            </div>
             {plan.plannedFuelBurnLiters > plan.startFuelLiters ? (
               <div className="wb-inline-warnings">
                 <div className="wb-inline-warning danger">Geplanter Verbrauch überschreitet den Kraftstoff beim Start.</div>
@@ -676,22 +805,37 @@ export function WeightBalancePage() {
           <EnvelopeChart startResult={startResult} landingResult={landingResult} />
         </CalculatorCard>
         <CalculatorCard title="Geschwindigkeiten" className="weight-balance-speed-results">
-          <div className="speed-grid">
-            <SpeedMetric
-              label={
-                <span>
-                  <SpeedSymbol index="R" /> · Rotate
-                </span>
-              }
-              speedKmh={startResult.speeds.rotateSpeedKmh}
-            />
-            <SpeedMetric label="in 15 m Höhe" speedKmh={startResult.speeds.speedAt15mKmh} />
-            <SpeedMetric label={<span><SpeedSymbol index="APP" /> · Start</span>} speedKmh={startResult.speeds.approachSpeedKmh} />
-            <SpeedMetric label={<span><SpeedSymbol index="REF" /> · Start</span>} speedKmh={startResult.speeds.referenceSpeedKmh} />
-            <SpeedMetric label={<span><SpeedSymbol index="S0" /> · Start</span>} speedKmh={startResult.speeds.stallIdleFlaps40Kmh} />
-            <SpeedMetric label={<span><SpeedSymbol index="APP" /> · Landung</span>} speedKmh={landingResult.speeds.approachSpeedKmh} />
-            <SpeedMetric label={<span><SpeedSymbol index="REF" /> · Landung</span>} speedKmh={landingResult.speeds.referenceSpeedKmh} />
-            <SpeedMetric label={<span><SpeedSymbol index="S0" /> · Landung</span>} speedKmh={landingResult.speeds.stallIdleFlaps40Kmh} />
+          <div className="wb-speed-groups">
+            <div className="wb-speed-group start">
+              <div className="wb-speed-group-title">Start Speeds</div>
+              <div className="speed-grid">
+                <SpeedMetric
+                  label={
+                    <span>
+                      <SpeedSymbol index="R" /> · Rotate
+                    </span>
+                  }
+                  speedKmh={startResult.speeds.rotateSpeedKmh}
+                />
+                <SpeedMetric label="in 15 m Höhe" speedKmh={startResult.speeds.speedAt15mKmh} />
+              </div>
+            </div>
+            <div className="wb-speed-group">
+              <div className="wb-speed-group-title">Approach · direkt nach Start</div>
+              <div className="speed-grid">
+                <SpeedMetric label={<span><SpeedSymbol index="APP" /> · Approach</span>} speedKmh={startResult.speeds.approachSpeedKmh} />
+                <SpeedMetric label={<span><SpeedSymbol index="REF" /> · 1.3 x <SpeedSymbol index="S0" /></span>} speedKmh={startResult.speeds.referenceSpeedKmh} />
+                <SpeedMetric label={<span><SpeedSymbol index="S0" /> · Leerlauf 40°</span>} speedKmh={startResult.speeds.stallIdleFlaps40Kmh} />
+              </div>
+            </div>
+            <div className="wb-speed-group">
+              <div className="wb-speed-group-title">Approach · geplantes Landegewicht</div>
+              <div className="speed-grid">
+                <SpeedMetric label={<span><SpeedSymbol index="APP" /> · Approach</span>} speedKmh={landingResult.speeds.approachSpeedKmh} />
+                <SpeedMetric label={<span><SpeedSymbol index="REF" /> · 1.3 x <SpeedSymbol index="S0" /></span>} speedKmh={landingResult.speeds.referenceSpeedKmh} />
+                <SpeedMetric label={<span><SpeedSymbol index="S0" /> · Leerlauf 40°</span>} speedKmh={landingResult.speeds.stallIdleFlaps40Kmh} />
+              </div>
+            </div>
           </div>
         </CalculatorCard>
         <CalculatorCard title="Beladung · Start bis Landung">

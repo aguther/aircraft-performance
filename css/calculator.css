@@ -1511,6 +1511,64 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   font-size: clamp(1.35rem, 1.8vw, 1.7rem);
 }
 
+.weight-balance-calculator .weight-balance-speed-results {
+  padding: 0.72rem 0.8rem;
+}
+
+.weight-balance-calculator .wb-speed-groups {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.weight-balance-calculator .wb-speed-group {
+  display: grid;
+  gap: 0.38rem;
+}
+
+.weight-balance-calculator .wb-speed-group-title {
+  color: var(--text-dim);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.weight-balance-calculator .weight-balance-speed-results .speed-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.42rem;
+}
+
+.weight-balance-calculator .weight-balance-speed-results .wb-speed-group.start .speed-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.weight-balance-calculator .weight-balance-speed-results .speed-grid .result-item {
+  min-height: 0;
+  padding: 0.48rem 0.62rem;
+  border-radius: 10px;
+}
+
+.weight-balance-calculator .weight-balance-speed-results .result-item-label {
+  font-size: 10.5px;
+  line-height: 1.2;
+}
+
+.weight-balance-calculator .weight-balance-speed-results .result-item-value {
+  font-size: clamp(1.08rem, 1.25vw, 1.32rem);
+  line-height: 1.05;
+}
+
+.weight-balance-calculator .weight-balance-speed-results .result-item-sub {
+  margin-top: 0.18rem;
+  font-size: 10.5px;
+}
+
+.weight-balance-calculator .weight-balance-speed-results .speed-type-badge {
+  padding: 0.12rem 0.42rem;
+  font-size: 10px;
+}
+
 .takeoff-calculator .traceability-card,
 .landing-calculator .traceability-card,
 .climb-calculator .traceability-card,
@@ -1895,6 +1953,48 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 
 .wb-planning-conditions {
   margin-top: 0.1rem;
+}
+
+.wb-status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.wb-status-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.48rem 0.62rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-soft);
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.wb-status-pill strong {
+  color: var(--green);
+  font-size: 11px;
+  letter-spacing: 0;
+  text-align: right;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.wb-status-pill.danger {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.wb-status-pill.danger strong {
+  color: var(--danger-text);
 }
 
 .wb-inline-warnings {
@@ -2739,6 +2839,22 @@ input[type="range"]:focus-visible::-moz-range-thumb {
     font-size: 10.5px;
   }
 
+  .weight-balance-calculator .weight-balance-speed-results .speed-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .weight-balance-calculator .weight-balance-speed-results .wb-speed-group.start .speed-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .weight-balance-calculator .weight-balance-speed-results .result-item-value {
+    font-size: 1.12rem;
+  }
+
+  .wb-status-grid {
+    grid-template-columns: 1fr;
+  }
+
   .wb-chart {
     max-height: 220px;
   }
@@ -2777,5 +2893,61 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   .speed-item-value,
   .atmos-item-value {
     font-size: 1.9rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .weight-balance-calculator .wb-speed-groups {
+    gap: 0.48rem;
+  }
+
+  .weight-balance-calculator .wb-speed-group {
+    gap: 0.32rem;
+  }
+
+  .weight-balance-calculator .wb-speed-group-title {
+    font-size: 8.5px;
+    letter-spacing: 0.06em;
+  }
+
+  .weight-balance-calculator .weight-balance-speed-results .speed-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.38rem;
+  }
+
+  .weight-balance-calculator .weight-balance-speed-results {
+    padding: 0.64rem;
+  }
+
+  .weight-balance-calculator .weight-balance-speed-results .speed-grid .result-item {
+    padding: 0.42rem 0.5rem;
+    border-radius: 9px;
+  }
+
+  .weight-balance-calculator .weight-balance-speed-results .result-item-label {
+    font-size: 8.5px;
+    letter-spacing: 0.04em;
+  }
+
+  .weight-balance-calculator .weight-balance-speed-results .result-item-value {
+    font-size: 1rem;
+  }
+
+  .weight-balance-calculator .weight-balance-speed-results .result-item-value .speed-type-badge {
+    display: none;
+  }
+
+  .weight-balance-calculator .weight-balance-speed-results .result-item-sub {
+    font-size: 9px;
+    line-height: 1.25;
+  }
+
+  .wb-status-pill {
+    padding: 0.42rem 0.5rem;
+    font-size: 9px;
+  }
+
+  .wb-status-pill strong {
+    font-size: 10px;
   }
 }
