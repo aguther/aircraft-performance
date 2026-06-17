@@ -123,9 +123,10 @@ describe("calculator interactions", () => {
       expect(storedPlan.weightBalance.registration).toBe("D-ELWF");
     });
 
-    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const confirmSpy = vi.spyOn(window, "confirm");
     await user.click(screen.getByRole("button", { name: "Neue Planung" }));
     expect(onResetFlightPlan).toHaveBeenCalledTimes(1);
+    expect(confirmSpy).not.toHaveBeenCalled();
   });
 
   it("keeps the important notice separate from the settings tab", () => {

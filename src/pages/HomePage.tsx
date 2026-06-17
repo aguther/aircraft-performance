@@ -24,11 +24,6 @@ export function HomePage({
     g115bData.weightBalance.emptyAircraft[0];
   const startFuelMassKg = plan.startFuelLiters * g115bData.weightBalance.fuelDensityKgPerLiter;
 
-  const resetFlightPlan = () => {
-    if (!window.confirm("Neue Flugplanung starten? Alle gespeicherten Eingaben, Flugplätze und übernommenen Werte werden zurückgesetzt.")) return;
-    onResetFlightPlan();
-  };
-
   return (
     <main className="idx-shell">
       <section className="idx-hero">
@@ -37,7 +32,7 @@ export function HomePage({
           <h1>{aircraft.shortName} · {plan.registration}</h1>
           <p>Flugzeug festlegen, Planungsdaten prüfen und danach die passenden Rechner öffnen.</p>
         </div>
-        <button className="idx-reset-button" type="button" onClick={resetFlightPlan}>
+        <button className="idx-reset-button" type="button" onClick={onResetFlightPlan}>
           <RotateCcw aria-hidden="true" />
           <span>Neue Planung</span>
         </button>
