@@ -220,7 +220,6 @@ async function saveExportBlob(blob: Blob, fileName: string, type: string) {
 }
 
 function CruiseChartCard({ inputs, chart }: { inputs: CruiseViewInputs; chart: CruiseChart }) {
-  const [overlayVisible, setOverlayVisible] = useState(true);
   const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
   const trace = createTrace(inputs, chart);
   const saveImage = async () => {
@@ -249,10 +248,6 @@ function CruiseChartCard({ inputs, chart }: { inputs: CruiseViewInputs; chart: C
       </div>
       <div className="traceability-toolbar">
         <div className="takeoff-chart-actions">
-          <label className="takeoff-chart-toggle">
-            <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
-            <span>Rechenweg</span>
-          </label>
           <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={saveImage}>
             {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
           </button>
@@ -262,7 +257,7 @@ function CruiseChartCard({ inputs, chart }: { inputs: CruiseViewInputs; chart: C
         </div>
       </div>
       <div className="takeoff-chart-scroll">
-        <div className={`takeoff-chart-stage cruise-chart-stage${overlayVisible ? "" : " overlay-hidden"}`} style={{ aspectRatio: `${chart.width} / ${chart.height}` }}>
+        <div className="takeoff-chart-stage cruise-chart-stage" style={{ aspectRatio: `${chart.width} / ${chart.height}` }}>
           <img className="takeoff-chart-image" src={chart.source} alt={chart.title} width={chart.width} height={chart.height} />
           <svg className="takeoff-chart-overlay" viewBox={`0 0 ${chart.width} ${chart.height}`} aria-label={`Grafischer Rechenweg im originalen ${chart.title}`}>
             <polyline className="cruise-chart-trace" points={trace.linePoints.map((point) => point.join(",")).join(" ")} />

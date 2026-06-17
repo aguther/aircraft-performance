@@ -136,20 +136,6 @@
   gap: 0.7rem;
 }
 
-.takeoff-chart-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  color: var(--text-sub);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.takeoff-chart-toggle input {
-  accent-color: #e90000;
-}
-
 .takeoff-chart-download {
   padding: 0.48rem 0.72rem;
   border: 1px solid var(--border-strong);
@@ -227,11 +213,6 @@
   vector-effect: non-scaling-stroke;
 }
 
-.cruise-chart-stage.overlay-hidden .cruise-chart-trace,
-.cruise-chart-stage.overlay-hidden .cruise-chart-trace-point {
-  display: none;
-}
-
 .takeoff-chart-image,
 .takeoff-chart-overlay,
 .climb-chart-image,
@@ -279,12 +260,6 @@
   stroke: #303030;
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
-}
-
-.takeoff-chart-stage.overlay-hidden .takeoff-chart-overlay,
-.climb-chart-stage.overlay-hidden .climb-chart-overlay,
-.stall-chart-stage.overlay-hidden .stall-chart-overlay {
-  display: none;
 }
 
 .takeoff-chart-legend {
@@ -1475,10 +1450,6 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   gap: 0.5rem;
 }
 
-.takeoff-calculator .takeoff-chart-toggle {
-  padding: 0 0.15rem;
-}
-
 .takeoff-calculator .takeoff-chart-download {
   min-height: 34px;
 }
@@ -2461,10 +2432,6 @@ input[type="range"]:focus-visible::-moz-range-thumb {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
     align-items: stretch;
-  }
-
-  .takeoff-chart-toggle {
-    grid-column: 1 / -1;
   }
 
   .takeoff-chart-download {

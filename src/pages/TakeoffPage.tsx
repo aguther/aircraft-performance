@@ -311,7 +311,6 @@ async function saveExportBlob(blob: Blob, fileName: string, type: string, option
 
 function TraceabilityCard({ inputs, result, exportContext }: { inputs: TakeoffInputs; result: TakeoffResult; exportContext: ExportContext }) {
   const [view, setView] = useState<"chart" | "path">("chart");
-  const [overlayVisible, setOverlayVisible] = useState(true);
   const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
   const points = createChartPoints(inputs, result);
   const finalDistancePoint: ChartPoint = [1227, chartDistanceY(result.takeoffDistanceMeters)];
@@ -355,10 +354,6 @@ function TraceabilityCard({ inputs, result, exportContext }: { inputs: TakeoffIn
         </div>
         {view === "chart" ? (
           <div className="takeoff-chart-actions">
-            <label className="takeoff-chart-toggle">
-              <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
-              <span>Rechenweg</span>
-            </label>
             <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={exportImage}>
               {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
             </button>
@@ -371,7 +366,7 @@ function TraceabilityCard({ inputs, result, exportContext }: { inputs: TakeoffIn
       {view === "path" ? <CalculationPath inputs={inputs} result={result} /> : (
         <>
           <div className="takeoff-chart-scroll">
-            <div className={`takeoff-chart-stage${overlayVisible ? "" : " overlay-hidden"}`}>
+            <div className="takeoff-chart-stage">
               <img className="takeoff-chart-image" src={CHART_SOURCE} alt="Originales Flughandbuchdiagramm Bild 5.3.7 Startstrecke" width="1516" height="1038" />
               <svg className="takeoff-chart-overlay" viewBox="0 0 1516 1038" aria-label="Grafischer Rechenweg im originalen Startstreckendiagramm">
                 <polyline className="takeoff-chart-path" points={points.map((point) => point.join(",")).join(" ")} />

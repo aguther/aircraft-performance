@@ -259,7 +259,6 @@ function ContextCard({ inputs, result }: { inputs: { departureDensityAltitudeFt:
 }
 
 function ChartCard({ from, to, inputs, result }: { from: LegState; to: LegState; inputs: { departureDensityAltitudeFt: number; destinationDensityAltitudeFt: number }; result: ClimbResult }) {
-  const [overlayVisible, setOverlayVisible] = useState(true);
   const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
   const valid = !result.error && result.climbTimeMinutes !== null && result.climbFuelLiters !== null && result.climbDistanceKm !== null && result.climbDistanceNm !== null;
   const saveImage = async () => {
@@ -280,10 +279,6 @@ function ChartCard({ from, to, inputs, result }: { from: LegState; to: LegState;
       </div>
       <div className="traceability-toolbar">
         <div className="takeoff-chart-actions">
-          <label className="takeoff-chart-toggle">
-            <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
-            <span>Rechenweg</span>
-          </label>
           <button className="takeoff-chart-download" type="button" disabled={!valid || exporting !== null} onClick={saveImage}>
             {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
           </button>
@@ -292,7 +287,7 @@ function ChartCard({ from, to, inputs, result }: { from: LegState; to: LegState;
           </button>
         </div>
       </div>
-      <div className="climb-chart-scroll"><div className={`climb-chart-stage${overlayVisible ? "" : " overlay-hidden"}`}><img className="climb-chart-image" src={CHART_SOURCE} alt="Originales Flughandbuchdiagramm Bild 5.3.9 Steigflug" width={CHART.width} height={CHART.height} /><ClimbOverlay inputs={inputs} result={result} /></div></div>
+      <div className="climb-chart-scroll"><div className="climb-chart-stage"><img className="climb-chart-image" src={CHART_SOURCE} alt="Originales Flughandbuchdiagramm Bild 5.3.9 Steigflug" width={CHART.width} height={CHART.height} /><ClimbOverlay inputs={inputs} result={result} /></div></div>
       <div className="climb-chart-results">
         <div className="climb-chart-result start"><strong>Start · kumulativ</strong><span>{result.departureCumulative.timeMinutes.toFixed(1)} min · {result.departureCumulative.fuelLiters.toFixed(1)} l · {result.departureCumulative.distanceKm.toFixed(1)} km</span></div>
         <div className="climb-chart-result delta"><strong>Steigflug · Differenz</strong><span>{valid ? `${result.climbTimeMinutes!.toFixed(1)} min · ${result.climbFuelLiters!.toFixed(1)} l · ${result.climbDistanceKm!.toFixed(1)} km · ${result.climbDistanceNm!.toFixed(1)} nm` : "—"}</span></div>

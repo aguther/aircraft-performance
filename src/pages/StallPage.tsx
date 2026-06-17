@@ -141,7 +141,6 @@ async function saveExportBlob(blob: Blob, fileName: string, type: string) {
 }
 
 function ChartCard({ inputs, result }: { inputs: StallInputs; result: StallResult }) {
-  const [overlayVisible, setOverlayVisible] = useState(true);
   const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
   const saveImage = async () => {
     setExporting("png");
@@ -161,10 +160,6 @@ function ChartCard({ inputs, result }: { inputs: StallInputs; result: StallResul
       </div>
       <div className="traceability-toolbar">
         <div className="takeoff-chart-actions">
-          <label className="takeoff-chart-toggle">
-            <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
-            <span>Rechenweg</span>
-          </label>
           <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={saveImage}>
             {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
           </button>
@@ -173,7 +168,7 @@ function ChartCard({ inputs, result }: { inputs: StallInputs; result: StallResul
           </button>
         </div>
       </div>
-      <div className="stall-chart-scroll"><div className={`stall-chart-stage${overlayVisible ? "" : " overlay-hidden"}`}><img className="stall-chart-image" src={CHART_SOURCE} alt="Originales Flughandbuchdiagramm Bild 5.3.4 Überziehgeschwindigkeiten" width={g115bData.stall.chart.width} height={g115bData.stall.chart.height} /><StallOverlay inputs={inputs} /></div></div>
+      <div className="stall-chart-scroll"><div className="stall-chart-stage"><img className="stall-chart-image" src={CHART_SOURCE} alt="Originales Flughandbuchdiagramm Bild 5.3.4 Überziehgeschwindigkeiten" width={g115bData.stall.chart.width} height={g115bData.stall.chart.height} /><StallOverlay inputs={inputs} /></div></div>
       <div className="takeoff-chart-legend"><span>{inputs.powerMode === "leerlauf" ? "Leerlauf" : "Vollast"} · Klappen {inputs.flapsDegrees}°</span><span>{inputs.massKg} kg</span><span>IAS · {result.stallSpeedKt.toFixed(1)} kt · {result.stallSpeedKmh.toFixed(1)} km/h</span></div>
     </section>
   );
