@@ -227,10 +227,10 @@ describe("calculator interactions", () => {
     expect(screen.getByText("850.3 kg")).toBeTruthy();
     expect(screen.getByText(/Übernahme konservativ als 851 kg/)).toBeTruthy();
     await user.click(screen.getByRole("button", { name: /Flugzeug & Betrieb/ }));
-    await user.click(screen.getByRole("checkbox", { name: "Masse übernehmen" }));
+    expect(screen.getByRole("checkbox", { name: "Masse übernommen" }).hasAttribute("checked")).toBe(true);
     const massField = screen.getByText("Masse", { selector: ".field-label" }).parentElement!;
     const massInput = massField.querySelector('input[type="number"]')!;
-    expect(massInput.getAttribute("value")).toBe("851");
+    await waitFor(() => expect(massInput.getAttribute("value")).toBe("851"));
     expect(massInput.hasAttribute("disabled")).toBe(true);
 
     await waitFor(() => {
@@ -347,7 +347,7 @@ describe("calculator interactions", () => {
     expect(screen.getByText("TORA")).toBeTruthy();
     expect(screen.getByText("TODA")).toBeTruthy();
     expect(screen.getByText("Geplante Startzeit · UTC · 24 h")).toBeTruthy();
-    expect(screen.getByText("TRUE")).toBeTruthy();
+    expect(screen.getByText("RWY TRUE")).toBeTruthy();
     expect(screen.getByText("MAG")).toBeTruthy();
     let atmosphereSection = screen.getByText("Atmosphäre", { selector: ".calculator-input-header strong" }).closest(".calculator-input-section")!;
     await waitFor(() => {
@@ -362,7 +362,8 @@ describe("calculator interactions", () => {
       expect((screen.getByRole("checkbox", { name: "Werte übernommen" }) as HTMLInputElement).checked).toBe(true);
     });
     await user.click(screen.getByRole("button", { name: /Atmosphäre/ }));
-    const atmosphereButton = screen.getByRole("button", { name: /EDFE · Frankfurt-Egelsbach · RWY 08/ });
+    const atmosphereButton = screen.getByRole("button", { name: /EDFE · RWY 08/ });
+    expect(atmosphereButton.textContent).not.toContain("Frankfurt-Egelsbach");
     expect(atmosphereButton.textContent).toContain("Elev 384 ft");
     expect(atmosphereButton.textContent).toContain("QNH 1016 hPa");
     await user.click(atmosphereButton);

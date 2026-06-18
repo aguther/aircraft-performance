@@ -316,7 +316,6 @@ async function saveExportBlob(blob: Blob, fileName: string, type: string, option
 
 function TraceabilityCard({ inputs, result, exportContext }: { inputs: LandingInputs; result: LandingResult; exportContext: ExportContext }) {
   const [view, setView] = useState<"chart" | "path">("chart");
-  const [overlayVisible, setOverlayVisible] = useState(true);
   const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
   const points = createChartPoints(inputs, result);
   const finalDistancePoint: ChartPoint = [1178, chartDistanceY(result.landingDistanceMeters)];
@@ -360,10 +359,6 @@ function TraceabilityCard({ inputs, result, exportContext }: { inputs: LandingIn
         </div>
         {view === "chart" ? (
           <div className="takeoff-chart-actions">
-            <label className="takeoff-chart-toggle">
-              <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
-              <span>Rechenweg</span>
-            </label>
             <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={exportImage}>
               {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
             </button>
@@ -376,7 +371,7 @@ function TraceabilityCard({ inputs, result, exportContext }: { inputs: LandingIn
       {view === "path" ? <CalculationPath inputs={inputs} result={result} /> : (
         <>
           <div className="takeoff-chart-scroll">
-            <div className={`takeoff-chart-stage${overlayVisible ? "" : " overlay-hidden"}`}>
+            <div className="takeoff-chart-stage">
               <img className="takeoff-chart-image" src={CHART_SOURCE} alt="Originales Flughandbuchdiagramm Bild 5.3.15 Landestrecke" width="1505" height="1045" />
               <svg className="takeoff-chart-overlay" viewBox="0 0 1505 1045" aria-label="Grafischer Rechenweg im originalen Landestreckendiagramm">
                 <polyline className="takeoff-chart-path" points={points.map((point) => point.join(",")).join(" ")} />
@@ -435,8 +430,8 @@ export function LandingPage() {
   const landingDistanceExceedsLda = availableLdaM != null && result.landingDistanceMeters > availableLdaM;
 
   useEffect(() => {
-    document.body.classList.add("runway-calculator");
-    return () => document.body.classList.remove("runway-calculator");
+    document.body.classList.add("runway-calculator", "landing-calculator");
+    return () => document.body.classList.remove("runway-calculator", "landing-calculator");
   }, []);
   useEffect(() => {
     updateLandingCalculator({
@@ -547,12 +542,12 @@ export function LandingPage() {
       </aside>
       <main className="results">
         <CalculatorContextCard atmosphere={result.atmosphere} warnings={warnings} conditions={result.conditions} />
-        <CalculatorCard title="Landeleistung">
+        <CalculatorCard title="Landeleistung" className="landing-primary-results">
           <div className="takeoff-summary-heading">
             <Gauge aria-hidden="true" />
             <span>Berechnete Strecken und Geschwindigkeiten</span>
           </div>
-          <div className="result-grid">
+          <div className="result-grid landing-distance-grid">
             <MetricItem label="Landing Roll · Landerollstrecke" value={String(result.landingRollMeters)} unit="m" danger={landingRollExceedsLda} />
             <MetricItem label="Landing Distance · Landestrecke über 15 m" value={String(result.landingDistanceMeters)} unit="m" danger={landingDistanceExceedsLda} />
           </div>

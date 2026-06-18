@@ -9,6 +9,8 @@ export type EmptyAircraft = {
   name: string;
   massKg: number;
   armM: number;
+  revision: number;
+  revisionDate: string;
 };
 
 type G115BData = {
@@ -456,9 +458,9 @@ export const g115bData = {
         fuel: { label: "Kraftstoff", armM: 0.89 },
       },
       emptyAircraft: [
-        { name: "D-EBFT", massKg: 668.6, armM: 0.217409 },
-        { name: "D-ELWF", massKg: 665, armM: 0.205579 },
-        { name: "D-ENZM", massKg: 673.286, armM: 0.2315 },
+        { name: "D-EBFT", massKg: 668.6, armM: 0.217409, revision: 4, revisionDate: "10.01.2026" },
+        { name: "D-ELWF", massKg: 665, armM: 0.205579, revision: 2, revisionDate: "12.03.2023" },
+        { name: "D-ENZM", massKg: 673.286, armM: 0.2315, revision: 2, revisionDate: "12.04.2023" },
       ],
     },
 } satisfies G115BData;

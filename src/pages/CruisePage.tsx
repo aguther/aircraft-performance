@@ -20,7 +20,6 @@ type ChartPoint = readonly [number, number];
 type CruiseChart = {
   title: string;
   cardTitle: string;
-  fileName: string;
   source: string;
   width: number;
   height: number;
@@ -143,12 +142,12 @@ function altitudeFields(inputs: CruiseViewInputs): Array<[string, string, boolea
   ];
 }
 
-function drawExportHeader(context: CanvasRenderingContext2D, inputs: CruiseViewInputs, chart: CruiseChart, time: string) {
+function drawExportHeader(context: CanvasRenderingContext2D, inputs: CruiseViewInputs, charts: readonly CruiseChart[], time: string, width: number) {
   const margin = 96;
   const gap = 32;
-  const fieldWidth = (chart.width - margin * 2 - gap * 3) / 4;
+  const fieldWidth = (width - margin * 2 - gap * 3) / 4;
   drawText(context, `${time}Z – Grob G115B Reiseflugberechnung`, margin, 76, { size: 46, weight: 700 });
-  drawText(context, chart.title, margin, 126, { size: 28, weight: 600, color: "#526274" });
+  drawText(context, "Wahre Fluggeschwindigkeit und Drehzahl", margin, 126, { size: 28, weight: 600, color: "#526274" });
   drawText(context, "Eingangswerte", margin, 188, { size: 30, weight: 700, color: "#006f9f" });
   altitudeFields(inputs).forEach(([label, value, disabled], index) => drawField(context, label, value, margin + index * (fieldWidth + gap), 212, fieldWidth, disabled));
   drawField(context, "OAT", inputs.mode === "da" ? "Nicht bereitgestellt" : `${inputs.oatC!.toLocaleString("de-DE")} °C`, margin, 352, fieldWidth, inputs.mode === "da");
@@ -156,36 +155,24 @@ function drawExportHeader(context: CanvasRenderingContext2D, inputs: CruiseViewI
   drawField(context, "Density Altitude", `${inputs.densityAltitudeFt.toLocaleString("de-DE")} ft`, margin + 2 * (fieldWidth + gap), 352, fieldWidth);
   drawField(context, "ISA-Abweichung", inputs.mode === "da" ? "Nicht berechnet" : `${formatSigned(inputs.isaDeviationC!, 1)} °C`, margin + 3 * (fieldWidth + gap), 352, fieldWidth, inputs.mode === "da");
   drawText(context, "Ergebnis", margin, 528, { size: 30, weight: 700, color: "#006f9f" });
-  drawField(context, chart.exportResultLabel, chart.exportResultValue, margin, 552, fieldWidth * 2 + gap);
+  charts.forEach((chart, index) => drawField(context, chart.exportResultLabel, chart.exportResultValue, margin + index * (fieldWidth * 2 + gap), 552, fieldWidth * 2 + gap));
 }
 
-async function exportChart(inputs: CruiseViewInputs, chart: CruiseChart, trace: ReturnType<typeof createTrace>) {
-  const { canvas, time } = await createCruiseExportCanvas(inputs, chart, trace);
+async function exportCharts(inputs: CruiseViewInputs, charts: readonly CruiseChart[]) {
+  const { canvas, time } = await createCruiseExportCanvas(inputs, charts);
   const blob = await canvasToBlob(canvas);
-  await saveExportBlob(blob, `${time}Z Grob G115B ${chart.fileName}.png`, "image/png");
+  await saveExportBlob(blob, `${time}Z Grob G115B Reiseflugberechnung.png`, "image/png");
 }
 
-async function exportChartPdf(inputs: CruiseViewInputs, chart: CruiseChart, trace: ReturnType<typeof createTrace>) {
-  const { canvas, time } = await createCruiseExportCanvas(inputs, chart, trace);
-  const blob = await createPdfBlobFromCanvas(canvas);
-  await saveExportBlob(blob, `${time}Z Grob G115B ${chart.fileName}.pdf`, "application/pdf");
+async function exportChartsPdf(inputs: CruiseViewInputs, charts: readonly CruiseChart[]) {
+  const { canvas, time } = await createCruiseExportCanvas(inputs, charts);
+  const blob = await createPdfBlobFromCanvas(canvas, { maxDimensionPx: 3600 });
+  await saveExportBlob(blob, `${time}Z Grob G115B Reiseflugberechnung.pdf`, "application/pdf");
 }
 
-async function createCruiseExportCanvas(inputs: CruiseViewInputs, chart: CruiseChart, trace: ReturnType<typeof createTrace>) {
-  const time = timestamp(new Date());
-  const headerHeight = 720;
-  const image = await loadImage(chart.source);
-  const canvas = document.createElement("canvas");
-  canvas.width = chart.width;
-  canvas.height = headerHeight + chart.height;
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
-  context.fillStyle = "#ffffff";
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  drawExportHeader(context, inputs, chart, time);
-  context.drawImage(image, 0, headerHeight);
+function drawChartTrace(context: CanvasRenderingContext2D, chart: CruiseChart, trace: ReturnType<typeof createTrace>, xOffset: number, yOffset: number) {
   context.save();
-  context.translate(0, headerHeight);
+  context.translate(xOffset, yOffset);
   context.strokeStyle = "#e90000";
   context.fillStyle = "#e90000";
   context.lineWidth = chart.width * (5 / 1516);
@@ -200,6 +187,31 @@ async function createCruiseExportCanvas(inputs: CruiseViewInputs, chart: CruiseC
     context.fill();
   });
   context.restore();
+}
+
+async function createCruiseExportCanvas(inputs: CruiseViewInputs, charts: readonly CruiseChart[]) {
+  const time = timestamp(new Date());
+  const headerHeight = 720;
+  const chartGap = 140;
+  const chartTitleHeight = 72;
+  const images = await Promise.all(charts.map((chart) => loadImage(chart.source)));
+  const width = Math.max(...charts.map((chart) => chart.width));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = headerHeight + charts.reduce((sum, chart) => sum + chartTitleHeight + chart.height, 0) + chartGap * (charts.length - 1);
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  drawExportHeader(context, inputs, charts, time, canvas.width);
+  let y = headerHeight;
+  charts.forEach((chart, index) => {
+    const x = (canvas.width - chart.width) / 2;
+    drawText(context, chart.title, 96, y + 40, { size: 30, weight: 700, color: "#152235" });
+    context.drawImage(images[index], x, y + chartTitleHeight);
+    drawChartTrace(context, chart, createTrace(inputs, chart), x, y + chartTitleHeight);
+    y += chartTitleHeight + chart.height + chartGap;
+  });
 
   return { canvas, time };
 }
@@ -219,14 +231,12 @@ async function saveExportBlob(blob: Blob, fileName: string, type: string) {
   window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 }
 
-function CruiseChartCard({ inputs, chart }: { inputs: CruiseViewInputs; chart: CruiseChart }) {
-  const [overlayVisible, setOverlayVisible] = useState(true);
+function CruiseExportToolbar({ inputs, charts }: { inputs: CruiseViewInputs; charts: readonly CruiseChart[] }) {
   const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
-  const trace = createTrace(inputs, chart);
   const saveImage = async () => {
     setExporting("png");
     try {
-      await exportChart(inputs, chart, trace);
+      await exportCharts(inputs, charts);
     } finally {
       setExporting(null);
     }
@@ -234,11 +244,35 @@ function CruiseChartCard({ inputs, chart }: { inputs: CruiseViewInputs; chart: C
   const savePdf = async () => {
     setExporting("pdf");
     try {
-      await exportChartPdf(inputs, chart, trace);
+      await exportChartsPdf(inputs, charts);
     } finally {
       setExporting(null);
     }
   };
+  return (
+    <section className="card cruise-export-card traceability-card">
+      <div className="traceability-header">
+        <div>
+          <div className="card-title">Nachvollziehbarkeit exportieren</div>
+          <div className="traceability-description">TAS- und Drehzahldiagramm gemeinsam speichern</div>
+        </div>
+      </div>
+      <div className="traceability-toolbar">
+        <div className="takeoff-chart-actions">
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={saveImage}>
+            {exporting === "png" ? "Erzeuge PNG…" : "Charts PNG speichern"}
+          </button>
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={savePdf}>
+            {exporting === "pdf" ? "PDF vorbereiten…" : "Charts PDF speichern"}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CruiseChartCard({ inputs, chart }: { inputs: CruiseViewInputs; chart: CruiseChart }) {
+  const trace = createTrace(inputs, chart);
   return (
     <section className="card takeoff-chart-card traceability-card">
       <div className="traceability-header">
@@ -247,22 +281,8 @@ function CruiseChartCard({ inputs, chart }: { inputs: CruiseViewInputs; chart: C
           <div className="traceability-description">Rechenweg im originalen Flughandbuchdiagramm</div>
         </div>
       </div>
-      <div className="traceability-toolbar">
-        <div className="takeoff-chart-actions">
-          <label className="takeoff-chart-toggle">
-            <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
-            <span>Rechenweg</span>
-          </label>
-          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={saveImage}>
-            {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
-          </button>
-          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={savePdf}>
-            {exporting === "pdf" ? "PDF vorbereiten…" : "PDF speichern"}
-          </button>
-        </div>
-      </div>
       <div className="takeoff-chart-scroll">
-        <div className={`takeoff-chart-stage cruise-chart-stage${overlayVisible ? "" : " overlay-hidden"}`} style={{ aspectRatio: `${chart.width} / ${chart.height}` }}>
+        <div className="takeoff-chart-stage cruise-chart-stage" style={{ aspectRatio: `${chart.width} / ${chart.height}` }}>
           <img className="takeoff-chart-image" src={chart.source} alt={chart.title} width={chart.width} height={chart.height} />
           <svg className="takeoff-chart-overlay" viewBox={`0 0 ${chart.width} ${chart.height}`} aria-label={`Grafischer Rechenweg im originalen ${chart.title}`}>
             <polyline className="cruise-chart-trace" points={trace.linePoints.map((point) => point.join(",")).join(" ")} />
@@ -331,7 +351,6 @@ export function CruisePage() {
     ...chartBase,
     title: "POH Bild 5.3.12 Reiseflug wahre Fluggeschwindigkeit",
     cardTitle: "Grafische Nachvollziehbarkeit · Wahre Fluggeschwindigkeit",
-    fileName: "Wahre Fluggeschwindigkeit",
     source: "/assets/grob115b-cruise-speed-chart.png",
     width: 4101,
     height: 2880,
@@ -353,7 +372,6 @@ export function CruisePage() {
     ...chartBase,
     title: "POH Bild 5.3.11 Reiseflug Drehzahl",
     cardTitle: "Grafische Nachvollziehbarkeit · Drehzahl",
-    fileName: "Drehzahl",
     source: "/assets/grob115b-cruise-rpm-chart.png",
     width: 4105,
     height: 2886,
@@ -371,6 +389,7 @@ export function CruisePage() {
     exportResultLabel: "Drehzahl",
     exportResultValue: `${Math.round(result.rpm)} rpm`,
   };
+  const cruiseCharts = [speedChart, rpmChart] as const;
 
   return (
     <div className="page-layout compact-calculator-layout">
@@ -404,17 +423,18 @@ export function CruisePage() {
       </aside>
       <main className="results">
         {mode !== "da" ? <CalculatorCard title="Atmosphäre"><div className="atmos-grid"><div className="atmos-item"><div className="atmos-item-label">Density Altitude</div><div className={`atmos-item-value${inputs.densityAltitudeFt > 10000 ? " warn" : ""}`}>{inputs.densityAltitudeFt.toLocaleString("de-DE")} <span>ft</span></div></div><div className="atmos-item"><div className="atmos-item-label">ISA-Abweichung</div><div className={`atmos-item-value${Math.abs(inputs.isaDeviationC!) < 0.1 ? "" : inputs.isaDeviationC! > 0 ? " warn" : " good"}`}>{formatSigned(inputs.isaDeviationC!, 1)} <span>°C</span></div></div></div></CalculatorCard> : null}
-        <CalculatorCard title="Reiseflugleistung">
+        <CalculatorCard title="Reiseflugleistung" className="cruise-primary-results">
           <div className="takeoff-summary-heading">
             <Gauge aria-hidden="true" />
             <span>{result.powerLabel} Leistung · DA {inputs.densityAltitudeFt.toLocaleString("de-DE")} ft</span>
           </div>
-          <div className="result-grid">
+          <div className="result-grid cruise-result-grid">
             <MetricItem label="Drehzahl · POH 5.3.11" value={String(Math.round(result.rpm))} unit="rpm" />
             <MetricItem label="Fuel Flow · POH 5.3.10" value={result.fuelFlowLitersPerHour.toFixed(1)} unit="l/h" subtext={`${result.nauticalMilesPerLiter.toFixed(2)} nm/l`} />
             <MetricItem label="Wahre Fluggeschwindigkeit · POH 5.3.12" value={result.tasKt.toFixed(1)} unit="kt" speedType="TAS" subtext={`${Math.round(result.tasKmh)} km/h`} />
           </div>
         </CalculatorCard>
+        <CruiseExportToolbar inputs={inputs} charts={cruiseCharts} />
         <CruiseChartCard inputs={inputs} chart={speedChart} />
         <CruiseChartCard inputs={inputs} chart={rpmChart} />
       </main>

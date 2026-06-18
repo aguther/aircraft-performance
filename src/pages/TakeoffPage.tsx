@@ -65,7 +65,7 @@ function formatAtmosphereSummary({
   weatherValues?: { qnhHpa?: number; oatC?: number };
 }) {
   if (mode === "airport") {
-    const airportLabel = airport ? `${airport.icaoCode ? `${airport.icaoCode} · ` : ""}${airport.name}` : "Noch kein Flugplatz";
+    const airportLabel = airport ? (airport.icaoCode || airport.name) : "Noch kein Flugplatz";
     const runwayLabelText = runway ? ` · RWY ${runway.designator}` : "";
     const displayElevationFt = airport?.elevationFt ?? elevationFt;
     const displayQnhHpa = weatherValues?.qnhHpa ?? qnhHpa;
@@ -311,7 +311,6 @@ async function saveExportBlob(blob: Blob, fileName: string, type: string, option
 
 function TraceabilityCard({ inputs, result, exportContext }: { inputs: TakeoffInputs; result: TakeoffResult; exportContext: ExportContext }) {
   const [view, setView] = useState<"chart" | "path">("chart");
-  const [overlayVisible, setOverlayVisible] = useState(true);
   const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
   const points = createChartPoints(inputs, result);
   const finalDistancePoint: ChartPoint = [1227, chartDistanceY(result.takeoffDistanceMeters)];
@@ -355,10 +354,6 @@ function TraceabilityCard({ inputs, result, exportContext }: { inputs: TakeoffIn
         </div>
         {view === "chart" ? (
           <div className="takeoff-chart-actions">
-            <label className="takeoff-chart-toggle">
-              <input type="checkbox" checked={overlayVisible} onChange={(event) => setOverlayVisible(event.target.checked)} />
-              <span>Rechenweg</span>
-            </label>
             <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={exportImage}>
               {exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}
             </button>
@@ -371,7 +366,7 @@ function TraceabilityCard({ inputs, result, exportContext }: { inputs: TakeoffIn
       {view === "path" ? <CalculationPath inputs={inputs} result={result} /> : (
         <>
           <div className="takeoff-chart-scroll">
-            <div className={`takeoff-chart-stage${overlayVisible ? "" : " overlay-hidden"}`}>
+            <div className="takeoff-chart-stage">
               <img className="takeoff-chart-image" src={CHART_SOURCE} alt="Originales Flughandbuchdiagramm Bild 5.3.7 Startstrecke" width="1516" height="1038" />
               <svg className="takeoff-chart-overlay" viewBox="0 0 1516 1038" aria-label="Grafischer Rechenweg im originalen Startstreckendiagramm">
                 <polyline className="takeoff-chart-path" points={points.map((point) => point.join(",")).join(" ")} />
@@ -436,8 +431,8 @@ export function TakeoffPage() {
     || (availableTodaM != null && result.takeoffDistanceMeters > availableTodaM);
 
   useEffect(() => {
-    document.body.classList.add("runway-calculator");
-    return () => document.body.classList.remove("runway-calculator");
+    document.body.classList.add("runway-calculator", "takeoff-calculator");
+    return () => document.body.classList.remove("runway-calculator", "takeoff-calculator");
   }, []);
   useEffect(() => {
     updateTakeoffCalculator({
@@ -561,12 +556,12 @@ export function TakeoffPage() {
       </aside>
       <main className="results">
         <CalculatorContextCard atmosphere={result.atmosphere} warnings={warnings} conditions={result.conditions} />
-        <CalculatorCard title="Startleistung">
+        <CalculatorCard title="Startleistung" className="takeoff-primary-results">
           <div className="takeoff-summary-heading">
             <Gauge aria-hidden="true" />
             <span>Berechnete Strecken und Geschwindigkeiten</span>
           </div>
-          <div className="result-grid">
+          <div className="result-grid takeoff-distance-grid">
             <MetricItem label="Ground Roll · Startrollstrecke" value={String(result.groundRollMeters)} unit="m" danger={groundRollExceedsTora} />
             <MetricItem label="Takeoff Distance · Startstrecke über 15 m" value={String(result.takeoffDistanceMeters)} unit="m" warn={takeoffDistanceExceedsLimit} />
           </div>

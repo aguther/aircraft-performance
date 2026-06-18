@@ -11,9 +11,14 @@ describe("WeightBalancePage", () => {
     expect(markup).toContain("Startmasse");
     expect(markup).toContain("Landemasse");
     expect(markup).toContain("D-EBFT");
+    expect(markup).toContain("Revision 4 vom 10.01.2026");
     expect(markup).toContain("830.6");
     expect(markup).toContain("235.18");
     expect(markup).toContain("zentral gespeichert");
+    expect(markup).toContain("Beladeplan exportieren");
+    expect(markup).toContain("Start, Landung, Revision und Envelope gemeinsam speichern");
+    expect(markup).toContain("PNG speichern");
+    expect(markup).toContain("PDF speichern");
     expect(markup.match(/Weight and balance envelope/g)).toHaveLength(1);
     expect(markup).toContain("Envelope · Start und Landung");
     expect(markup).toContain("Beladung · Start bis Landung");

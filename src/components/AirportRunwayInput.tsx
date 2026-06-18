@@ -47,16 +47,15 @@ function AirportPreviewValue({ label, value, unit, status }: Readonly<{ label: s
 
 function RunwayHeadingPreview({ runway }: Readonly<{ runway: RunwayDirection }>) {
   return (
-    <div className="airport-preview-item">
-      <span className="airport-preview-label">RWY true / mag</span>
+    <div className="airport-preview-item airport-heading-combined">
       <div className="airport-heading-pair">
         <span>
-          <small>TRUE</small>
-          <strong>{formatDirection(runway.trueHeadingDeg)}°</strong>
+          <span className="airport-preview-label">RWY TRUE</span>
+          <strong className="airport-preview-value">{formatDirection(runway.trueHeadingDeg)}°</strong>
         </span>
         <span>
-          <small>MAG</small>
-          <strong>{formatDirection(runway.magneticHeadingDeg)}°</strong>
+          <span className="airport-preview-label">MAG</span>
+          <strong className="airport-preview-value">{formatDirection(runway.magneticHeadingDeg)}°</strong>
         </span>
       </div>
     </div>
@@ -364,7 +363,18 @@ export function AirportRunwayInput({
           </div>
           <div className="airport-preview">
             <AirportPreviewValue label="Elevation" value="–" />
-            <AirportPreviewValue label="RWY true / mag" value="–" />
+            <div className="airport-preview-item airport-heading-combined">
+              <div className="airport-heading-pair">
+                <span>
+                  <span className="airport-preview-label">RWY TRUE</span>
+                  <strong className="airport-preview-value">–</strong>
+                </span>
+                <span>
+                  <span className="airport-preview-label">MAG</span>
+                  <strong className="airport-preview-value">–</strong>
+                </span>
+              </div>
+            </div>
             <AirportPreviewValue label="Bahnlänge" value="–" />
           </div>
           <div className="airport-declared-distances" aria-label="Verfügbare Pistenstrecken">

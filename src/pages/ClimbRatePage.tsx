@@ -34,6 +34,10 @@ export function ClimbRatePage() {
     [massKg, densityAltitudeFt, referencePressureAltitudeFt],
   );
   useEffect(() => {
+    document.body.classList.add("climb-rate-calculator");
+    return () => document.body.classList.remove("climb-rate-calculator");
+  }, []);
+  useEffect(() => {
     updateClimbRateCalculator({ altitude, massKg });
   }, [altitude, massKg, updateClimbRateCalculator]);
 
@@ -66,12 +70,12 @@ export function ClimbRatePage() {
           atmosphereWarningThresholdFt={10000}
           conditions={result.conditions}
         />
-        <CalculatorCard title="Steigleistung">
+        <CalculatorCard title="Steigleistung" className="climb-rate-primary-results">
           <div className="takeoff-summary-heading">
             <Gauge aria-hidden="true" />
             <span>{massKg} kg · DA {densityAltitudeFt.toLocaleString("de-DE")} ft</span>
           </div>
-          <div className="result-grid">
+          <div className="result-grid climb-rate-result-grid">
             <MetricItem label="Steigrate · Rate of Climb" value={String(Math.round(result.climbRateFpm))} unit="ft/min" subtext={`${result.climbRateMs.toFixed(1)} m/s`} />
             <MetricItem label={<span><SpeedSymbol index="Y" /> · Climb Speed</span>} value={kilometersPerHourToKnots(result.climbSpeedKmh).toFixed(1)} unit="kt" speedType="IAS" subtext={`${Math.round(result.climbSpeedKmh)} km/h`} />
           </div>
