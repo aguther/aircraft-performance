@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { CloudSun, Gauge, Plane, Road } from "lucide-react";
+import { landingTrace as calculateDr400LandingTrace } from "../aircraft/dr400/calculators";
 import { calculateLanding as calculateG115BLanding } from "../aircraft/g115b/calculators";
 import { g115bData } from "../aircraft/g115b/data";
 import type { LandingInputs } from "../aircraft/g115b/types";
@@ -249,31 +250,35 @@ async function exportChartPdf(inputs: LandingInputs, result: LandingResult, expo
 }
 
 function drawWrappedText(context: CanvasRenderingContext2D, text: string, x: number, y: number, width: number, options: { color?: string; weight?: number; size?: number; lineHeight?: number } = {}) {
-  const words = text.split(" ");
   const lineHeight = options.lineHeight ?? 24;
-  let line = "";
   let lineY = y;
   context.fillStyle = options.color || "#152235";
   context.font = `${options.weight || 500} ${options.size || 18}px "Segoe UI", Arial, sans-serif`;
-  words.forEach((word, index) => {
-    const testLine = line ? `${line} ${word}` : word;
-    if (context.measureText(testLine).width > width && line) {
-      context.fillText(line, x, lineY);
-      line = word;
-      lineY += lineHeight;
-    } else {
-      line = testLine;
-    }
-    if (index === words.length - 1 && line) context.fillText(line, x, lineY);
+  text.split("\n").forEach((paragraph) => {
+    const words = paragraph.split(" ");
+    let line = "";
+    words.forEach((word, index) => {
+      const testLine = line ? `${line} ${word}` : word;
+      if (context.measureText(testLine).width > width && line) {
+        context.fillText(line, x, lineY);
+        line = word;
+        lineY += lineHeight;
+      } else {
+        line = testLine;
+      }
+      if (index === words.length - 1 && line) context.fillText(line, x, lineY);
+    });
+    lineY += lineHeight;
   });
-  return lineY + lineHeight;
+  return lineY;
 }
 
 async function createLandingPathExportCanvas(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext, aircraftLabel: string) {
   const exportDate = new Date();
+  const trace = calculateDr400LandingTrace(inputs);
   const canvas = document.createElement("canvas");
   canvas.width = 1200;
-  canvas.height = 1020;
+  canvas.height = 1500;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
   context.fillStyle = "#ffffff";
@@ -290,17 +295,22 @@ async function createLandingPathExportCanvas(inputs: LandingInputs, result: Land
 
   drawText(context, "Atmosphäre", 48, 330, { size: 19, weight: 700, color: "#006f9f" });
   const pressureAltitudeText = exportContext.pressureAltitudeMode === "direct"
-    ? `Pressure Altitude wurde direkt mit ${inputs.pressureAltitudeFt} ft angesetzt.`
+    ? `Pressure Altitude = direkt eingegebene Druckhöhe = ${inputs.pressureAltitudeFt} ft.`
     : `Pressure Altitude = Elevation + (1013.25 - QNH) x 27 = ${exportContext.elevationFt} + (1013.25 - ${exportContext.qnhHpa}) x 27 = ${inputs.pressureAltitudeFt} ft.`;
   let textY = drawWrappedText(context, pressureAltitudeText, 48, 362, 1070);
-  textY = drawWrappedText(context, `ISA-Temperatur = 15 - 1.98 x PA/1000 = ${result.atmosphere.isaTemperatureC.toFixed(1)} °C. ISA-Abweichung = OAT - ISA = ${formatSigned(result.atmosphere.isaDeviationC, 1)} °C. Density Altitude = PA + 120 x ISA-Abweichung = ${result.atmosphere.densityAltitudeFt} ft.`, 48, textY + 8, 1070);
+  textY = drawWrappedText(context, [
+    `ISA-Temperatur = 15 - 1.98 x PA / 1000 = 15 - 1.98 x ${inputs.pressureAltitudeFt} / 1000 = ${result.atmosphere.isaTemperatureC.toFixed(1)} °C.`,
+    `ISA-Abweichung = OAT - ISA = ${inputs.oatC} - ${result.atmosphere.isaTemperatureC.toFixed(1)} = ${formatSigned(result.atmosphere.isaDeviationC, 1)} °C.`,
+    `Density Altitude = PA + 120 x ISA-Abweichung = ${inputs.pressureAltitudeFt} + 120 x ${result.atmosphere.isaDeviationC.toFixed(1)} = ${result.atmosphere.densityAltitudeFt} ft.`,
+  ].join("\n"), 48, textY + 4, 1070);
 
   drawText(context, "Tabellen- und Korrekturschritte", 48, textY + 36, { size: 19, weight: 700, color: "#006f9f" });
   const steps = [
-    ["1", `Aus der Landetabelle mit Pressure Altitude ${inputs.pressureAltitudeFt} ft, OAT ${inputs.oatC} °C und Masse ${inputs.massKg} kg linear interpoliert.`, `${round(result.landingRollByAtmosphereMeters)} m nach Atmosphäre, ${round(result.landingRollByMassMeters)} m nach Masse`],
-    ["2", `Windkorrektur mit ${formatWindLabel(inputs.windKt)} nach Handbuchfaktoren angewendet.`, `${round(result.landingRollByWindMeters)} m Landerollstrecke ohne Zuschlag`],
-    ["3", "15-m-Hindernisstrecke aus der zugehörigen POH-Tabelle/Relation interpoliert.", `${round(result.landingDistanceWithoutMarginMeters)} m ohne Zuschlag`],
-    ["4", `Zuschlag ${inputs.safetyMarginPercent}% auf die Rollstrecke addiert und auf Rollstrecke sowie 15-m-Strecke übertragen.`, `${result.landingRollMeters} m / ${result.landingDistanceMeters} m`],
+    ["1", `Landerollstrecke aus POH-Tabelle.\n${trace.roll845.text}\n${trace.roll1045.text}`, `${round(result.landingRollByAtmosphereMeters)} m bei 1045 kg`],
+    ["2", `15-m-Strecke aus POH-Tabelle.\n${trace.obstacle845.text}\n${trace.obstacle1045.text}`, `${round(trace.obstacle1045.result)} m bei 1045 kg`],
+    ["3", `Masseninterpolation zwischen den POH-Gewichten.\n${trace.massText}`, `${round(trace.rollByMassMeters)} m / ${round(trace.obstacleByMassMeters)} m vor Wind`],
+    ["4", trace.windText, `${round(result.landingRollByWindMeters)} m / ${round(result.landingDistanceWithoutMarginMeters)} m`],
+    ["5", trace.marginText, `${result.landingRollMeters} m / ${result.landingDistanceMeters} m`],
   ];
   let rowY = textY + 72;
   steps.forEach(([index, detail, value]) => {
@@ -308,13 +318,13 @@ async function createLandingPathExportCanvas(inputs: LandingInputs, result: Land
     context.strokeStyle = "#d8e3eb";
     context.lineWidth = 1;
     context.beginPath();
-    context.roundRect(48, rowY, 1072, 88, 10);
+    context.roundRect(48, rowY, 1072, 178, 10);
     context.fill();
     context.stroke();
-    drawText(context, index, 70, rowY + 52, { size: 24, weight: 800, color: "#006f9f" });
-    drawWrappedText(context, detail, 112, rowY + 31, 690, { size: 17, lineHeight: 21 });
-    drawWrappedText(context, value, 830, rowY + 39, 260, { size: 18, weight: 700, lineHeight: 22 });
-    rowY += 100;
+    drawText(context, index, 70, rowY + 92, { size: 24, weight: 800, color: "#006f9f" });
+    drawWrappedText(context, detail, 112, rowY + 28, 710, { size: 14, lineHeight: 17 });
+    drawWrappedText(context, value, 850, rowY + 72, 240, { size: 17, weight: 700, lineHeight: 21 });
+    rowY += 194;
   });
   drawWrappedText(context, result.warnings.length ? `Warnungen: ${result.warnings.map((warning) => warning.text).join(" · ")}` : "Warnungen: keine.", 48, rowY + 14, 1070, { color: result.warnings.length ? "#9a5200" : "#526274" });
   return { canvas, exportDate };

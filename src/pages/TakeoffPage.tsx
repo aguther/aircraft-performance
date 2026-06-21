@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { CloudSun, Gauge, Plane, Road } from "lucide-react";
+import { takeoffTrace as calculateDr400TakeoffTrace } from "../aircraft/dr400/calculators";
 import type { TakeoffInputs } from "../aircraft/g115b/types";
 import { performanceForAircraft, safetyMarginForSurface } from "../app/aircraftPerformance";
 import { useAircraft } from "../app/AircraftContext";
@@ -243,31 +244,35 @@ async function exportChartPdf(inputs: TakeoffInputs, result: TakeoffResult, expo
 }
 
 function drawWrappedExportText(context: CanvasRenderingContext2D, text: string, x: number, y: number, width: number, options: { color?: string; weight?: number; size?: number; lineHeight?: number } = {}) {
-  const words = text.split(" ");
   const lineHeight = options.lineHeight ?? 24;
-  let line = "";
   let lineY = y;
   context.fillStyle = options.color || "#152235";
   context.font = `${options.weight || 500} ${options.size || 18}px "Segoe UI", Arial, sans-serif`;
-  words.forEach((word, index) => {
-    const testLine = line ? `${line} ${word}` : word;
-    if (context.measureText(testLine).width > width && line) {
-      context.fillText(line, x, lineY);
-      line = word;
-      lineY += lineHeight;
-    } else {
-      line = testLine;
-    }
-    if (index === words.length - 1 && line) context.fillText(line, x, lineY);
+  text.split("\n").forEach((paragraph) => {
+    const words = paragraph.split(" ");
+    let line = "";
+    words.forEach((word, index) => {
+      const testLine = line ? `${line} ${word}` : word;
+      if (context.measureText(testLine).width > width && line) {
+        context.fillText(line, x, lineY);
+        line = word;
+        lineY += lineHeight;
+      } else {
+        line = testLine;
+      }
+      if (index === words.length - 1 && line) context.fillText(line, x, lineY);
+    });
+    lineY += lineHeight;
   });
-  return lineY + lineHeight;
+  return lineY;
 }
 
 async function createTakeoffPathExportCanvas(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext, aircraftLabel: string) {
   const exportDate = new Date();
+  const trace = calculateDr400TakeoffTrace(inputs);
   const canvas = document.createElement("canvas");
   canvas.width = 1200;
-  canvas.height = 1080;
+  canvas.height = 1720;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
   context.fillStyle = "#ffffff";
@@ -285,18 +290,23 @@ async function createTakeoffPathExportCanvas(inputs: TakeoffInputs, result: Take
 
   drawExportText(context, "Atmosphäre", 48, 330, { size: 19, weight: 700, color: "#006f9f" });
   const pressureAltitudeText = exportContext.pressureAltitudeMode === "direct"
-    ? `Pressure Altitude wurde direkt mit ${inputs.pressureAltitudeFt} ft angesetzt.`
+    ? `Pressure Altitude = direkt eingegebene Druckhöhe = ${inputs.pressureAltitudeFt} ft.`
     : `Pressure Altitude = Elevation + (1013.25 - QNH) x 27 = ${exportContext.elevationFt} + (1013.25 - ${exportContext.qnhHpa}) x 27 = ${inputs.pressureAltitudeFt} ft.`;
   let textY = drawWrappedExportText(context, pressureAltitudeText, 48, 362, 1070);
-  textY = drawWrappedExportText(context, `ISA-Temperatur = 15 - 1.98 x PA/1000 = ${result.atmosphere.isaTemperatureC.toFixed(1)} °C. ISA-Abweichung = OAT - ISA = ${formatSigned(result.atmosphere.isaDeviationC, 1)} °C. Density Altitude = PA + 120 x ISA-Abweichung = ${result.atmosphere.densityAltitudeFt} ft.`, 48, textY + 8, 1070);
+  textY = drawWrappedExportText(context, [
+    `ISA-Temperatur = 15 - 1.98 x PA / 1000 = 15 - 1.98 x ${inputs.pressureAltitudeFt} / 1000 = ${result.atmosphere.isaTemperatureC.toFixed(1)} °C.`,
+    `ISA-Abweichung = OAT - ISA = ${inputs.oatC} - ${result.atmosphere.isaTemperatureC.toFixed(1)} = ${formatSigned(result.atmosphere.isaDeviationC, 1)} °C.`,
+    `Density Altitude = PA + 120 x ISA-Abweichung = ${inputs.pressureAltitudeFt} + 120 x ${result.atmosphere.isaDeviationC.toFixed(1)} = ${result.atmosphere.densityAltitudeFt} ft.`,
+  ].join("\n"), 48, textY + 4, 1070);
 
   drawExportText(context, "Tabellen- und Korrekturschritte", 48, textY + 36, { size: 19, weight: 700, color: "#006f9f" });
   const steps = [
-    ["1", `Aus der Starttabelle mit Pressure Altitude ${inputs.pressureAltitudeFt} ft, OAT ${inputs.oatC} °C und Masse ${inputs.massKg} kg linear interpoliert.`, `${round(result.groundRollByAtmosphereMeters)} m nach Atmosphäre, ${round(result.groundRollByMassMeters)} m nach Masse`],
-    ["2", "Slope ist für dieses Muster nicht im Flughandbuch verfügbar und wird deshalb nicht angewendet.", `${round(result.groundRollBySlopeMeters)} m`],
-    ["3", `Windkorrektur mit ${formatWindLabel(inputs.windKt)} nach Handbuchfaktoren angewendet.`, `${round(result.groundRollByWindMeters)} m Ground Roll ohne Zuschlag`],
-    ["4", "15-m-Hindernisstrecke aus der zugehörigen POH-Tabelle/Relation interpoliert.", `${round(result.takeoffDistanceWithoutMarginMeters)} m ohne Zuschlag`],
-    ["5", `Zuschlag ${inputs.safetyMarginPercent}% auf die Rollstrecke addiert und auf Rollstrecke sowie 15-m-Strecke übertragen.`, `${result.groundRollMeters} m / ${result.takeoffDistanceMeters} m`],
+    ["1", `Startrollstrecke aus POH-Tabelle.\n${trace.roll900.text}\n${trace.roll1100.text}`, `${round(result.groundRollByAtmosphereMeters)} m bei 1100 kg`],
+    ["2", `15-m-Strecke aus POH-Tabelle.\n${trace.obstacle900.text}\n${trace.obstacle1100.text}`, `${round(trace.obstacle1100.result)} m bei 1100 kg`],
+    ["3", `Masseninterpolation zwischen den POH-Gewichten.\n${trace.massText}`, `${round(trace.groundRollByMassMeters)} m / ${round(trace.obstacleByMassMeters)} m vor Wind`],
+    ["4", "Slope ist für dieses Muster nicht im Flughandbuch verfügbar und wird deshalb nicht angewendet.", `${round(result.groundRollBySlopeMeters)} m`],
+    ["5", trace.windText, `${round(result.groundRollByWindMeters)} m / ${round(result.takeoffDistanceWithoutMarginMeters)} m`],
+    ["6", trace.marginText, `${result.groundRollMeters} m / ${result.takeoffDistanceMeters} m`],
   ];
   let rowY = textY + 72;
   steps.forEach(([index, detail, value]) => {
@@ -304,13 +314,13 @@ async function createTakeoffPathExportCanvas(inputs: TakeoffInputs, result: Take
     context.strokeStyle = "#d8e3eb";
     context.lineWidth = 1;
     context.beginPath();
-    context.roundRect(48, rowY, 1072, 88, 10);
+    context.roundRect(48, rowY, 1072, 178, 10);
     context.fill();
     context.stroke();
-    drawExportText(context, index, 70, rowY + 52, { size: 24, weight: 800, color: "#006f9f" });
-    drawWrappedExportText(context, detail, 112, rowY + 31, 690, { size: 17, lineHeight: 21 });
-    drawWrappedExportText(context, value, 830, rowY + 39, 260, { size: 18, weight: 700, lineHeight: 22 });
-    rowY += 100;
+    drawExportText(context, index, 70, rowY + 92, { size: 24, weight: 800, color: "#006f9f" });
+    drawWrappedExportText(context, detail, 112, rowY + 28, 710, { size: 14, lineHeight: 17 });
+    drawWrappedExportText(context, value, 850, rowY + 72, 240, { size: 17, weight: 700, lineHeight: 21 });
+    rowY += 194;
   });
   drawWrappedExportText(context, result.warnings.length ? `Warnungen: ${result.warnings.map((warning) => warning.text).join(" · ")}` : "Warnungen: keine.", 48, rowY + 14, 1070, { color: result.warnings.length ? "#9a5200" : "#526274" });
   return { canvas, exportDate };

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Gauge, Weight } from "lucide-react";
 import { calculateWeightBalance as calculateG115BWeightBalance } from "../aircraft/g115b/calculators";
-import { g115bData } from "../aircraft/g115b/data";
 import { useAircraft } from "../app/AircraftContext";
 import { performanceForAircraft } from "../app/aircraftPerformance";
 import { useFlightPlan, type WeightBalancePlan } from "../app/FlightPlanContext";
@@ -14,6 +13,13 @@ import { SliderField } from "../components/SliderField";
 import { createPdfBlobFromCanvas, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
 
 type WeightBalanceResult = ReturnType<typeof calculateG115BWeightBalance>;
+type WeightBalanceExportMeta = {
+  aircraftLabel: string;
+  envelope: readonly MassMomentPoint[];
+  fuelDensityKgPerLiter: number;
+  fuelSource: string;
+  mtowKg: number;
+};
 
 function bankedStallSpeedKmh(stallSpeedKmh: number, bankDegrees: number): number {
   return stallSpeedKmh * Math.sqrt(1 / Math.cos((bankDegrees * Math.PI) / 180));
@@ -456,6 +462,7 @@ function drawSpeedExportTable(
 
 function drawExportEnvelope(
   context: CanvasRenderingContext2D,
+  envelope: readonly MassMomentPoint[],
   startResult: WeightBalanceResult,
   landingResult: WeightBalanceResult,
   x: number,
@@ -463,7 +470,6 @@ function drawExportEnvelope(
   width: number,
   height: number,
 ) {
-  const envelope = g115bData.weightBalance.envelope;
   const results = [startResult, landingResult];
   const minMoment = Math.min(...envelope.map((point) => point.momentKgM), ...results.map((result) => result.totalMomentKgM)) - 8;
   const maxMoment = Math.max(...envelope.map((point) => point.momentKgM), ...results.map((result) => result.totalMomentKgM)) + 8;
@@ -553,10 +559,12 @@ async function createWeightBalanceExportCanvas(
   startResult: WeightBalanceResult,
   landingResult: WeightBalanceResult,
   landingFuelLiters: number,
+  meta: WeightBalanceExportMeta,
 ) {
   const exportDate = new Date();
   const burnedFuelMassKg = startResult.fuelMassKg - landingResult.fuelMassKg;
   const burnedFuelMomentKgM = startResult.totalMomentKgM - landingResult.totalMomentKgM;
+  const burnedFuelArmM = burnedFuelMassKg > 0 ? burnedFuelMomentKgM / burnedFuelMassKg : 0;
   const canvas = document.createElement("canvas");
   canvas.width = 2200;
   canvas.height = 1500;
@@ -568,7 +576,7 @@ async function createWeightBalanceExportCanvas(
   context.strokeStyle = "#152235";
   context.lineWidth = 6;
   context.strokeRect(48, 42, canvas.width - 96, 136);
-  exportText(context, `Grob G115B - ${plan.registration}`, canvas.width / 2, 100, { size: 38, weight: 700, align: "center" });
+  exportText(context, `${meta.aircraftLabel} - ${plan.registration}`, canvas.width / 2, 100, { size: 38, weight: 700, align: "center" });
   exportText(context, "Beladeplan", canvas.width / 2, 144, { size: 34, weight: 700, align: "center" });
   exportText(context, `Revision ${startResult.emptyAircraft.revision}`, canvas.width - 210, 96, { size: 25, weight: 700, align: "center" });
   exportText(context, startResult.emptyAircraft.revisionDate, canvas.width - 210, 136, { size: 25, align: "center" });
@@ -590,14 +598,14 @@ async function createWeightBalanceExportCanvas(
     1,
     [1, 2, 3],
   );
-  exportText(context, "MTOW: 920 kg", 72, 750, { size: 24, weight: 700 });
+  exportText(context, `MTOW: ${meta.mtowKg} kg`, 72, 750, { size: 24, weight: 700 });
 
   exportText(context, "Landung", 60, 828, { size: 28, weight: 700, color: "#006f9f" });
   drawExportTable(
     context,
     [
       ["Position", "Masse [kg]", "Arm [m]", "Moment [kg m]"],
-      [`Kraftstoff-Verbrauch (${plan.plannedFuelBurnLiters.toFixed(1)} l)`, `-${burnedFuelMassKg.toFixed(1)}`, g115bData.weightBalance.stations.fuel.armM.toFixed(4), `-${burnedFuelMomentKgM.toFixed(2)}`],
+      [`Kraftstoff-Verbrauch (${plan.plannedFuelBurnLiters.toFixed(1)} l)`, `-${burnedFuelMassKg.toFixed(1)}`, burnedFuelArmM.toFixed(4), `-${burnedFuelMomentKgM.toFixed(2)}`],
       ["Landegewicht", landingResult.totalMassKg.toFixed(1), landingResult.cgArmM.toFixed(4), landingResult.totalMomentKgM.toFixed(2)],
     ],
     60,
@@ -616,8 +624,8 @@ async function createWeightBalanceExportCanvas(
   ];
   drawStatusExportTable(context, envelopeStatusRows, 60, 1208, [250, 650], 43);
   const statusRows = [
-    ["Kraftstoffdichte", `${g115bData.weightBalance.fuelDensityKgPerLiter.toLocaleString("de-DE")} kg/l`],
-    ["Quelle", `${g115bData.weightBalance.source} · Beladeplan Revision ${startResult.emptyAircraft.revision} vom ${startResult.emptyAircraft.revisionDate}`],
+    ["Kraftstoffdichte", `${meta.fuelDensityKgPerLiter.toLocaleString("de-DE")} kg/l`],
+    ["Quelle", `${meta.fuelSource} · Beladeplan Revision ${startResult.emptyAircraft.revision} vom ${startResult.emptyAircraft.revisionDate}`],
   ];
   drawExportTable(context, statusRows, 60, 1294, [250, 650], 43, 0, 0);
 
@@ -638,7 +646,7 @@ async function createWeightBalanceExportCanvas(
     [330, 110, 145, 145],
     40,
   );
-  drawExportEnvelope(context, startResult, landingResult, 1030, 780, 1040, 600);
+  drawExportEnvelope(context, meta.envelope, startResult, landingResult, 1030, 780, 1040, 600);
 
   return { canvas, exportDate };
 }
@@ -648,10 +656,11 @@ async function exportWeightBalanceImage(
   startResult: WeightBalanceResult,
   landingResult: WeightBalanceResult,
   landingFuelLiters: number,
+  meta: WeightBalanceExportMeta,
 ) {
-  const { canvas, exportDate } = await createWeightBalanceExportCanvas(plan, startResult, landingResult, landingFuelLiters);
+  const { canvas, exportDate } = await createWeightBalanceExportCanvas(plan, startResult, landingResult, landingFuelLiters, meta);
   const blob = await canvasToBlob(canvas);
-  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Beladeplan ${plan.registration}.png`, "image/png");
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z ${meta.aircraftLabel} Beladeplan ${plan.registration}.png`, "image/png");
 }
 
 async function exportWeightBalancePdf(
@@ -659,25 +668,28 @@ async function exportWeightBalancePdf(
   startResult: WeightBalanceResult,
   landingResult: WeightBalanceResult,
   landingFuelLiters: number,
+  meta: WeightBalanceExportMeta,
   options: { openWindow?: Window | null } = {},
 ) {
-  const { canvas, exportDate } = await createWeightBalanceExportCanvas(plan, startResult, landingResult, landingFuelLiters);
+  const { canvas, exportDate } = await createWeightBalanceExportCanvas(plan, startResult, landingResult, landingFuelLiters, meta);
   const blob = await createPdfBlobFromCanvas(canvas, { orientation: "landscape", maxDimensionPx: 2400 });
   if (options.openWindow) {
     openExportBlob(blob, options.openWindow);
     return;
   }
-  await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Beladeplan ${plan.registration}.pdf`, "application/pdf");
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z ${meta.aircraftLabel} Beladeplan ${plan.registration}.pdf`, "application/pdf");
 }
 
 function WeightBalanceExportCard({
   landingFuelLiters,
   landingResult,
+  meta,
   plan,
   startResult,
 }: {
   landingFuelLiters: number;
   landingResult: WeightBalanceResult;
+  meta: WeightBalanceExportMeta;
   plan: WeightBalancePlan;
   startResult: WeightBalanceResult;
 }) {
@@ -685,7 +697,7 @@ function WeightBalanceExportCard({
   const saveImage = async () => {
     setExporting("png");
     try {
-      await exportWeightBalanceImage(plan, startResult, landingResult, landingFuelLiters);
+      await exportWeightBalanceImage(plan, startResult, landingResult, landingFuelLiters, meta);
     } finally {
       setExporting(null);
     }
@@ -693,7 +705,7 @@ function WeightBalanceExportCard({
   const savePdf = async () => {
     setExporting("pdf");
     try {
-      await exportWeightBalancePdf(plan, startResult, landingResult, landingFuelLiters);
+      await exportWeightBalancePdf(plan, startResult, landingResult, landingFuelLiters, meta);
     } finally {
       setExporting(null);
     }
@@ -703,7 +715,7 @@ function WeightBalanceExportCard({
     let exportWindow: Window | null = null;
     try {
       exportWindow = openExportTab();
-      await exportWeightBalancePdf(plan, startResult, landingResult, landingFuelLiters, { openWindow: exportWindow });
+      await exportWeightBalancePdf(plan, startResult, landingResult, landingFuelLiters, meta, { openWindow: exportWindow });
     } catch (error) {
       exportWindow?.close();
       console.error(error);
@@ -747,6 +759,13 @@ export function WeightBalancePage() {
   const startFuelLiters = dr400 ? (plan.mainFuelLiters ?? 109) + (plan.wingFuelLiters ?? 80) : plan.startFuelLiters;
   const landingFuel = deriveLandingFuel({ ...plan, startFuelLiters }, plan.plannedFuelBurnLiters, aircraft.id);
   const landingFuelLiters = landingFuel.fuelLiters;
+  const exportMeta = useMemo<WeightBalanceExportMeta>(() => ({
+    aircraftLabel: aircraft.shortName,
+    envelope: weightBalanceData.envelope,
+    fuelDensityKgPerLiter: weightBalanceData.fuelDensityKgPerLiter,
+    fuelSource: weightBalanceData.source,
+    mtowKg: performance.limits.takeoffMassMaxKg,
+  }), [aircraft.shortName, performance.limits.takeoffMassMaxKg, weightBalanceData.envelope, weightBalanceData.fuelDensityKgPerLiter, weightBalanceData.source]);
   const startResult = useMemo(
     () =>
       calculateWeightBalance({
@@ -950,7 +969,7 @@ export function WeightBalancePage() {
             ) : null}
           </div>
         </CalculatorCard>
-        {!dr400 ? <WeightBalanceExportCard plan={plan} startResult={startResult} landingResult={landingResult} landingFuelLiters={landingFuelLiters} /> : null}
+        <WeightBalanceExportCard meta={exportMeta} plan={plan} startResult={startResult} landingResult={landingResult} landingFuelLiters={landingFuelLiters} />
         <CalculatorCard title="Envelope · Start und Landung">
           <EnvelopeChart envelope={weightBalanceData.envelope} startResult={startResult} landingResult={landingResult} />
         </CalculatorCard>
