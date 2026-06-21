@@ -143,8 +143,8 @@ function interpolationFormula(label: string, x: number, x0: number, y0: number, 
 }
 
 function compactInterpolationLine(label: string, x: number, x0: number, y0: number, x1: number, y1: number, result: number, unit: string) {
-  if (x0 === x1) return `${label}: Stützstelle ${x0} -> ${Math.round(result)} ${unit}`;
-  return `${label}: ${y0}/${y1} ${unit} bei ${x0}/${x1} -> ${Math.round(result)} ${unit}`;
+  if (x0 === x1) return `${label}: Tabellenwert bei ${x0} = ${Math.round(result)} ${unit}`;
+  return `${label}: ${y0} + (${x.toFixed(0)} - ${x0}) / (${x1} - ${x0}) x (${y1} - ${y0}) = ${Math.round(result)} ${unit}`;
 }
 
 function raggedTrace(
@@ -170,7 +170,7 @@ function raggedTrace(
   const upperAtTemp = valueAt(upperTempValues, values[upperAltitudeIndex], oatC);
   const result = core.interpolate1D([lowerAltitude, upperAltitude], [lowerAtTemp, upperAtTemp], altitudeFt);
   const compact = [
-    `${label}: Tabellenhöhe ${lowerAltitude}/${upperAltitude} ft, OAT ${oatC} °C.`,
+    `${label}: erst OAT je Höhenzeile, dann Höhe ${lowerAltitude}/${upperAltitude} ft.`,
     compactInterpolationLine(`${lowerAltitude} ft OAT`, oatC, lowerTempLow, values[lowerAltitudeIndex][lowerTempLowIndex], lowerTempHigh, values[lowerAltitudeIndex][lowerTempHighIndex], lowerAtTemp, "m"),
     compactInterpolationLine(`${upperAltitude} ft OAT`, oatC, upperTempLow, values[upperAltitudeIndex][upperTempLowIndex], upperTempHigh, values[upperAltitudeIndex][upperTempHighIndex], upperAtTemp, "m"),
     compactInterpolationLine("Höhe", altitudeFt, lowerAltitude, Math.round(lowerAtTemp), upperAltitude, Math.round(upperAtTemp), result, "m"),
@@ -192,7 +192,7 @@ function massTrace(label: string, massKg: number, lowerMass: number, lowerValue:
 }
 
 function compactMassTrace(label: string, massKg: number, lowerMass: number, lowerValue: number, upperMass: number, upperValue: number, result: number) {
-  return `${label}: ${Math.round(lowerValue)}/${Math.round(upperValue)} m bei ${lowerMass}/${upperMass} kg -> ${Math.round(result)} m`;
+  return `${label}: ${Math.round(lowerValue)} + (${massKg} - ${lowerMass}) / (${upperMass} - ${lowerMass}) x (${Math.round(upperValue)} - ${Math.round(lowerValue)}) = ${Math.round(result)} m`;
 }
 
 function windFactor(windKt: number) {
@@ -217,6 +217,7 @@ export function takeoffTrace(inputs: TakeoffInputs) {
   const groundRollByWindMeters = groundRollByMassMeters * factor;
   const obstacleByWindMeters = obstacleByMassMeters * factor;
   const groundRollMarginMeters = groundRollByWindMeters * (inputs.safetyMarginPercent / 100);
+  const obstacleMarginMeters = obstacleByWindMeters * (inputs.safetyMarginPercent / 100);
   return {
     roll900,
     roll1100,
@@ -235,7 +236,7 @@ export function takeoffTrace(inputs: TakeoffInputs) {
       compactMassTrace("15-m-Strecke Masse", mass, 900, obstacle900.result, 1100, obstacle1100.result, obstacleByMassMeters),
     ].join("\n"),
     windText: `Windfaktor: ${inputs.windKt} kt -> Faktor ${factor.toFixed(2)}. Rollstrecke ${Math.round(groundRollByMassMeters)} x ${factor.toFixed(2)} = ${Math.round(groundRollByWindMeters)} m; 15-m-Strecke ${Math.round(obstacleByMassMeters)} x ${factor.toFixed(2)} = ${Math.round(obstacleByWindMeters)} m.`,
-    marginText: `Zuschlag: ${Math.round(groundRollByWindMeters)} x ${inputs.safetyMarginPercent}% = ${Math.round(groundRollMarginMeters)} m. Rollstrecke ${Math.round(groundRollByWindMeters)} + ${Math.round(groundRollMarginMeters)} = ${core.round(groundRollByWindMeters + groundRollMarginMeters)} m; 15-m-Strecke ${Math.round(obstacleByWindMeters)} + ${Math.round(groundRollMarginMeters)} = ${core.round(obstacleByWindMeters + groundRollMarginMeters)} m.`,
+    marginText: `Zuschlag auf jede Ergebnisstrecke: Roll ${Math.round(groundRollByWindMeters)} x ${inputs.safetyMarginPercent}% = ${Math.round(groundRollMarginMeters)} m -> ${core.round(groundRollByWindMeters + groundRollMarginMeters)} m. 15-m-Strecke ${Math.round(obstacleByWindMeters)} x ${inputs.safetyMarginPercent}% = ${Math.round(obstacleMarginMeters)} m -> ${core.round(obstacleByWindMeters + obstacleMarginMeters)} m.`,
   };
 }
 
@@ -251,6 +252,7 @@ export function landingTrace(inputs: LandingInputs) {
   const rollByWindMeters = rollByMassMeters * factor;
   const obstacleByWindMeters = obstacleByMassMeters * factor;
   const landingRollMarginMeters = rollByWindMeters * (inputs.safetyMarginPercent / 100);
+  const obstacleMarginMeters = obstacleByWindMeters * (inputs.safetyMarginPercent / 100);
   return {
     roll845,
     roll1045,
@@ -269,7 +271,7 @@ export function landingTrace(inputs: LandingInputs) {
       compactMassTrace("15-m-Strecke Masse", mass, 845, obstacle845.result, 1045, obstacle1045.result, obstacleByMassMeters),
     ].join("\n"),
     windText: `Windfaktor: ${inputs.windKt} kt -> Faktor ${factor.toFixed(2)}. Rollstrecke ${Math.round(rollByMassMeters)} x ${factor.toFixed(2)} = ${Math.round(rollByWindMeters)} m; 15-m-Strecke ${Math.round(obstacleByMassMeters)} x ${factor.toFixed(2)} = ${Math.round(obstacleByWindMeters)} m.`,
-    marginText: `Zuschlag: ${Math.round(rollByWindMeters)} x ${inputs.safetyMarginPercent}% = ${Math.round(landingRollMarginMeters)} m. Rollstrecke ${Math.round(rollByWindMeters)} + ${Math.round(landingRollMarginMeters)} = ${core.round(rollByWindMeters + landingRollMarginMeters)} m; 15-m-Strecke ${Math.round(obstacleByWindMeters)} + ${Math.round(landingRollMarginMeters)} = ${core.round(obstacleByWindMeters + landingRollMarginMeters)} m.`,
+    marginText: `Zuschlag auf jede Ergebnisstrecke: Roll ${Math.round(rollByWindMeters)} x ${inputs.safetyMarginPercent}% = ${Math.round(landingRollMarginMeters)} m -> ${core.round(rollByWindMeters + landingRollMarginMeters)} m. 15-m-Strecke ${Math.round(obstacleByWindMeters)} x ${inputs.safetyMarginPercent}% = ${Math.round(obstacleMarginMeters)} m -> ${core.round(obstacleByWindMeters + obstacleMarginMeters)} m.`,
   };
 }
 
@@ -285,6 +287,7 @@ export function calculateTakeoff(inputs: TakeoffInputs) {
   const groundRollByWindMeters = groundRollByMassMeters * factor;
   const obstacleByWindMeters = takeoffDistanceWithoutMarginMeters * factor;
   const groundRollMarginMeters = groundRollByWindMeters * (inputs.safetyMarginPercent / 100);
+  const takeoffDistanceMarginMeters = obstacleByWindMeters * (inputs.safetyMarginPercent / 100);
   const warnings: Warning[] = [];
   const atmosphere = core.densityAltitude(inputs.pressureAltitudeFt, inputs.oatC);
   if (inputs.massKg > 1100) warnings.push({ text: "Masse überschreitet MTOW (1100 kg).", danger: true });
@@ -302,7 +305,8 @@ export function calculateTakeoff(inputs: TakeoffInputs) {
     groundRollMarginMeters,
     groundRollMeters: core.round(groundRollByWindMeters + groundRollMarginMeters),
     takeoffDistanceWithoutMarginMeters: obstacleByWindMeters,
-    takeoffDistanceMeters: core.round(obstacleByWindMeters + groundRollMarginMeters),
+    takeoffDistanceMarginMeters,
+    takeoffDistanceMeters: core.round(obstacleByWindMeters + takeoffDistanceMarginMeters),
     rotateSpeedKmh: 100,
     speedAt15mKmh: 130,
     conditions: ["1100/900-kg-Tabelle interpoliert", "Ohne Wind tabelliert", "Klappen Startstellung", "Vollgas", "Trockene Bahn"],
@@ -321,6 +325,7 @@ export function calculateLanding(inputs: LandingInputs) {
   const landingRollByWindMeters = landingRollByMassMeters * factor;
   const obstacleByWindMeters = landingDistanceWithoutMarginMeters * factor;
   const landingRollMarginMeters = landingRollByWindMeters * (inputs.safetyMarginPercent / 100);
+  const landingDistanceMarginMeters = obstacleByWindMeters * (inputs.safetyMarginPercent / 100);
   const warnings: Warning[] = [];
   const atmosphere = core.densityAltitude(inputs.pressureAltitudeFt, inputs.oatC);
   if (inputs.massKg > 1045) warnings.push({ text: "Masse oberhalb DR400-Landetabelle (1045 kg).", danger: true });
@@ -339,7 +344,8 @@ export function calculateLanding(inputs: LandingInputs) {
     landingRollMarginMeters,
     landingRollMeters: core.round(landingRollByWindMeters + landingRollMarginMeters),
     landingDistanceWithoutMarginMeters: obstacleByWindMeters,
-    landingDistanceMeters: core.round(obstacleByWindMeters + landingRollMarginMeters),
+    landingDistanceMarginMeters,
+    landingDistanceMeters: core.round(obstacleByWindMeters + landingDistanceMarginMeters),
     approachSpeedKmh: 125,
     referenceSpeedKmh: 95 * 1.3,
     conditions: ["1045/845-kg-Tabelle interpoliert", "Klappen Landestellung", "Motor Leerlauf", "Trockene ebene Betonbahn"],

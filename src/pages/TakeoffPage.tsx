@@ -305,6 +305,7 @@ async function createTakeoffPathExportCanvas(inputs: TakeoffInputs, result: Take
   const exportDate = new Date();
   const trace = calculateDr400TakeoffTrace(inputs);
   const steps = [
+    ["Info", "Handhabung: DR400 hat keine Diagrammlinie, sondern POH-Tabellen. Es wird je Strecke zuerst in der OAT-Spalte interpoliert, dann zwischen den Druckhöhen, danach zwischen 900/1100 kg. Wind und Bahn-Zuschlag werden danach auf die jeweilige Ergebnisstrecke angewendet.", "Rechenfolge"],
     ["1", `Startrollstrecke aus POH-Tabelle.\n${trace.roll900.compact}\n${trace.roll1100.compact}`, `${round(result.groundRollByAtmosphereMeters)} m bei 1100 kg`],
     ["2", `15-m-Strecke aus POH-Tabelle.\n${trace.obstacle900.compact}\n${trace.obstacle1100.compact}`, `${round(trace.obstacle1100.result)} m bei 1100 kg`],
     ["3", `Masseninterpolation zwischen den POH-Gewichten.\n${trace.massCompact}`, `${round(trace.groundRollByMassMeters)} m / ${round(trace.obstacleByMassMeters)} m vor Wind`],

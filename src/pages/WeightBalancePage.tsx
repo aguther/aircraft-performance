@@ -43,9 +43,9 @@ function plannedFuelBurnLiters(plan: WeightBalancePlan, aircraftId: string) {
   return (plan.plannedMainFuelBurnLiters ?? plan.plannedFuelBurnLiters) + (plan.plannedWingFuelBurnLiters ?? 0);
 }
 
-function axisTicks(minValue: number, maxValue: number, preferredStep: number) {
-  const start = Math.floor(minValue / preferredStep) * preferredStep;
-  const end = Math.ceil(maxValue / preferredStep) * preferredStep;
+function axisTicksInside(minValue: number, maxValue: number, preferredStep: number) {
+  const start = Math.ceil(minValue / preferredStep) * preferredStep;
+  const end = Math.floor(maxValue / preferredStep) * preferredStep;
   const ticks: number[] = [];
   for (let tick = start; tick <= end; tick += preferredStep) ticks.push(tick);
   return ticks;
@@ -73,8 +73,8 @@ function EnvelopeChart({ envelope, startResult, landingResult }: { envelope: rea
   const polygonPoints = envelope
     .map((point) => `${x(point.momentKgM).toFixed(1)},${y(point.massKg).toFixed(1)}`)
     .join(" ");
-  const massTicks = axisTicks(Math.min(...envelope.map((point) => point.massKg)), Math.max(...envelope.map((point) => point.massKg)), 100);
-  const momentTicks = axisTicks(Math.min(...envelope.map((point) => point.momentKgM)), Math.max(...envelope.map((point) => point.momentKgM)), 50);
+  const massTicks = axisTicksInside(minMass, maxMass, 100);
+  const momentTicks = axisTicksInside(minMoment, maxMoment, 50);
 
   return (
     <div className="wb-chart-wrap">
@@ -488,34 +488,34 @@ function drawExportEnvelope(
   const maxMoment = Math.max(...envelope.map((point) => point.momentKgM), ...results.map((result) => result.totalMomentKgM)) + 8;
   const minMass = Math.min(...envelope.map((point) => point.massKg), ...results.map((result) => result.totalMassKg)) - 14;
   const maxMass = Math.max(...envelope.map((point) => point.massKg), ...results.map((result) => result.totalMassKg)) + 14;
-  const padding = { top: 52, right: 38, bottom: 64, left: 76 };
+  const padding = { top: 88, right: 64, bottom: 84, left: 82 };
   const plotWidth = width - padding.left - padding.right;
   const plotHeight = height - padding.top - padding.bottom;
   const px = (moment: number) => x + padding.left + ((moment - minMoment) / (maxMoment - minMoment)) * plotWidth;
   const py = (mass: number) => y + padding.top + (1 - (mass - minMass) / (maxMass - minMass)) * plotHeight;
-  const massTicks = axisTicks(Math.min(...envelope.map((point) => point.massKg)), Math.max(...envelope.map((point) => point.massKg)), 100);
-  const momentTicks = axisTicks(Math.min(...envelope.map((point) => point.momentKgM)), Math.max(...envelope.map((point) => point.momentKgM)), 50);
+  const massTicks = axisTicksInside(minMass, maxMass, 100);
+  const momentTicks = axisTicksInside(minMoment, maxMoment, 50);
 
   context.fillStyle = "#f7fafc";
   context.strokeStyle = "#152235";
   context.lineWidth = 3;
   context.fillRect(x, y, width, height);
   context.strokeRect(x, y, width, height);
-  exportText(context, "Envelope", x + 22, y + 32, { size: 22, weight: 700 });
+  exportText(context, "Envelope", x + 22, y + 38, { size: 22, weight: 700 });
   const titleStartX = x + 138;
   context.fillStyle = "#20a879";
   context.beginPath();
-  context.arc(titleStartX, y + 24, 7, 0, Math.PI * 2);
+  context.arc(titleStartX, y + 30, 7, 0, Math.PI * 2);
   context.fill();
-  exportText(context, "Start", titleStartX + 16, y + 32, { size: 22, weight: 700, color: "#20a879" });
-  exportText(context, "/", titleStartX + 88, y + 32, { size: 22, weight: 700 });
+  exportText(context, "Start", titleStartX + 16, y + 38, { size: 22, weight: 700, color: "#20a879" });
+  exportText(context, "/", titleStartX + 88, y + 38, { size: 22, weight: 700 });
   context.fillStyle = "#006f9f";
   context.beginPath();
-  context.arc(titleStartX + 120, y + 24, 7, 0, Math.PI * 2);
+  context.arc(titleStartX + 120, y + 30, 7, 0, Math.PI * 2);
   context.fill();
-  exportText(context, "Landung", titleStartX + 136, y + 32, { size: 22, weight: 700, color: "#006f9f" });
-  exportText(context, "Masse [kg]", x + 22, y + 62, { size: 17, weight: 700, color: "#607487" });
-  exportText(context, "Moment [kg m]", x + width - 22, y + height - 20, { size: 17, weight: 700, align: "right", color: "#607487" });
+  exportText(context, "Landung", titleStartX + 136, y + 38, { size: 22, weight: 700, color: "#006f9f" });
+  exportText(context, "Masse [kg]", x + 22, y + 68, { size: 17, weight: 700, color: "#607487" });
+  exportText(context, "Moment [kg m]", x + width - 22, y + height - 16, { size: 17, weight: 700, align: "right", color: "#607487" });
 
   context.strokeStyle = "#b9c4cc";
   context.lineWidth = 1.5;
@@ -524,14 +524,14 @@ function drawExportEnvelope(
     context.moveTo(x + padding.left, py(tick));
     context.lineTo(x + width - padding.right, py(tick));
     context.stroke();
-    exportText(context, String(tick), x + 18, py(tick) + 6, { size: 16, color: "#607487" });
+    exportText(context, String(tick), x + 20, py(tick) + 6, { size: 16, color: "#607487" });
   });
   momentTicks.forEach((tick) => {
     context.beginPath();
     context.moveTo(px(tick), y + padding.top);
     context.lineTo(px(tick), y + height - padding.bottom);
     context.stroke();
-    exportText(context, String(tick), px(tick), y + height - 30, { size: 16, align: "center", color: "#607487" });
+    exportText(context, String(tick), px(tick), y + height - 36, { size: 16, align: "center", color: "#607487" });
   });
 
   context.beginPath();
