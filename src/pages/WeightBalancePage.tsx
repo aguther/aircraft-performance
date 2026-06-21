@@ -543,20 +543,27 @@ function drawExportEnvelope(
   context.setLineDash([]);
 
   [
-    { result: startResult, label: "Start", color: "#20a879" },
-    { result: landingResult, label: "Landung", color: "#006f9f" },
-  ].forEach(({ result, label, color }) => {
+    { align: "left" as const, dx: 22, dy: 34, result: startResult, label: "Start", color: "#20a879" },
+    { align: "left" as const, dx: 22, dy: 34, result: landingResult, label: "Landung", color: "#006f9f" },
+  ].forEach(({ align, dx, dy, result, label, color }) => {
     const pointX = px(result.totalMomentKgM);
     const pointY = py(result.totalMassKg);
     const markerRadius = 8;
     const labelWidth = context.measureText(label).width;
-    const labelX = Math.min(x + width - 24, Math.max(x + padding.left + labelWidth / 2, pointX + 22));
-    const labelY = pointY < y + padding.top + 80 ? pointY + 34 : pointY - 18;
-    context.fillStyle = color;
+    const labelColor = result.withinEnvelope ? color : "#b42318";
+    const labelX = Math.min(
+      x + width - labelWidth - 20,
+      Math.max(x + padding.left + 10, pointX + dx),
+    );
+    const labelY = Math.min(
+      y + height - padding.bottom - 10,
+      Math.max(y + padding.top + 26, pointY + dy),
+    );
+    context.fillStyle = labelColor;
     context.beginPath();
     context.arc(pointX, pointY, markerRadius, 0, Math.PI * 2);
     context.fill();
-    exportText(context, label, labelX, labelY, { size: 17, weight: 700, align: "center", color });
+    exportText(context, label, labelX, labelY, { size: 17, weight: 700, align, color: labelColor });
   });
 }
 
