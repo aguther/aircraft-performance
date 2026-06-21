@@ -209,14 +209,50 @@
 }
 
 .idx-plan-status span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.14rem;
   color: var(--text);
   font-size: 0.78rem;
   letter-spacing: 0;
   text-transform: none;
 }
 
+.idx-plan-status b {
+  color: var(--text-sub);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.idx-speed-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+}
+
+.idx-speed-groups .idx-plan-status {
+  margin: 0;
+}
+
+.idx-mini-heading {
+  margin-bottom: 0.28rem;
+  color: var(--text-sub);
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.idx-load-status {
+  grid-template-columns: 1fr;
+}
+
 .idx-secondary-link {
   width: 100%;
+  margin-top: 0.65rem;
 }
 
 .idx-section {

@@ -422,17 +422,11 @@ function drawSpeedExportTable(
       context.lineWidth = isHeader ? 3 : 2;
       context.strokeRect(cellX, rowY, width, currentRowHeight);
       if (isHeader) {
-        const headerLines = cellIndex === 0
-          ? [header[cellIndex]]
-          : (header[cellIndex] ?? "").replace(" [", "\n[").replace(" Bank ", " Bank\n").split("\n");
-        const headerCenterX = cellX + width / 2;
-        const lineHeight = 17;
-        const firstLineY = rowY + currentRowHeight / 2 - ((headerLines.length - 1) * lineHeight) / 2 + 6;
-        headerLines.forEach((line, lineIndex) => exportText(context, line, cellIndex === 0 ? cellX + textPadding : headerCenterX, firstLineY + lineIndex * lineHeight, {
+        exportText(context, header[cellIndex] ?? "", cellIndex === 0 ? cellX + textPadding : cellX + width / 2, rowY + currentRowHeight * 0.64, {
           align: cellIndex === 0 ? "left" : "center",
-          size: cellIndex === 0 ? 18 : 16,
+          size: cellIndex === 0 ? 18 : 17,
           weight: 700,
-        }));
+        });
       } else {
         const speedRow = row as SpeedExportRow;
         const textY = rowY + currentRowHeight * 0.64;
@@ -642,7 +636,7 @@ async function createWeightBalanceExportCanvas(
     1030,
     318,
     [330, 110, 145, 145],
-    46,
+    40,
   );
   drawExportEnvelope(context, startResult, landingResult, 1030, 780, 1040, 600);
 

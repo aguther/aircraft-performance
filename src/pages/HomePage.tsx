@@ -4,7 +4,8 @@ import { Plane, RotateCcw, ShieldCheck, Weight } from "lucide-react";
 import { useAircraft } from "../app/AircraftContext";
 import { performanceForAircraft } from "../app/aircraftPerformance";
 import { useFlightPlan } from "../app/FlightPlanContext";
-import { speedText } from "../app/speed";
+import { speedUnitLabel } from "../app/speed";
+import { kilometersPerHourToKnots } from "../domain";
 
 type HomePageProps = {
   aircraft: AircraftDefinition;
@@ -12,6 +13,23 @@ type HomePageProps = {
   onResetFlightPlan: () => void;
   onSelectAircraft: (aircraftId: string) => void;
 };
+
+type SpeedEntry = {
+  label: string;
+  detail?: string;
+  from?: number;
+  to?: number;
+  value?: number;
+};
+
+function formatSpeedEntry(entry: SpeedEntry, unit: "kt" | "kmh") {
+  const speed = (valueKmh: number) => unit === "kt"
+    ? Math.round(kilometersPerHourToKnots(valueKmh)).toString()
+    : Math.round(valueKmh).toString();
+  if (entry.value != null) return `${speed(entry.value)} ${speedUnitLabel(unit)}`;
+  if (entry.from != null && entry.to != null) return `${speed(entry.from)}-${speed(entry.to)} ${speedUnitLabel(unit)}`;
+  return "–";
+}
 
 export function HomePage({
   aircraft,
@@ -105,13 +123,39 @@ export function HomePage({
         </div>
         <div className="idx-aircraft-card">
           <div className="idx-card-kicker"><ShieldCheck aria-hidden="true" /> Limits & Speeds</div>
-          <div className="idx-plan-status">
-            <span>V<sub>R</sub> {speedText(performance.overviewSpeedsKmh.takeoff, resolvedSpeedUnit)}</span>
-            <span>15 m {speedText(performance.overviewSpeedsKmh.obstacle, resolvedSpeedUnit)}</span>
-            <span>V<sub>APP</sub> {speedText(performance.overviewSpeedsKmh.approach, resolvedSpeedUnit)}</span>
-            <span>Touchdown {speedText(performance.overviewSpeedsKmh.landingTouchdown, resolvedSpeedUnit)}</span>
-            <span>V<sub>Y</sub> {speedText(performance.overviewSpeedsKmh.climbVy, resolvedSpeedUnit)}</span>
-            <span>Gleiten {speedText(performance.overviewSpeedsKmh.glide, resolvedSpeedUnit)}</span>
+          <div className="idx-speed-groups">
+            <div>
+              <div className="idx-mini-heading">Betrieb</div>
+              <div className="idx-plan-status">
+                {performance.operatingSpeedsKmh.map((entry) => (
+                  <span key={entry.label}><b>{entry.label}</b>{formatSpeedEntry(entry, resolvedSpeedUnit)}</span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="idx-mini-heading">Grenzen</div>
+              <div className="idx-plan-status">
+                {performance.speedLimitsKmh.map((entry) => (
+                  <span title={entry.detail} key={entry.label}><b>{entry.label}</b>{formatSpeedEntry(entry, resolvedSpeedUnit)}</span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="idx-mini-heading">Markierungen</div>
+              <div className="idx-plan-status">
+                {performance.speedMarkingsKmh.map((entry) => (
+                  <span key={entry.label}><b>{entry.label}</b>{formatSpeedEntry(entry, resolvedSpeedUnit)}</span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="idx-mini-heading">Lastvielfache</div>
+              <div className="idx-plan-status idx-load-status">
+                {performance.loadFactors.map((entry) => (
+                  <span key={entry.label}><b>{entry.label}</b>{entry.value}</span>
+                ))}
+              </div>
+            </div>
           </div>
           <Link className="idx-secondary-link" to="/weight_balance.html">Beladung bearbeiten</Link>
         </div>
