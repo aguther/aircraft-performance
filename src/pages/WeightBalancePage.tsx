@@ -357,9 +357,10 @@ function drawStatusExportTable(
 }
 
 type SpeedExportRow = {
+  bank30Kt?: string;
+  bank45Kt?: string;
   detail?: string;
   group?: never;
-  kmh: string;
   kt: string;
   suffixSymbolSubscript?: string;
   suffixText?: string;
@@ -372,11 +373,15 @@ type SpeedExportGroupRow = {
 
 function speedRowsForResult(result: WeightBalanceResult): SpeedExportRow[] {
   return [
-    { detail: "Approach", kmh: Math.round(result.speeds.approachSpeedKmh).toString(), kt: kilometersPerHourToKnots(result.speeds.approachSpeedKmh).toFixed(1), subscript: "APP" },
-    { kmh: Math.round(result.speeds.referenceSpeedKmh).toString(), kt: kilometersPerHourToKnots(result.speeds.referenceSpeedKmh).toFixed(1), subscript: "REF", suffixSymbolSubscript: "S0", suffixText: "1.3 x" },
-    { detail: "Leerlauf 40°", kmh: Math.round(result.speeds.stallIdleFlaps40Kmh).toString(), kt: kilometersPerHourToKnots(result.speeds.stallIdleFlaps40Kmh).toFixed(1), subscript: "S0" },
-    { detail: "Leerlauf 40° · 30° Bank", kmh: Math.round(result.speeds.stallIdleFlaps40Bank30Kmh).toString(), kt: kilometersPerHourToKnots(result.speeds.stallIdleFlaps40Bank30Kmh).toFixed(1), subscript: "S0" },
-    { detail: "Leerlauf 40° · 45° Bank", kmh: Math.round(result.speeds.stallIdleFlaps40Bank45Kmh).toString(), kt: kilometersPerHourToKnots(result.speeds.stallIdleFlaps40Bank45Kmh).toFixed(1), subscript: "S0" },
+    { detail: "Approach", kt: kilometersPerHourToKnots(result.speeds.approachSpeedKmh).toFixed(1), subscript: "APP" },
+    { kt: kilometersPerHourToKnots(result.speeds.referenceSpeedKmh).toFixed(1), subscript: "REF", suffixSymbolSubscript: "S0", suffixText: "1.3 x" },
+    {
+      bank30Kt: kilometersPerHourToKnots(result.speeds.stallIdleFlaps40Bank30Kmh).toFixed(1),
+      bank45Kt: kilometersPerHourToKnots(result.speeds.stallIdleFlaps40Bank45Kmh).toFixed(1),
+      detail: "Leerlauf 40°",
+      kt: kilometersPerHourToKnots(result.speeds.stallIdleFlaps40Kmh).toFixed(1),
+      subscript: "S0",
+    },
   ];
 }
 
@@ -404,7 +409,7 @@ function drawSpeedExportTable(
   widths: number[],
   rowHeight: number,
 ) {
-  const header = ["Wert", "IAS [kt]", "IAS [km/h]"];
+  const header = ["Wert", "IAS [kt]", "VS0 30°", "VS0 45°"];
   const groupHeight = 28;
   const textPadding = 14;
   const numericPadding = 30;
@@ -443,7 +448,8 @@ function drawSpeedExportTable(
         const textY = rowY + currentRowHeight * 0.64;
         if (cellIndex === 0) drawSpeedLabel(context, speedRow, cellX + textPadding, textY);
         if (cellIndex === 1) exportText(context, speedRow.kt, cellX + width - numericPadding, textY, { align: "right", size: 18 });
-        if (cellIndex === 2) exportText(context, speedRow.kmh, cellX + width - numericPadding, textY, { align: "right", size: 18 });
+        if (cellIndex === 2) exportText(context, speedRow.bank30Kt ?? "", cellX + width - numericPadding, textY, { align: "right", size: 18 });
+        if (cellIndex === 3) exportText(context, speedRow.bank45Kt ?? "", cellX + width - numericPadding, textY, { align: "right", size: 18 });
       }
       cellX += width;
     });
@@ -541,7 +547,7 @@ async function createWeightBalanceExportCanvas(
   const burnedFuelMomentKgM = startResult.totalMomentKgM - landingResult.totalMomentKgM;
   const canvas = document.createElement("canvas");
   canvas.width = 2200;
-  canvas.height = 1700;
+  canvas.height = 1500;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
 
@@ -574,7 +580,7 @@ async function createWeightBalanceExportCanvas(
   );
   exportText(context, "MTOW: 920 kg", 72, 750, { size: 24, weight: 700 });
 
-  exportText(context, "Landung", 60, 788, { size: 28, weight: 700, color: "#006f9f" });
+  exportText(context, "Landung", 60, 828, { size: 28, weight: 700, color: "#006f9f" });
   drawExportTable(
     context,
     [
@@ -583,7 +589,7 @@ async function createWeightBalanceExportCanvas(
       ["Landegewicht", landingResult.totalMassKg.toFixed(1), landingResult.cgArmM.toFixed(4), landingResult.totalMomentKgM.toFixed(2)],
     ],
     60,
-    820,
+    860,
     [360, 170, 160, 210],
     58,
     1,
@@ -591,36 +597,36 @@ async function createWeightBalanceExportCanvas(
     [1, 2, 3],
   );
 
-  exportText(context, "Geschwindigkeiten", 60, 1038, { size: 28, weight: 700, color: "#006f9f" });
+  exportText(context, "Status", 60, 1170, { size: 28, weight: 700, color: "#006f9f" });
+  const envelopeStatusRows = [
+    { danger: !startResult.withinEnvelope, label: "Start", value: startResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope" },
+    { danger: !landingResult.withinEnvelope, label: "Landung", value: landingResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope" },
+  ];
+  drawStatusExportTable(context, envelopeStatusRows, 60, 1208, [250, 650], 43);
+  const statusRows = [
+    ["Kraftstoffdichte", `${g115bData.weightBalance.fuelDensityKgPerLiter.toLocaleString("de-DE")} kg/l`],
+    ["Quelle", `${g115bData.weightBalance.source} · Beladeplan Revision ${startResult.emptyAircraft.revision} vom ${startResult.emptyAircraft.revisionDate}`],
+  ];
+  drawExportTable(context, statusRows, 60, 1294, [250, 650], 43, 0, 0);
+
+  exportText(context, "Geschwindigkeiten", 1030, 286, { size: 28, weight: 700, color: "#006f9f" });
   drawSpeedExportTable(
     context,
     [
       { group: "Start" },
-      { detail: "Rotate", kmh: Math.round(startResult.speeds.rotateSpeedKmh).toString(), kt: kilometersPerHourToKnots(startResult.speeds.rotateSpeedKmh).toFixed(1), subscript: "R" },
-      { kmh: Math.round(startResult.speeds.speedAt15mKmh).toString(), kt: kilometersPerHourToKnots(startResult.speeds.speedAt15mKmh).toFixed(1), subscript: "15m" },
+      { detail: "Rotate", kt: kilometersPerHourToKnots(startResult.speeds.rotateSpeedKmh).toFixed(1), subscript: "R" },
+      { kt: kilometersPerHourToKnots(startResult.speeds.speedAt15mKmh).toFixed(1), subscript: "15m" },
       { group: "Landung mit Abfluggewicht" },
       ...speedRowsForResult(startResult),
       { group: "Landung mit Landegewicht" },
       ...speedRowsForResult(landingResult),
     ],
-    60,
-    1070,
-    [560, 160, 180],
-    36,
+    1030,
+    318,
+    [350, 120, 130, 130],
+    40,
   );
-  drawExportEnvelope(context, startResult, landingResult, 1030, 238, 1040, 900);
-
-  exportText(context, "Status", 1030, 1210, { size: 28, weight: 700, color: "#006f9f" });
-  const envelopeStatusRows = [
-    { danger: !startResult.withinEnvelope, label: "Start", value: startResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope" },
-    { danger: !landingResult.withinEnvelope, label: "Landung", value: landingResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope" },
-  ];
-  drawStatusExportTable(context, envelopeStatusRows, 1030, 1248, [250, 790], 43);
-  const statusRows = [
-    ["Kraftstoffdichte", `${g115bData.weightBalance.fuelDensityKgPerLiter.toLocaleString("de-DE")} kg/l`],
-    ["Quelle", `${g115bData.weightBalance.source} · Beladeplan Revision ${startResult.emptyAircraft.revision} vom ${startResult.emptyAircraft.revisionDate}`],
-  ];
-  drawExportTable(context, statusRows, 1030, 1334, [250, 790], 43, 0, 0);
+  drawExportEnvelope(context, startResult, landingResult, 1030, 780, 1040, 600);
 
   return { canvas, exportDate };
 }
