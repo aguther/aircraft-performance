@@ -43,8 +43,12 @@ export type WeightBalanceInputs = {
   aircraftName: string;
   pilotMassKg: number;
   copilotMassKg: number;
+  passengerLeftMassKg?: number;
+  passengerRightMassKg?: number;
   baggageMassKg: number;
   fuelLiters: number;
+  mainFuelLiters?: number;
+  wingFuelLiters?: number;
 };
 
 export type ClimbProfilePoint = {
@@ -59,4 +63,3 @@ export type CalculatorContext = {
   atmosphere?: Atmosphere;
   conditions: string[];
 };
-

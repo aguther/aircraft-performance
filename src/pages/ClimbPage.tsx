@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { PlaneLanding, PlaneTakeoff } from "lucide-react";
-import { calculateClimb } from "../aircraft/g115b/calculators";
+import { calculateClimb as calculateG115BClimb } from "../aircraft/g115b/calculators";
 import { g115bData } from "../aircraft/g115b/data";
+import { useAircraft } from "../app/AircraftContext";
+import { performanceForAircraft } from "../app/aircraftPerformance";
 import { useFlightPlan, type FlightPlanTakeoffStart } from "../app/FlightPlanContext";
 import { interpolate1D } from "../domain";
 import { AltitudeInput, type AltitudeInputValue, resolveAltitudeInput } from "../components/AltitudeInput";
@@ -10,7 +12,7 @@ import { CalculatorCard, MetricItem } from "../components/CalculatorCard";
 import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { createPdfBlobFromCanvas, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
 
-type ClimbResult = ReturnType<typeof calculateClimb>;
+type ClimbResult = ReturnType<typeof calculateG115BClimb>;
 type LegState = AltitudeInputValue;
 type ChartPoint = readonly [number, number];
 
@@ -323,6 +325,9 @@ function ChartCard({ from, to, inputs, result }: { from: LegState; to: LegState;
 }
 
 export function ClimbPage() {
+  const { aircraft } = useAircraft();
+  const performance = performanceForAircraft(aircraft);
+  const { calculateClimb } = performance.calculators;
   const { flightPlan, updateClimbCalculator, updateImports } = useFlightPlan();
   const savedCalculator = flightPlan.climbCalculator;
   const [from, setFrom] = useState<LegState>(savedCalculator?.from ?? { mode: "alt", altitudeFt: 0, flightLevel: 0, densityAltitudeFt: 0, oatC: 15, qnhHpa: 1013 });
@@ -379,7 +384,16 @@ export function ClimbPage() {
             <MetricItem label="Strecke · Distance" value={valid ? result.climbDistanceNm!.toFixed(1) : "—"} unit={valid ? "nm" : ""} subtext={valid ? `${result.climbDistanceKm!.toFixed(1)} km` : undefined} />
           </div>
         </CalculatorCard>
-        <ChartCard from={activeFrom} to={to} inputs={inputs} result={result} />
+        {performance.hasChartOverlays ? (
+          <ChartCard from={activeFrom} to={to} inputs={inputs} result={result} />
+        ) : (
+          <CalculatorCard title="Nachvollziehbarkeit">
+            <div className="conditions-grid">
+              {result.conditions.map((condition) => <span key={condition}>{condition}</span>)}
+              <span>Start und Ziel aus DR400-Steigflug-Tabelle interpoliert</span>
+            </div>
+          </CalculatorCard>
+        )}
       </main>
     </div>
   );

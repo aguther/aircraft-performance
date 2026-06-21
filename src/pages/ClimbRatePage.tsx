@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Gauge, Mountain, Plane } from "lucide-react";
-import { calculateClimbRate } from "../aircraft/g115b/calculators";
+import { useAircraft } from "../app/AircraftContext";
+import { performanceForAircraft } from "../app/aircraftPerformance";
 import { useFlightPlan } from "../app/FlightPlanContext";
-import { kilometersPerHourToKnots } from "../domain";
 import { AltitudeInput, type AltitudeInputValue, resolveAltitudeInput } from "../components/AltitudeInput";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
 import { CalculatorContextCard } from "../components/CalculatorContextCard";
 import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { SliderField } from "../components/SliderField";
+import { speedUnitLabel, speedValue } from "../app/speed";
 
 function describeAltitude(altitude: AltitudeInputValue, densityAltitudeFt: number) {
   if (altitude.mode === "da") return `DA ${densityAltitudeFt.toLocaleString("de-DE")} ft`;
@@ -16,6 +17,9 @@ function describeAltitude(altitude: AltitudeInputValue, densityAltitudeFt: numbe
 }
 
 export function ClimbRatePage() {
+  const { aircraft, resolvedSpeedUnit } = useAircraft();
+  const performance = performanceForAircraft(aircraft);
+  const { calculateClimbRate } = performance.calculators;
   const { flightPlan, updateClimbRateCalculator } = useFlightPlan();
   const savedCalculator = flightPlan.climbRateCalculator;
   const [altitude, setAltitude] = useState<AltitudeInputValue>(savedCalculator?.altitude ?? {
@@ -26,7 +30,7 @@ export function ClimbRatePage() {
     qnhHpa: 1013,
     oatC: 6,
   });
-  const [massKg, setMassKg] = useState(savedCalculator?.massKg ?? 920);
+  const [massKg, setMassKg] = useState(savedCalculator?.massKg ?? performance.limits.climbRateMassMaxKg);
   const resolvedAltitude = useMemo(() => resolveAltitudeInput(altitude), [altitude]);
   const { atmosphere, densityAltitudeFt, pressureAltitudeFt: referencePressureAltitudeFt } = resolvedAltitude;
   const result = useMemo(
@@ -59,7 +63,7 @@ export function ClimbRatePage() {
           description="Flugmasse"
           summary={`${massKg} kg`}
         >
-          <SliderField label="Masse" unit="kg" value={massKg} min={750} max={920} inputMax={920} onChange={setMassKg} />
+          <SliderField label="Masse" unit="kg" value={massKg} min={performance.limits.climbRateMassMinKg} max={performance.limits.climbRateMassMaxKg} inputMax={performance.limits.climbRateMassMaxKg} onChange={setMassKg} />
         </CalculatorInputSection>
       </aside>
       <main className="results">
@@ -77,7 +81,7 @@ export function ClimbRatePage() {
           </div>
           <div className="result-grid climb-rate-result-grid">
             <MetricItem label="Steigrate · Rate of Climb" value={String(Math.round(result.climbRateFpm))} unit="ft/min" subtext={`${result.climbRateMs.toFixed(1)} m/s`} />
-            <MetricItem label={<span><SpeedSymbol index="Y" /> · Climb Speed</span>} value={kilometersPerHourToKnots(result.climbSpeedKmh).toFixed(1)} unit="kt" speedType="IAS" subtext={`${Math.round(result.climbSpeedKmh)} km/h`} />
+            <MetricItem label={<span><SpeedSymbol index="Y" /> · Climb Speed</span>} value={speedValue(result.climbSpeedKmh, resolvedSpeedUnit)} unit={speedUnitLabel(resolvedSpeedUnit)} speedType="IAS" />
           </div>
         </CalculatorCard>
       </main>

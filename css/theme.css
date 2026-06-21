@@ -118,12 +118,12 @@ a {
 }
 
 .app-header-row {
-  height: 58px;
+  height: 56px;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 0.8rem;
-  padding: 0 1rem;
+  gap: 0.6rem;
+  padding: 0 0.8rem;
 }
 
 .app-brand {
@@ -136,18 +136,24 @@ a {
 
 .app-brand-mark {
   display: grid;
-  width: 72px;
-  height: 38px;
+  min-width: 108px;
+  height: 36px;
+  padding: 0 0.55rem;
   flex: 0 0 auto;
   place-items: center;
   border: 1px solid var(--border-strong);
   border-radius: 13px;
   background: linear-gradient(135deg, var(--cyan-bg), var(--bg-active));
   color: var(--cyan);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 900;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
+  line-height: 1.05;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .calculator-tabs {
@@ -168,16 +174,16 @@ a {
 .calculator-tab {
   position: relative;
   display: flex;
-  width: 82px;
-  height: 50px;
-  flex: 0 0 82px;
+  width: 78px;
+  height: 48px;
+  flex: 0 0 78px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.15rem;
-  padding: 0.25rem 0.65rem;
+  padding: 0.22rem 0.5rem;
   color: var(--text-dim);
-  font-size: 8.5px;
+  font-size: 8.2px;
   font-weight: 700;
   text-decoration: none;
   transition: color 0.15s, background 0.15s;
@@ -643,10 +649,11 @@ html.usage-notice-active body {
   }
 
   .app-brand-mark {
-    width: 66px;
-    height: 38px;
+    min-width: 92px;
+    height: 36px;
+    padding: 0 0.45rem;
     border-radius: 12px;
-    font-size: 9px;
+    font-size: 8px;
   }
 
   .calculator-tabs {
@@ -654,9 +661,9 @@ html.usage-notice-active body {
   }
 
   .calculator-tab {
-    width: 76px;
-    height: 48px;
-    flex-basis: 76px;
+    width: 72px;
+    height: 46px;
+    flex-basis: 72px;
     padding-inline: 0.45rem;
   }
 

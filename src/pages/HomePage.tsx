@@ -1,8 +1,10 @@
 import type { AircraftDefinition } from "../app/aircraft";
 import { Link } from "react-router-dom";
 import { Plane, RotateCcw, ShieldCheck, Weight } from "lucide-react";
-import { g115bData } from "../aircraft/g115b/data";
+import { useAircraft } from "../app/AircraftContext";
+import { performanceForAircraft } from "../app/aircraftPerformance";
 import { useFlightPlan } from "../app/FlightPlanContext";
+import { speedText } from "../app/speed";
 
 type HomePageProps = {
   aircraft: AircraftDefinition;
@@ -17,12 +19,28 @@ export function HomePage({
   onResetFlightPlan,
   onSelectAircraft,
 }: HomePageProps) {
+  const { resolvedSpeedUnit } = useAircraft();
   const { flightPlan, updateWeightBalance } = useFlightPlan();
+  const performance = performanceForAircraft(aircraft);
   const plan = flightPlan.weightBalance;
   const selectedEmptyAircraft =
-    g115bData.weightBalance.emptyAircraft.find((entry) => entry.name === plan.registration) ??
-    g115bData.weightBalance.emptyAircraft[0];
-  const startFuelMassKg = plan.startFuelLiters * g115bData.weightBalance.fuelDensityKgPerLiter;
+    performance.data.weightBalance.emptyAircraft.find((entry) => entry.name === plan.registration) ??
+    performance.data.weightBalance.emptyAircraft[0];
+  const startFuelLiters = aircraft.id === "robin-dr400-180"
+    ? (plan.mainFuelLiters ?? 109) + (plan.wingFuelLiters ?? 80)
+    : plan.startFuelLiters;
+  const startFuelMassKg = startFuelLiters * performance.data.weightBalance.fuelDensityKgPerLiter;
+  const selectAircraft = (aircraftId: string) => {
+    const nextAircraft = availableAircraft.find((option) => option.id === aircraftId);
+    onSelectAircraft(aircraftId);
+    if (!nextAircraft) return;
+    updateWeightBalance({
+      registration: nextAircraft.registrations[0] ?? plan.registration,
+      startFuelLiters: nextAircraft.id === "robin-dr400-180" ? 189 : Math.min(plan.startFuelLiters, 107),
+      mainFuelLiters: nextAircraft.id === "robin-dr400-180" ? 109 : undefined,
+      wingFuelLiters: nextAircraft.id === "robin-dr400-180" ? 80 : undefined,
+    });
+  };
 
   return (
     <main className="idx-shell">
@@ -47,7 +65,7 @@ export function HomePage({
             id="idx-aircraft-type"
             value={aircraft.id}
             disabled={availableAircraft.length < 2}
-            onChange={(event) => onSelectAircraft(event.target.value)}
+            onChange={(event) => selectAircraft(event.target.value)}
           >
             {availableAircraft.map((option) => <option value={option.id} key={option.id}>{option.shortName}</option>)}
           </select>
@@ -62,7 +80,12 @@ export function HomePage({
                 type="button"
                 aria-pressed={registration === plan.registration}
                 key={registration}
-                onClick={() => updateWeightBalance({ registration })}
+                onClick={() => updateWeightBalance({
+                  registration,
+                  startFuelLiters: aircraft.id === "robin-dr400-180" ? 189 : plan.startFuelLiters,
+                  mainFuelLiters: aircraft.id === "robin-dr400-180" ? 109 : undefined,
+                  wingFuelLiters: aircraft.id === "robin-dr400-180" ? 80 : undefined,
+                })}
               >
                 {registration}
               </button>
@@ -74,17 +97,21 @@ export function HomePage({
           <div className="idx-aircraft-metrics">
             <div><span>Leermasse</span><strong>{selectedEmptyAircraft.massKg.toFixed(1)} kg</strong></div>
             <div><span>Leerarm</span><strong>{selectedEmptyAircraft.armM.toFixed(4)} m</strong></div>
-            <div><span>Startkraftstoff</span><strong>{plan.startFuelLiters.toFixed(1)} l</strong></div>
+            <div><span>Startkraftstoff</span><strong>{startFuelLiters.toFixed(1)} l</strong></div>
             <div><span>Kraftstoffmasse</span><strong>{startFuelMassKg.toFixed(1)} kg</strong></div>
+            <div><span>MTOW</span><strong>{performance.limits.takeoffMassMaxKg} kg</strong></div>
+            <div><span>Landung max.</span><strong>{performance.limits.landingMassMaxKg} kg</strong></div>
           </div>
         </div>
         <div className="idx-aircraft-card">
-          <div className="idx-card-kicker"><ShieldCheck aria-hidden="true" /> Planung</div>
+          <div className="idx-card-kicker"><ShieldCheck aria-hidden="true" /> Limits & Speeds</div>
           <div className="idx-plan-status">
-            <span>Pilot {plan.pilotMassKg} kg</span>
-            <span>Co-Pilot {plan.copilotMassKg} kg</span>
-            <span>Gepäck {plan.baggageMassKg} kg</span>
-            <span>Verbrauch {plan.plannedFuelBurnLiters.toFixed(1)} l</span>
+            <span>V<sub>R</sub> {speedText(performance.overviewSpeedsKmh.takeoff, resolvedSpeedUnit)}</span>
+            <span>15 m {speedText(performance.overviewSpeedsKmh.obstacle, resolvedSpeedUnit)}</span>
+            <span>V<sub>APP</sub> {speedText(performance.overviewSpeedsKmh.approach, resolvedSpeedUnit)}</span>
+            <span>Touchdown {speedText(performance.overviewSpeedsKmh.landingTouchdown, resolvedSpeedUnit)}</span>
+            <span>V<sub>Y</sub> {speedText(performance.overviewSpeedsKmh.climbVy, resolvedSpeedUnit)}</span>
+            <span>Gleiten {speedText(performance.overviewSpeedsKmh.glide, resolvedSpeedUnit)}</span>
           </div>
           <Link className="idx-secondary-link" to="/weight_balance.html">Beladung bearbeiten</Link>
         </div>

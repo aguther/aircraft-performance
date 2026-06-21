@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Gauge, Mountain, Plane } from "lucide-react";
-import { calculateCruise } from "../aircraft/g115b/calculators";
+import { useAircraft } from "../app/AircraftContext";
+import { performanceForAircraft } from "../app/aircraftPerformance";
 import {
   densityAltitude,
   flightLevelToFeet,
@@ -14,6 +15,7 @@ import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
 import { useFlightPlan } from "../app/FlightPlanContext";
 import { createPdfBlobFromCanvas, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
+import { speedText, speedUnitLabel, speedValue } from "../app/speed";
 
 type CruiseMode = "alt" | "fl" | "da";
 type ChartPoint = readonly [number, number];
@@ -330,6 +332,9 @@ const chartBase = {
 };
 
 export function CruisePage() {
+  const { aircraft, resolvedSpeedUnit } = useAircraft();
+  const performance = performanceForAircraft(aircraft);
+  const { calculateCruise } = performance.calculators;
   const { flightPlan, updateCruiseCalculator } = useFlightPlan();
   const savedCalculator = flightPlan.cruiseCalculator;
   const [mode, setMode] = useState<CruiseMode>(savedCalculator?.mode ?? "alt");
@@ -390,9 +395,9 @@ export function CruisePage() {
     resultValues: [170, 180, 190, 200, 210, 220, 230, 240, 250, 260],
     resultPixels: [1948, 2112, 2276, 2440, 2604, 2768, 2932, 3096, 3260, 3423],
     value: result.tasKmh,
-    resultText: `TAS · ${result.tasKt.toFixed(1)} kt · ${Math.round(result.tasKmh)} km/h`,
+    resultText: `TAS · ${speedText(result.tasKmh, resolvedSpeedUnit)}`,
     exportResultLabel: "Wahre Fluggeschwindigkeit · TAS",
-    exportResultValue: `${result.tasKt.toFixed(1)} kt / ${Math.round(result.tasKmh)} km/h`,
+    exportResultValue: speedText(result.tasKmh, resolvedSpeedUnit),
   };
   const rpmChart: CruiseChart = {
     ...chartBase,
@@ -457,12 +462,24 @@ export function CruisePage() {
           <div className="result-grid cruise-result-grid">
             <MetricItem label="Drehzahl · POH 5.3.11" value={String(Math.round(result.rpm))} unit="rpm" />
             <MetricItem label="Fuel Flow · POH 5.3.10" value={result.fuelFlowLitersPerHour.toFixed(1)} unit="l/h" subtext={`${result.nauticalMilesPerLiter.toFixed(2)} nm/l`} />
-            <MetricItem label="Wahre Fluggeschwindigkeit · POH 5.3.12" value={result.tasKt.toFixed(1)} unit="kt" speedType="TAS" subtext={`${Math.round(result.tasKmh)} km/h`} />
+            <MetricItem label="Wahre Fluggeschwindigkeit · POH 5.3.12" value={speedValue(result.tasKmh, resolvedSpeedUnit)} unit={speedUnitLabel(resolvedSpeedUnit)} speedType="TAS" />
           </div>
         </CalculatorCard>
-        <CruiseExportToolbar inputs={inputs} charts={cruiseCharts} />
-        <CruiseChartCard inputs={inputs} chart={speedChart} />
-        <CruiseChartCard inputs={inputs} chart={rpmChart} />
+        {performance.hasChartOverlays ? (
+          <>
+            <CruiseExportToolbar inputs={inputs} charts={cruiseCharts} />
+            <CruiseChartCard inputs={inputs} chart={speedChart} />
+            <CruiseChartCard inputs={inputs} chart={rpmChart} />
+          </>
+        ) : (
+          <CalculatorCard title="Nachvollziehbarkeit">
+            <div className="conditions-grid">
+              <span>Werte aus DR400/180 Reiseflug-Tabelle interpoliert</span>
+              <span>Leistung: {result.powerLabel}</span>
+              <span>Density Altitude: {inputs.densityAltitudeFt.toLocaleString("de-DE")} ft</span>
+            </div>
+          </CalculatorCard>
+        )}
       </main>
     </div>
   );

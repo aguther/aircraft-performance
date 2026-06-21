@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { Gauge, Plane, Settings } from "lucide-react";
-import { calculateStall } from "../aircraft/g115b/calculators";
+import { calculateStall as calculateG115BStall } from "../aircraft/g115b/calculators";
 import { g115bData } from "../aircraft/g115b/data";
 import type { StallInputs } from "../aircraft/g115b/types";
+import { useAircraft } from "../app/AircraftContext";
+import { performanceForAircraft } from "../app/aircraftPerformance";
 import { useFlightPlan } from "../app/FlightPlanContext";
 import { interpolate1D } from "../domain";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
 import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { SliderField } from "../components/SliderField";
 import { createPdfBlobFromCanvas, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
+import { speedText, speedUnitLabel, speedValue } from "../app/speed";
 
-type StallResult = ReturnType<typeof calculateStall>;
+type StallResult = ReturnType<typeof calculateG115BStall>;
 type ChartPoint = readonly [number, number];
 
 const CHART_SOURCE = "/assets/grob115b-stall-chart.png";
@@ -200,9 +203,12 @@ function ChartCard({ inputs, result }: { inputs: StallInputs; result: StallResul
 }
 
 export function StallPage() {
+  const { aircraft, resolvedSpeedUnit } = useAircraft();
+  const performance = performanceForAircraft(aircraft);
+  const { calculateStall } = performance.calculators;
   const { flightPlan, updateStallCalculator } = useFlightPlan();
   const savedCalculator = flightPlan.stallCalculator;
-  const [massKg, setMassKg] = useState(savedCalculator?.massKg ?? 920);
+  const [massKg, setMassKg] = useState(savedCalculator?.massKg ?? performance.limits.stallMassMaxKg);
   const [powerMode, setPowerMode] = useState<StallInputs["powerMode"]>(savedCalculator?.powerMode ?? "leerlauf");
   const [flapsDegrees, setFlapsDegrees] = useState<StallInputs["flapsDegrees"]>(savedCalculator?.flapsDegrees ?? 40);
   const inputs = useMemo<StallInputs>(() => ({ massKg, powerMode, flapsDegrees }), [massKg, powerMode, flapsDegrees]);
@@ -225,7 +231,7 @@ export function StallPage() {
           description="Flugmasse"
           summary={`${massKg} kg`}
         >
-          <SliderField label="Flugmasse" unit="kg" value={massKg} min={750} max={920} hint="MTOW 920 kg · Minimalgewicht ca. 750 kg" onChange={setMassKg} />
+          <SliderField label="Flugmasse" unit="kg" value={massKg} min={performance.limits.stallMassMinKg} max={performance.limits.stallMassMaxKg} hint={`MTOW ${performance.limits.stallMassMaxKg} kg`} onChange={setMassKg} />
         </CalculatorInputSection>
         <CalculatorInputSection
           defaultOpen={false}
@@ -261,9 +267,18 @@ export function StallPage() {
             <Gauge aria-hidden="true" />
             <span>{massKg} kg · {powerMode === "leerlauf" ? "Leerlauf" : "Vollast"} · Klappen {flapsDegrees}°</span>
           </div>
-          <div className="result-grid stall-result-grid" style={{ gridTemplateColumns: "1fr" }}><MetricItem label={<span>Überziehgeschwindigkeit · <SpeedSymbol index={result.stallLabel.slice(1)} /></span>} value={result.stallSpeedKt.toFixed(1)} unit="kt" speedType="IAS" subtext={`${result.stallSpeedKmh.toFixed(1)} km/h`} /></div>
+          <div className="result-grid stall-result-grid" style={{ gridTemplateColumns: "1fr" }}><MetricItem label={<span>Überziehgeschwindigkeit · <SpeedSymbol index={result.stallLabel.slice(1)} /></span>} value={speedValue(result.stallSpeedKmh, resolvedSpeedUnit)} unit={speedUnitLabel(resolvedSpeedUnit)} speedType="IAS" /></div>
         </CalculatorCard>
-        <ChartCard inputs={inputs} result={result} />
+        {performance.hasChartOverlays ? (
+          <ChartCard inputs={inputs} result={result} />
+        ) : (
+          <CalculatorCard title="Nachvollziehbarkeit">
+            <div className="conditions-grid">
+              {result.conditions.map((condition) => <span key={condition}>{condition}</span>)}
+              <span>IAS · {speedText(result.stallSpeedKmh, resolvedSpeedUnit)}</span>
+            </div>
+          </CalculatorCard>
+        )}
       </main>
     </div>
   );

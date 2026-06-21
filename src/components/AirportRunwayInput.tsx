@@ -338,7 +338,7 @@ export function AirportRunwayInput({
         </span>
       </form>
       {error ? <div className="airport-status error">{error}</div> : null}
-      {!airport && !error ? (
+      {!airport ? (
         <div className="airport-empty-state">
           <label className="airport-field">
             <span>Flugplatz</span>

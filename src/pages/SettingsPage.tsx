@@ -1,20 +1,30 @@
-import { FileText, Laptop, Moon, Settings, Sun } from "lucide-react";
+import { FileText, Gauge, Laptop, Moon, Settings, Sun } from "lucide-react";
 import { buildInfo, formatBuildVersion } from "../app/buildInfo";
+import type { SpeedUnitPreference } from "../app/AircraftContext";
 import type { ThemePreference } from "../app/theme";
 
 export function SettingsPage({
   preference,
+  speedUnitPreference,
   onOpenUsageNotice,
+  onSelectSpeedUnit,
   onSelectTheme,
 }: {
   preference: ThemePreference;
+  speedUnitPreference?: SpeedUnitPreference;
   onOpenUsageNotice: () => void;
+  onSelectSpeedUnit?: (preference: SpeedUnitPreference) => void;
   onSelectTheme: (preference: ThemePreference) => void;
 }) {
   const themeOptions = [
     { value: "auto", label: "Automatisch", Icon: Laptop },
     { value: "light", label: "Hell", Icon: Sun },
     { value: "dark", label: "Dunkel", Icon: Moon },
+  ] as const;
+  const speedUnitOptions = [
+    { value: "auto", label: "Automatisch" },
+    { value: "kt", label: "kt" },
+    { value: "kmh", label: "km/h" },
   ] as const;
 
   return (
@@ -55,6 +65,23 @@ export function SettingsPage({
             <button type="button" onClick={onOpenUsageNotice}>Disclaimer anzeigen</button>
           </div>
         </div>
+        {onSelectSpeedUnit ? <div className="settings-page-row settings-theme-row">
+          <Gauge aria-hidden="true" />
+          <span><strong>Geschwindigkeit</strong><small>Anzeige für das aktuell gewählte Flugzeug</small></span>
+          <div className="settings-theme-options" role="group" aria-label="Geschwindigkeitseinheit">
+            {speedUnitOptions.map(({ value, label }) => (
+              <button
+                className={(speedUnitPreference ?? "auto") === value ? "active" : ""}
+                type="button"
+                aria-pressed={(speedUnitPreference ?? "auto") === value}
+                onClick={() => onSelectSpeedUnit?.(value)}
+                key={value}
+              >
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+        </div> : null}
       </section>
     </main>
   );

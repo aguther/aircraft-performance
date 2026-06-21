@@ -7,8 +7,12 @@ export type WeightBalancePlan = {
   registration: string;
   pilotMassKg: number;
   copilotMassKg: number;
+  passengerLeftMassKg?: number;
+  passengerRightMassKg?: number;
   baggageMassKg: number;
   startFuelLiters: number;
+  mainFuelLiters?: number;
+  wingFuelLiters?: number;
   plannedFuelBurnLiters: number;
 };
 
