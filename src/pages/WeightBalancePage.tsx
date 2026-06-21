@@ -29,13 +29,18 @@ function deriveLandingFuel(plan: WeightBalancePlan, plannedFuelBurnLiters: numbe
   if (aircraftId !== "robin-dr400-180") {
     return { fuelLiters: Math.max(0, plan.startFuelLiters - plannedFuelBurnLiters) };
   }
-  let remainingBurn = Math.max(0, plannedFuelBurnLiters);
   const startWingFuelLiters = plan.wingFuelLiters ?? 80;
   const startMainFuelLiters = plan.mainFuelLiters ?? 109;
-  const wingFuelLiters = Math.max(0, startWingFuelLiters - remainingBurn);
-  remainingBurn = Math.max(0, remainingBurn - startWingFuelLiters);
-  const mainFuelLiters = Math.max(0, startMainFuelLiters - remainingBurn);
+  const mainFuelBurnLiters = Math.max(0, plan.plannedMainFuelBurnLiters ?? plannedFuelBurnLiters);
+  const wingFuelBurnLiters = Math.max(0, plan.plannedWingFuelBurnLiters ?? 0);
+  const wingFuelLiters = Math.max(0, startWingFuelLiters - wingFuelBurnLiters);
+  const mainFuelLiters = Math.max(0, startMainFuelLiters - mainFuelBurnLiters);
   return { fuelLiters: mainFuelLiters + wingFuelLiters, mainFuelLiters, wingFuelLiters };
+}
+
+function plannedFuelBurnLiters(plan: WeightBalancePlan, aircraftId: string) {
+  if (aircraftId !== "robin-dr400-180") return plan.plannedFuelBurnLiters;
+  return (plan.plannedMainFuelBurnLiters ?? plan.plannedFuelBurnLiters) + (plan.plannedWingFuelBurnLiters ?? 0);
 }
 
 function EnvelopeChart({ envelope, startResult, landingResult }: { envelope: readonly MassMomentPoint[]; startResult: WeightBalanceResult; landingResult: WeightBalanceResult }) {
@@ -582,52 +587,76 @@ async function createWeightBalanceExportCanvas(
   exportText(context, startResult.emptyAircraft.revisionDate, canvas.width - 210, 136, { size: 25, align: "center" });
   exportText(context, exportTimestamp(exportDate), 78, 144, { size: 22, color: "#607487" });
 
+  const startRows = [
+    ["Position", "Masse [kg]", "Arm [m]", "Moment [kg m]"],
+    ...startResult.stations.map((station) => [station.label, station.massKg.toFixed(1), station.armM.toFixed(4), station.momentKgM.toFixed(2)]),
+    ["Abfluggewicht", startResult.totalMassKg.toFixed(1), startResult.cgArmM.toFixed(4), startResult.totalMomentKgM.toFixed(2)],
+  ];
+  const fuelStations = startResult.stations.filter((station) => station.label.toLowerCase().includes("tank") || station.label === "Kraftstoff");
+  const fuelBurnRows = fuelStations.map((startStation) => {
+    const landingStation = landingResult.stations.find((station) => station.label === startStation.label);
+    const massDeltaKg = Math.max(0, startStation.massKg - (landingStation?.massKg ?? 0));
+    const momentDeltaKgM = Math.max(0, startStation.momentKgM - (landingStation?.momentKgM ?? 0));
+    return [`${startStation.label}-Verbrauch`, `-${massDeltaKg.toFixed(1)}`, startStation.armM.toFixed(4), `-${momentDeltaKgM.toFixed(2)}`];
+  });
+  const landingRows = [
+    ["Position", "Masse [kg]", "Arm [m]", "Moment [kg m]"],
+    ...(fuelStations.length > 1
+      ? fuelBurnRows
+      : [[`Kraftstoff-Verbrauch (${plan.plannedFuelBurnLiters.toFixed(1)} l)`, `-${burnedFuelMassKg.toFixed(1)}`, burnedFuelArmM.toFixed(4), `-${burnedFuelMomentKgM.toFixed(2)}`]]),
+    ["Landegewicht", landingResult.totalMassKg.toFixed(1), landingResult.cgArmM.toFixed(4), landingResult.totalMomentKgM.toFixed(2)],
+  ];
+  const leftX = 60;
+  const tableWidths = [360, 170, 160, 210];
+  const wbRowHeight = 45;
+  const startY = 318;
+  const startTableHeight = startRows.length * wbRowHeight;
+  const mtowY = startY + startTableHeight + 34;
+  const landingTitleY = mtowY + 62;
+  const landingY = landingTitleY + 34;
+  const landingTableHeight = landingRows.length * wbRowHeight;
+  const statusTitleY = landingY + landingTableHeight + 84;
+  const statusY = statusTitleY + 34;
+
   exportText(context, "Startbeladung", 60, 286, { size: 28, weight: 700, color: "#006f9f" });
   drawExportTable(
     context,
-    [
-      ["Position", "Masse [kg]", "Arm [m]", "Moment [kg m]"],
-      ...startResult.stations.map((station) => [station.label, station.massKg.toFixed(1), station.armM.toFixed(4), station.momentKgM.toFixed(2)]),
-      ["Abfluggewicht", startResult.totalMassKg.toFixed(1), startResult.cgArmM.toFixed(4), startResult.totalMomentKgM.toFixed(2)],
-    ],
-    60,
-    318,
-    [360, 170, 160, 210],
-    58,
+    startRows,
+    leftX,
+    startY,
+    tableWidths,
+    wbRowHeight,
     1,
     1,
     [1, 2, 3],
   );
-  exportText(context, `MTOW: ${meta.mtowKg} kg`, 72, 750, { size: 24, weight: 700 });
+  exportText(context, `MTOW: ${meta.mtowKg} kg`, 72, mtowY, { size: 24, weight: 700 });
 
-  exportText(context, "Landung", 60, 828, { size: 28, weight: 700, color: "#006f9f" });
+  exportText(context, "Landung", 60, landingTitleY, { size: 28, weight: 700, color: "#006f9f" });
   drawExportTable(
     context,
-    [
-      ["Position", "Masse [kg]", "Arm [m]", "Moment [kg m]"],
-      [`Kraftstoff-Verbrauch (${plan.plannedFuelBurnLiters.toFixed(1)} l)`, `-${burnedFuelMassKg.toFixed(1)}`, burnedFuelArmM.toFixed(4), `-${burnedFuelMomentKgM.toFixed(2)}`],
-      ["Landegewicht", landingResult.totalMassKg.toFixed(1), landingResult.cgArmM.toFixed(4), landingResult.totalMomentKgM.toFixed(2)],
-    ],
-    60,
-    860,
-    [360, 170, 160, 210],
-    58,
+    landingRows,
+    leftX,
+    landingY,
+    tableWidths,
+    wbRowHeight,
     1,
     1,
     [1, 2, 3],
   );
 
-  exportText(context, "Status", 60, 1170, { size: 28, weight: 700, color: "#006f9f" });
+  exportText(context, "Status", 60, statusTitleY, { size: 28, weight: 700, color: "#006f9f" });
   const envelopeStatusRows = [
     { danger: !startResult.withinEnvelope, label: "Start", value: startResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope" },
     { danger: !landingResult.withinEnvelope, label: "Landung", value: landingResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope" },
   ];
-  drawStatusExportTable(context, envelopeStatusRows, 60, 1208, [250, 650], 43);
+  drawStatusExportTable(context, envelopeStatusRows, 60, statusY, [250, 650], 43);
   const statusRows = [
     ["Kraftstoffdichte", `${meta.fuelDensityKgPerLiter.toLocaleString("de-DE")} kg/l`],
-    ["Quelle", `${meta.fuelSource} · Beladeplan Revision ${startResult.emptyAircraft.revision} vom ${startResult.emptyAircraft.revisionDate}`],
+    ["Quelle", meta.fuelSource],
+    ["Revision", `Beladeplan ${startResult.emptyAircraft.revision} vom ${startResult.emptyAircraft.revisionDate}`],
   ];
-  drawExportTable(context, statusRows, 60, 1294, [250, 650], 43, 0, 0);
+  drawExportTable(context, statusRows, 60, statusY + 92, [250, 650], 43, 0, 0);
 
   exportText(context, "Geschwindigkeiten", 1030, 286, { size: 28, weight: 700, color: "#006f9f" });
   drawSpeedExportTable(
@@ -757,7 +786,8 @@ export function WeightBalancePage() {
   const plan = flightPlan.weightBalance;
   const dr400 = aircraft.id === "robin-dr400-180";
   const startFuelLiters = dr400 ? (plan.mainFuelLiters ?? 109) + (plan.wingFuelLiters ?? 80) : plan.startFuelLiters;
-  const landingFuel = deriveLandingFuel({ ...plan, startFuelLiters }, plan.plannedFuelBurnLiters, aircraft.id);
+  const plannedBurnLiters = plannedFuelBurnLiters(plan, aircraft.id);
+  const landingFuel = deriveLandingFuel({ ...plan, startFuelLiters }, plannedBurnLiters, aircraft.id);
   const landingFuelLiters = landingFuel.fuelLiters;
   const exportMeta = useMemo<WeightBalanceExportMeta>(() => ({
     aircraftLabel: aircraft.shortName,
@@ -810,8 +840,10 @@ export function WeightBalancePage() {
       startFuelLiters: dr400 ? 189 : Math.min(plan.startFuelLiters, performance.limits.fuelMaxLiters),
       mainFuelLiters: dr400 ? 109 : undefined,
       wingFuelLiters: dr400 ? 80 : undefined,
+      plannedMainFuelBurnLiters: dr400 ? (plan.plannedMainFuelBurnLiters ?? plan.plannedFuelBurnLiters) : undefined,
+      plannedWingFuelBurnLiters: dr400 ? (plan.plannedWingFuelBurnLiters ?? 0) : undefined,
     });
-  }, [aircraft.registrations, dr400, performance.limits.fuelMaxLiters, plan.registration, plan.startFuelLiters, updateWeightBalance]);
+  }, [aircraft.registrations, dr400, performance.limits.fuelMaxLiters, plan.plannedFuelBurnLiters, plan.plannedMainFuelBurnLiters, plan.plannedWingFuelBurnLiters, plan.registration, plan.startFuelLiters, updateWeightBalance]);
   useEffect(() => {
     document.body.classList.add("weight-balance-calculator");
     return () => document.body.classList.remove("weight-balance-calculator");
@@ -896,16 +928,47 @@ export function WeightBalancePage() {
               onChange={(wingFuelLiters) => updateWeightBalance({ wingFuelLiters, startFuelLiters: (plan.mainFuelLiters ?? 109) + wingFuelLiters })}
             />
           ) : null}
-          <SliderField
-            label="Geplanter Verbrauch"
-            unit="l"
-            value={plan.plannedFuelBurnLiters}
-            min={0}
-            max={performance.limits.fuelMaxLiters}
-            inputMax={performance.limits.fuelMaxLiters}
-            hint={`Verbleibend bei Landung: ${landingFuelLiters.toFixed(1)} l`}
-            onChange={(plannedFuelBurnLiters) => updateWeightBalance({ plannedFuelBurnLiters })}
-          />
+          {dr400 ? (
+            <>
+              <SliderField
+                label="Verbrauch Haupttank"
+                unit="l"
+                value={plan.plannedMainFuelBurnLiters ?? plan.plannedFuelBurnLiters}
+                min={0}
+                max={plan.mainFuelLiters ?? 109}
+                inputMax={109}
+                hint={`${(landingFuel.mainFuelLiters ?? 0).toFixed(1)} l im Haupttank bei Landung.`}
+                onChange={(plannedMainFuelBurnLiters) => updateWeightBalance({
+                  plannedMainFuelBurnLiters,
+                  plannedFuelBurnLiters: plannedMainFuelBurnLiters + (plan.plannedWingFuelBurnLiters ?? 0),
+                })}
+              />
+              <SliderField
+                label="Verbrauch Flächentanks"
+                unit="l"
+                value={plan.plannedWingFuelBurnLiters ?? 0}
+                min={0}
+                max={plan.wingFuelLiters ?? 80}
+                inputMax={80}
+                hint={`${(landingFuel.wingFuelLiters ?? 0).toFixed(1)} l in den Flächentanks bei Landung.`}
+                onChange={(plannedWingFuelBurnLiters) => updateWeightBalance({
+                  plannedWingFuelBurnLiters,
+                  plannedFuelBurnLiters: (plan.plannedMainFuelBurnLiters ?? plan.plannedFuelBurnLiters) + plannedWingFuelBurnLiters,
+                })}
+              />
+            </>
+          ) : (
+            <SliderField
+              label="Geplanter Verbrauch"
+              unit="l"
+              value={plan.plannedFuelBurnLiters}
+              min={0}
+              max={performance.limits.fuelMaxLiters}
+              inputMax={performance.limits.fuelMaxLiters}
+              hint={`Verbleibend bei Landung: ${landingFuelLiters.toFixed(1)} l`}
+              onChange={(plannedFuelBurnLiters) => updateWeightBalance({ plannedFuelBurnLiters })}
+            />
+          )}
         </CalculatorInputSection>
       </aside>
       <main className="results">
@@ -921,7 +984,7 @@ export function WeightBalancePage() {
                 value={startResult.totalMassKg.toFixed(1)}
                 unit="kg"
                 subtext={
-                  startResult.withinEnvelope ? `${plan.startFuelLiters.toFixed(1)} l Kraftstoff · zentral gespeichert` : "Ausserhalb Envelope"
+                  startResult.withinEnvelope ? `${startFuelLiters.toFixed(1)} l Kraftstoff · zentral gespeichert` : "Ausserhalb Envelope"
                 }
                 danger={!startResult.withinEnvelope}
               />
@@ -938,7 +1001,7 @@ export function WeightBalancePage() {
             <div className="conditions-grid wb-planning-conditions">
               {startResult.conditions.map((condition) => <span key={condition}>{condition}</span>)}
               <span>Beladeplan Revision {startResult.emptyAircraft.revision} vom {startResult.emptyAircraft.revisionDate}</span>
-              <span>Landung = Start − geplanter Kraftstoffverbrauch</span>
+              <span>Landung = Start − geplanter Kraftstoffverbrauch{dr400 ? " je Tank" : ""}</span>
             </div>
             <div className="wb-status-grid">
               <div className={`wb-status-pill${startResult.withinEnvelope ? "" : " danger"}`}>
@@ -950,7 +1013,7 @@ export function WeightBalancePage() {
                 <strong>{landingResult.withinEnvelope ? "Envelope OK" : "Außerhalb Envelope"}</strong>
               </div>
             </div>
-            {plan.plannedFuelBurnLiters > plan.startFuelLiters ? (
+            {plannedBurnLiters > startFuelLiters ? (
               <div className="wb-inline-warnings">
                 <div className="wb-inline-warning danger">Geplanter Verbrauch überschreitet den Kraftstoff beim Start.</div>
               </div>
@@ -969,7 +1032,7 @@ export function WeightBalancePage() {
             ) : null}
           </div>
         </CalculatorCard>
-        <WeightBalanceExportCard meta={exportMeta} plan={plan} startResult={startResult} landingResult={landingResult} landingFuelLiters={landingFuelLiters} />
+        <WeightBalanceExportCard meta={exportMeta} plan={{ ...plan, startFuelLiters, plannedFuelBurnLiters: plannedBurnLiters }} startResult={startResult} landingResult={landingResult} landingFuelLiters={landingFuelLiters} />
         <CalculatorCard title="Envelope · Start und Landung">
           <EnvelopeChart envelope={weightBalanceData.envelope} startResult={startResult} landingResult={landingResult} />
         </CalculatorCard>
@@ -1013,7 +1076,7 @@ export function WeightBalancePage() {
           </div>
         </CalculatorCard>
         <CalculatorCard title="Beladung · Start bis Landung">
-          <BreakdownTable startResult={startResult} landingResult={landingResult} plannedFuelBurnLiters={plan.plannedFuelBurnLiters} />
+          <BreakdownTable startResult={startResult} landingResult={landingResult} plannedFuelBurnLiters={plannedBurnLiters} />
         </CalculatorCard>
       </main>
     </div>

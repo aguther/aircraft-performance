@@ -142,6 +142,11 @@ function interpolationFormula(label: string, x: number, x0: number, y0: number, 
   return `${label}: ${y0} + (${x.toFixed(0)} - ${x0}) / (${x1} - ${x0}) x (${y1} - ${y0}) = ${Math.round(result)} ${unit}.`;
 }
 
+function compactInterpolationLine(label: string, x: number, x0: number, y0: number, x1: number, y1: number, result: number, unit: string) {
+  if (x0 === x1) return `${label}: Stützstelle ${x0} -> ${Math.round(result)} ${unit}`;
+  return `${label}: ${y0}/${y1} ${unit} bei ${x0}/${x1} -> ${Math.round(result)} ${unit}`;
+}
+
 function raggedTrace(
   label: string,
   altitudes: readonly number[],
@@ -164,7 +169,14 @@ function raggedTrace(
   const lowerAtTemp = valueAt(lowerTempValues, values[lowerAltitudeIndex], oatC);
   const upperAtTemp = valueAt(upperTempValues, values[upperAltitudeIndex], oatC);
   const result = core.interpolate1D([lowerAltitude, upperAltitude], [lowerAtTemp, upperAtTemp], altitudeFt);
+  const compact = [
+    `${label}: Tabellenhöhe ${lowerAltitude}/${upperAltitude} ft, OAT ${oatC} °C.`,
+    compactInterpolationLine(`${lowerAltitude} ft OAT`, oatC, lowerTempLow, values[lowerAltitudeIndex][lowerTempLowIndex], lowerTempHigh, values[lowerAltitudeIndex][lowerTempHighIndex], lowerAtTemp, "m"),
+    compactInterpolationLine(`${upperAltitude} ft OAT`, oatC, upperTempLow, values[upperAltitudeIndex][upperTempLowIndex], upperTempHigh, values[upperAltitudeIndex][upperTempHighIndex], upperAtTemp, "m"),
+    compactInterpolationLine("Höhe", altitudeFt, lowerAltitude, Math.round(lowerAtTemp), upperAltitude, Math.round(upperAtTemp), result, "m"),
+  ].join("\n");
   return {
+    compact,
     result,
     text: [
       `${label}: Tabellenhöhen ${lowerAltitude}/${upperAltitude} ft, OAT-Stützstellen ${lowerTempLow}/${lowerTempHigh} °C und ${upperTempLow}/${upperTempHigh} °C.`,
@@ -177,6 +189,10 @@ function raggedTrace(
 
 function massTrace(label: string, massKg: number, lowerMass: number, lowerValue: number, upperMass: number, upperValue: number, result: number) {
   return interpolationFormula(label, massKg, lowerMass, Math.round(lowerValue), upperMass, Math.round(upperValue), result, "m");
+}
+
+function compactMassTrace(label: string, massKg: number, lowerMass: number, lowerValue: number, upperMass: number, upperValue: number, result: number) {
+  return `${label}: ${Math.round(lowerValue)}/${Math.round(upperValue)} m bei ${lowerMass}/${upperMass} kg -> ${Math.round(result)} m`;
 }
 
 function windFactor(windKt: number) {
@@ -214,6 +230,10 @@ export function takeoffTrace(inputs: TakeoffInputs) {
       massTrace("Rollstrecke Masse", mass, 900, roll900.result, 1100, roll1100.result, groundRollByMassMeters),
       massTrace("15-m-Strecke Masse", mass, 900, obstacle900.result, 1100, obstacle1100.result, obstacleByMassMeters),
     ].join(" "),
+    massCompact: [
+      compactMassTrace("Rollstrecke Masse", mass, 900, roll900.result, 1100, roll1100.result, groundRollByMassMeters),
+      compactMassTrace("15-m-Strecke Masse", mass, 900, obstacle900.result, 1100, obstacle1100.result, obstacleByMassMeters),
+    ].join("\n"),
     windText: `Windfaktor: ${inputs.windKt} kt -> Faktor ${factor.toFixed(2)}. Rollstrecke ${Math.round(groundRollByMassMeters)} x ${factor.toFixed(2)} = ${Math.round(groundRollByWindMeters)} m; 15-m-Strecke ${Math.round(obstacleByMassMeters)} x ${factor.toFixed(2)} = ${Math.round(obstacleByWindMeters)} m.`,
     marginText: `Zuschlag: ${Math.round(groundRollByWindMeters)} x ${inputs.safetyMarginPercent}% = ${Math.round(groundRollMarginMeters)} m. Rollstrecke ${Math.round(groundRollByWindMeters)} + ${Math.round(groundRollMarginMeters)} = ${core.round(groundRollByWindMeters + groundRollMarginMeters)} m; 15-m-Strecke ${Math.round(obstacleByWindMeters)} + ${Math.round(groundRollMarginMeters)} = ${core.round(obstacleByWindMeters + groundRollMarginMeters)} m.`,
   };
@@ -244,6 +264,10 @@ export function landingTrace(inputs: LandingInputs) {
       massTrace("Rollstrecke Masse", mass, 845, roll845.result, 1045, roll1045.result, rollByMassMeters),
       massTrace("15-m-Strecke Masse", mass, 845, obstacle845.result, 1045, obstacle1045.result, obstacleByMassMeters),
     ].join(" "),
+    massCompact: [
+      compactMassTrace("Rollstrecke Masse", mass, 845, roll845.result, 1045, roll1045.result, rollByMassMeters),
+      compactMassTrace("15-m-Strecke Masse", mass, 845, obstacle845.result, 1045, obstacle1045.result, obstacleByMassMeters),
+    ].join("\n"),
     windText: `Windfaktor: ${inputs.windKt} kt -> Faktor ${factor.toFixed(2)}. Rollstrecke ${Math.round(rollByMassMeters)} x ${factor.toFixed(2)} = ${Math.round(rollByWindMeters)} m; 15-m-Strecke ${Math.round(obstacleByMassMeters)} x ${factor.toFixed(2)} = ${Math.round(obstacleByWindMeters)} m.`,
     marginText: `Zuschlag: ${Math.round(rollByWindMeters)} x ${inputs.safetyMarginPercent}% = ${Math.round(landingRollMarginMeters)} m. Rollstrecke ${Math.round(rollByWindMeters)} + ${Math.round(landingRollMarginMeters)} = ${core.round(rollByWindMeters + landingRollMarginMeters)} m; 15-m-Strecke ${Math.round(obstacleByWindMeters)} + ${Math.round(landingRollMarginMeters)} = ${core.round(obstacleByWindMeters + landingRollMarginMeters)} m.`,
   };

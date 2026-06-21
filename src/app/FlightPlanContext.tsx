@@ -14,6 +14,8 @@ export type WeightBalancePlan = {
   mainFuelLiters?: number;
   wingFuelLiters?: number;
   plannedFuelBurnLiters: number;
+  plannedMainFuelBurnLiters?: number;
+  plannedWingFuelBurnLiters?: number;
 };
 
 export type FlightPlanMasses = {

@@ -267,12 +267,24 @@ function drawWrappedExportText(context: CanvasRenderingContext2D, text: string, 
   return lineY;
 }
 
+function atmosphereExportLines(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext) {
+  const pressureAltitudeText = exportContext.pressureAltitudeMode === "direct"
+    ? `Pressure Altitude = direkt eingegebene Druckhöhe = ${inputs.pressureAltitudeFt} ft.`
+    : `Pressure Altitude = Elevation + (1013.25 - QNH) x 27 = ${exportContext.elevationFt} + (1013.25 - ${exportContext.qnhHpa}) x 27 = ${inputs.pressureAltitudeFt} ft.`;
+  return [
+    pressureAltitudeText,
+    `ISA-Temperatur = 15 - 1.98 x PA / 1000 = 15 - 1.98 x ${inputs.pressureAltitudeFt} / 1000 = ${result.atmosphere.isaTemperatureC.toFixed(1)} °C.`,
+    `ISA-Abweichung = OAT - ISA = ${inputs.oatC} - ${result.atmosphere.isaTemperatureC.toFixed(1)} = ${formatSigned(result.atmosphere.isaDeviationC, 1)} °C.`,
+    `Density Altitude = PA + 120 x ISA-Abweichung = ${inputs.pressureAltitudeFt} + 120 x ${result.atmosphere.isaDeviationC.toFixed(1)} = ${result.atmosphere.densityAltitudeFt} ft.`,
+  ];
+}
+
 async function createTakeoffPathExportCanvas(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext, aircraftLabel: string) {
   const exportDate = new Date();
   const trace = calculateDr400TakeoffTrace(inputs);
   const canvas = document.createElement("canvas");
   canvas.width = 1200;
-  canvas.height = 1720;
+  canvas.height = 1360;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
   context.fillStyle = "#ffffff";
@@ -289,21 +301,13 @@ async function createTakeoffPathExportCanvas(inputs: TakeoffInputs, result: Take
   drawExportField(context, "Zuschlag", `${inputs.safetyMarginPercent}%`, 864, 206, 256);
 
   drawExportText(context, "Atmosphäre", 48, 330, { size: 19, weight: 700, color: "#006f9f" });
-  const pressureAltitudeText = exportContext.pressureAltitudeMode === "direct"
-    ? `Pressure Altitude = direkt eingegebene Druckhöhe = ${inputs.pressureAltitudeFt} ft.`
-    : `Pressure Altitude = Elevation + (1013.25 - QNH) x 27 = ${exportContext.elevationFt} + (1013.25 - ${exportContext.qnhHpa}) x 27 = ${inputs.pressureAltitudeFt} ft.`;
-  let textY = drawWrappedExportText(context, pressureAltitudeText, 48, 362, 1070);
-  textY = drawWrappedExportText(context, [
-    `ISA-Temperatur = 15 - 1.98 x PA / 1000 = 15 - 1.98 x ${inputs.pressureAltitudeFt} / 1000 = ${result.atmosphere.isaTemperatureC.toFixed(1)} °C.`,
-    `ISA-Abweichung = OAT - ISA = ${inputs.oatC} - ${result.atmosphere.isaTemperatureC.toFixed(1)} = ${formatSigned(result.atmosphere.isaDeviationC, 1)} °C.`,
-    `Density Altitude = PA + 120 x ISA-Abweichung = ${inputs.pressureAltitudeFt} + 120 x ${result.atmosphere.isaDeviationC.toFixed(1)} = ${result.atmosphere.densityAltitudeFt} ft.`,
-  ].join("\n"), 48, textY + 4, 1070);
+  const textY = drawWrappedExportText(context, atmosphereExportLines(inputs, result, exportContext).join("\n"), 48, 362, 1070, { size: 17, lineHeight: 23 });
 
   drawExportText(context, "Tabellen- und Korrekturschritte", 48, textY + 36, { size: 19, weight: 700, color: "#006f9f" });
   const steps = [
-    ["1", `Startrollstrecke aus POH-Tabelle.\n${trace.roll900.text}\n${trace.roll1100.text}`, `${round(result.groundRollByAtmosphereMeters)} m bei 1100 kg`],
-    ["2", `15-m-Strecke aus POH-Tabelle.\n${trace.obstacle900.text}\n${trace.obstacle1100.text}`, `${round(trace.obstacle1100.result)} m bei 1100 kg`],
-    ["3", `Masseninterpolation zwischen den POH-Gewichten.\n${trace.massText}`, `${round(trace.groundRollByMassMeters)} m / ${round(trace.obstacleByMassMeters)} m vor Wind`],
+    ["1", `Startrollstrecke aus POH-Tabelle.\n${trace.roll900.compact}\n${trace.roll1100.compact}`, `${round(result.groundRollByAtmosphereMeters)} m bei 1100 kg`],
+    ["2", `15-m-Strecke aus POH-Tabelle.\n${trace.obstacle900.compact}\n${trace.obstacle1100.compact}`, `${round(trace.obstacle1100.result)} m bei 1100 kg`],
+    ["3", `Masseninterpolation zwischen den POH-Gewichten.\n${trace.massCompact}`, `${round(trace.groundRollByMassMeters)} m / ${round(trace.obstacleByMassMeters)} m vor Wind`],
     ["4", "Slope ist für dieses Muster nicht im Flughandbuch verfügbar und wird deshalb nicht angewendet.", `${round(result.groundRollBySlopeMeters)} m`],
     ["5", trace.windText, `${round(result.groundRollByWindMeters)} m / ${round(result.takeoffDistanceWithoutMarginMeters)} m`],
     ["6", trace.marginText, `${result.groundRollMeters} m / ${result.takeoffDistanceMeters} m`],
@@ -314,13 +318,13 @@ async function createTakeoffPathExportCanvas(inputs: TakeoffInputs, result: Take
     context.strokeStyle = "#d8e3eb";
     context.lineWidth = 1;
     context.beginPath();
-    context.roundRect(48, rowY, 1072, 178, 10);
+    context.roundRect(48, rowY, 1072, 112, 10);
     context.fill();
     context.stroke();
-    drawExportText(context, index, 70, rowY + 92, { size: 24, weight: 800, color: "#006f9f" });
-    drawWrappedExportText(context, detail, 112, rowY + 28, 710, { size: 14, lineHeight: 17 });
-    drawWrappedExportText(context, value, 850, rowY + 72, 240, { size: 17, weight: 700, lineHeight: 21 });
-    rowY += 194;
+    drawExportText(context, index, 70, rowY + 66, { size: 24, weight: 800, color: "#006f9f" });
+    drawWrappedExportText(context, detail, 112, rowY + 20, 735, { size: 12, lineHeight: 14 });
+    drawWrappedExportText(context, value, 870, rowY + 54, 220, { size: 17, weight: 700, lineHeight: 21 });
+    rowY += 124;
   });
   drawWrappedExportText(context, result.warnings.length ? `Warnungen: ${result.warnings.map((warning) => warning.text).join(" · ")}` : "Warnungen: keine.", 48, rowY + 14, 1070, { color: result.warnings.length ? "#9a5200" : "#526274" });
   return { canvas, exportDate };
@@ -366,9 +370,8 @@ async function createTakeoffExportCanvas(inputs: TakeoffInputs, result: TakeoffR
   drawExportField(context, "Slope", formatSlopeLabel(inputs.slopePercent), 402, 192, 338);
   drawExportField(context, "Wind", formatWindLabel(inputs.windKt), 756, 192, 338);
   drawExportField(context, "Zuschlag", `${inputs.safetyMarginPercent}%`, 1110, 192, 302);
-  drawExportText(context, "Berechnete Atmosphärenwerte", 48, 300, { size: 19, weight: 700, color: "#006f9f" });
-  drawExportField(context, "Density Altitude", `${result.atmosphere.densityAltitudeFt} ft`, 48, 316, 410);
-  drawExportField(context, "ISA-Abweichung", `${formatSigned(result.atmosphere.isaDeviationC, 1)} °C`, 474, 316, 410);
+  drawExportText(context, "Atmosphäre", 48, 300, { size: 19, weight: 700, color: "#006f9f" });
+  drawWrappedExportText(context, atmosphereExportLines(inputs, result, exportContext).join("\n"), 48, 328, 1364, { size: 16, lineHeight: 22 });
   drawExportText(context, "Ergebnis", 48, 424, { size: 19, weight: 700, color: "#006f9f" });
   drawExportField(context, "Rollstrecke ohne Zuschlag", `${round(result.groundRollByWindMeters)} m`, 48, 440, 664);
   drawExportField(context, "Zuschlag", `${round(result.groundRollMarginMeters)} m`, 728, 440, 684);
