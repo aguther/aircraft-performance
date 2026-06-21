@@ -414,7 +414,7 @@ function drawSpeedExportTable(
   widths: number[],
   rowHeight: number,
 ) {
-  const header = ["Wert", "IAS [kt]", "VS0 30°", "VS0 45°"];
+  const header = ["Wert", "IAS [kt]", "30° Bank (Φ)", "45° Bank (Φ)"];
   const groupHeight = 28;
   const textPadding = 14;
   const numericPadding = 30;
@@ -453,8 +453,21 @@ function drawSpeedExportTable(
         const textY = rowY + currentRowHeight * 0.64;
         if (cellIndex === 0) drawSpeedLabel(context, speedRow, cellX + textPadding, textY);
         if (cellIndex === 1) exportText(context, speedRow.kt, cellX + width - numericPadding, textY, { align: "right", size: 18 });
-        if (cellIndex === 2) exportText(context, speedRow.bank30Kt ?? "", cellX + width - numericPadding, textY, { align: "right", size: 18 });
-        if (cellIndex === 3) exportText(context, speedRow.bank45Kt ?? "", cellX + width - numericPadding, textY, { align: "right", size: 18 });
+        if (cellIndex === 2 || cellIndex === 3) {
+          const value = cellIndex === 2 ? speedRow.bank30Kt : speedRow.bank45Kt;
+          if (value) {
+            exportText(context, value, cellX + width - numericPadding, textY, { align: "right", size: 18 });
+          } else {
+            context.fillStyle = "#edf1f4";
+            context.fillRect(cellX + 1, rowY + 1, width - 2, currentRowHeight - 2);
+            context.strokeStyle = "#9aa8b3";
+            context.lineWidth = 1.5;
+            context.beginPath();
+            context.moveTo(cellX + 10, rowY + currentRowHeight - 8);
+            context.lineTo(cellX + width - 10, rowY + 8);
+            context.stroke();
+          }
+        }
       }
       cellX += width;
     });
@@ -530,14 +543,20 @@ function drawExportEnvelope(
   context.setLineDash([]);
 
   [
-    { dx: 18, dy: -12, result: startResult, label: "Start", color: "#20a879" },
-    { dx: 28, dy: 34, result: landingResult, label: "Landung", color: "#006f9f" },
-  ].forEach(({ dx, dy, result, label, color }) => {
+    { result: startResult, label: "Start", color: "#20a879" },
+    { result: landingResult, label: "Landung", color: "#006f9f" },
+  ].forEach(({ result, label, color }) => {
+    const pointX = px(result.totalMomentKgM);
+    const pointY = py(result.totalMassKg);
+    const markerRadius = 8;
+    const labelWidth = context.measureText(label).width;
+    const labelX = Math.min(x + width - 24, Math.max(x + padding.left + labelWidth / 2, pointX + 22));
+    const labelY = pointY < y + padding.top + 80 ? pointY + 34 : pointY - 18;
     context.fillStyle = color;
     context.beginPath();
-    context.arc(px(result.totalMomentKgM), py(result.totalMassKg), 12, 0, Math.PI * 2);
+    context.arc(pointX, pointY, markerRadius, 0, Math.PI * 2);
     context.fill();
-    exportText(context, label, px(result.totalMomentKgM) + dx, py(result.totalMassKg) + dy, { size: 17, weight: 700, color });
+    exportText(context, label, labelX, labelY, { size: 17, weight: 700, align: "center", color });
   });
 }
 
@@ -628,7 +647,7 @@ async function createWeightBalanceExportCanvas(
     ],
     1030,
     318,
-    [350, 120, 130, 130],
+    [330, 110, 145, 145],
     40,
   );
   drawExportEnvelope(context, startResult, landingResult, 1030, 780, 1040, 600);
