@@ -226,6 +226,11 @@ function timestamp(date: Date) {
   return date.toISOString().replace("T", " ").replace(/:/g, "-").slice(0, 19);
 }
 
+function exportTimestamp(date: Date) {
+  const value = date.toISOString();
+  return `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)} ${value.slice(11, 19)}Z`;
+}
+
 async function exportChartImage(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext) {
   const { canvas, exportDate } = await createLandingExportCanvas(inputs, result, exportContext);
   const blob = await canvasToBlob(canvas);
@@ -256,7 +261,7 @@ async function createLandingExportCanvas(inputs: LandingInputs, result: LandingR
 
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, canvas.width, canvas.height);
-  drawText(context, `${timestamp(exportDate)}Z – Grob G115B Landestreckenberechnung`, 48, 54, { size: 30, weight: 700 });
+  drawText(context, `${exportTimestamp(exportDate)} – Grob G115B Landestreckenberechnung`, 48, 54, { size: 30, weight: 700 });
   drawText(context, "Eingangswerte", 48, 96, { size: 19, weight: 700, color: "#006f9f" });
   drawField(context, "Elevation", exportContext.pressureAltitudeMode !== "direct" ? `${exportContext.elevationFt} ft` : "Nicht bereitgestellt", 48, 112, 338, exportContext.pressureAltitudeMode === "direct");
   drawField(context, "QNH", exportContext.pressureAltitudeMode !== "direct" ? `${exportContext.qnhHpa} hPa` : "Nicht bereitgestellt", 402, 112, 338, exportContext.pressureAltitudeMode === "direct");

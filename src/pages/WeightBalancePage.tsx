@@ -230,6 +230,11 @@ function timestamp(date: Date) {
   return date.toISOString().replace("T", " ").replace(/:/g, "-").slice(0, 19);
 }
 
+function exportTimestamp(date: Date) {
+  const value = date.toISOString();
+  return `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)} ${value.slice(11, 19)}Z`;
+}
+
 function canvasToBlob(canvas: HTMLCanvasElement) {
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("PNG konnte nicht erzeugt werden.")), "image/png");
@@ -560,7 +565,7 @@ async function createWeightBalanceExportCanvas(
   exportText(context, "Beladeplan", canvas.width / 2, 144, { size: 34, weight: 700, align: "center" });
   exportText(context, `Revision ${startResult.emptyAircraft.revision}`, canvas.width - 210, 96, { size: 25, weight: 700, align: "center" });
   exportText(context, startResult.emptyAircraft.revisionDate, canvas.width - 210, 136, { size: 25, align: "center" });
-  exportText(context, `${timestamp(exportDate)}Z`, 78, 144, { size: 22, color: "#607487" });
+  exportText(context, exportTimestamp(exportDate), 78, 144, { size: 22, color: "#607487" });
 
   exportText(context, "Startbeladung", 60, 286, { size: 28, weight: 700, color: "#006f9f" });
   drawExportTable(

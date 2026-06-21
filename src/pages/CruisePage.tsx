@@ -111,6 +111,11 @@ function timestamp(date: Date) {
   return date.toISOString().replace("T", " ").replace(/:/g, "-").slice(0, 19);
 }
 
+function exportTimestamp(date: Date) {
+  const value = date.toISOString();
+  return `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)} ${value.slice(11, 19)}Z`;
+}
+
 function formatAltitudeSummary(inputs: CruiseViewInputs) {
   if (inputs.mode === "alt") return `Altitude ${inputs.altitudeFt!.toLocaleString("de-DE")} ft · QNH ${inputs.qnhHpa} hPa · DA ${inputs.densityAltitudeFt.toLocaleString("de-DE")} ft`;
   if (inputs.mode === "fl") return `FL ${inputs.flightLevel} · DA ${inputs.densityAltitudeFt.toLocaleString("de-DE")} ft`;
@@ -142,11 +147,11 @@ function altitudeFields(inputs: CruiseViewInputs): Array<[string, string, boolea
   ];
 }
 
-function drawExportHeader(context: CanvasRenderingContext2D, inputs: CruiseViewInputs, charts: readonly CruiseChart[], time: string, width: number) {
+function drawExportHeader(context: CanvasRenderingContext2D, inputs: CruiseViewInputs, charts: readonly CruiseChart[], exportDate: Date, width: number) {
   const margin = 96;
   const gap = 32;
   const fieldWidth = (width - margin * 2 - gap * 3) / 4;
-  drawText(context, `${time}Z – Grob G115B Reiseflugberechnung`, margin, 76, { size: 46, weight: 700 });
+  drawText(context, `${exportTimestamp(exportDate)} – Grob G115B Reiseflugberechnung`, margin, 76, { size: 46, weight: 700 });
   drawText(context, "Wahre Fluggeschwindigkeit und Drehzahl", margin, 126, { size: 28, weight: 600, color: "#526274" });
   drawText(context, "Eingangswerte", margin, 188, { size: 30, weight: 700, color: "#006f9f" });
   altitudeFields(inputs).forEach(([label, value, disabled], index) => drawField(context, label, value, margin + index * (fieldWidth + gap), 212, fieldWidth, disabled));
@@ -194,7 +199,8 @@ function drawChartTrace(context: CanvasRenderingContext2D, chart: CruiseChart, t
 }
 
 async function createCruiseExportCanvas(inputs: CruiseViewInputs, charts: readonly CruiseChart[]) {
-  const time = timestamp(new Date());
+  const exportDate = new Date();
+  const time = timestamp(exportDate);
   const headerHeight = 720;
   const chartGap = 140;
   const chartTitleHeight = 72;
@@ -207,7 +213,7 @@ async function createCruiseExportCanvas(inputs: CruiseViewInputs, charts: readon
   if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, canvas.width, canvas.height);
-  drawExportHeader(context, inputs, charts, time, canvas.width);
+  drawExportHeader(context, inputs, charts, exportDate, canvas.width);
   let y = headerHeight;
   charts.forEach((chart, index) => {
     const x = (canvas.width - chart.width) / 2;

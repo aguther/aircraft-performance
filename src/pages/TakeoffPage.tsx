@@ -220,6 +220,11 @@ function timestamp(date: Date) {
   return date.toISOString().replace("T", " ").replace(/:/g, "-").slice(0, 19);
 }
 
+function exportTimestamp(date: Date) {
+  const value = date.toISOString();
+  return `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)} ${value.slice(11, 19)}Z`;
+}
+
 async function exportChartImage(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext) {
   const { canvas, exportDate } = await createTakeoffExportCanvas(inputs, result, exportContext);
   const blob = await canvasToBlob(canvas);
@@ -250,7 +255,7 @@ async function createTakeoffExportCanvas(inputs: TakeoffInputs, result: TakeoffR
 
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, canvas.width, canvas.height);
-  drawExportText(context, `${timestamp(exportDate)}Z – Grob G115B Startstreckenberechnung`, 48, 54, { size: 30, weight: 700 });
+  drawExportText(context, `${exportTimestamp(exportDate)} – Grob G115B Startstreckenberechnung`, 48, 54, { size: 30, weight: 700 });
   drawExportText(context, "Eingangswerte", 48, 96, { size: 19, weight: 700, color: "#006f9f" });
   drawExportField(context, "Elevation", exportContext.pressureAltitudeMode !== "direct" ? `${exportContext.elevationFt} ft` : "Nicht bereitgestellt", 48, 112, 338, exportContext.pressureAltitudeMode === "direct");
   drawExportField(context, "QNH", exportContext.pressureAltitudeMode !== "direct" ? `${exportContext.qnhHpa} hPa` : "Nicht bereitgestellt", 402, 112, 338, exportContext.pressureAltitudeMode === "direct");

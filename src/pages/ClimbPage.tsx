@@ -153,6 +153,11 @@ function timestamp(date: Date) {
   return date.toISOString().replace("T", " ").replace(/:/g, "-").slice(0, 19);
 }
 
+function exportTimestamp(date: Date) {
+  const value = date.toISOString();
+  return `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)} ${value.slice(11, 19)}Z`;
+}
+
 function drawOverlay(context: CanvasRenderingContext2D, inputs: { departureDensityAltitudeFt: number; destinationDensityAltitudeFt: number }, result: ClimbResult) {
   const traces = [
     { da: inputs.departureDensityAltitudeFt, values: result.departureCumulative, color: START_COLOR },
@@ -208,7 +213,7 @@ async function createClimbExportCanvas(from: LegState, to: LegState, inputs: { d
   if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, canvas.width, canvas.height);
-  drawText(context, `${timestamp(exportDate)}Z – Grob G115B Steigflugberechnung`, 40, 52, { size: 27, weight: 700 });
+  drawText(context, `${exportTimestamp(exportDate)} – Grob G115B Steigflugberechnung`, 40, 52, { size: 27, weight: 700 });
   drawText(context, "Eingangswerte", 40, 94, { size: 18, weight: 700, color: "#006f9f" });
   drawField(context, "Start", describeLeg(from), 40, 110, 550);
   drawField(context, "Ziel", describeLeg(to), 610, 110, 550);
