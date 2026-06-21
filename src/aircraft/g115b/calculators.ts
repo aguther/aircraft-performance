@@ -18,6 +18,10 @@ function stallIdleFlaps40Kmh(massKg: number): number {
     return core.interpolate1D(data.stall.massBreakpoints, data.stall.speedsKmh.idle.flaps40, massKg);
   }
 
+function bankedStallSpeedKmh(stallSpeedKmh: number, bankDegrees: number): number {
+    return stallSpeedKmh * Math.sqrt(1 / Math.cos((bankDegrees * Math.PI) / 180));
+  }
+
 function vrefKmh(massKg: number): number {
     return stallIdleFlaps40Kmh(massKg) * VREF_STALL_FACTOR;
   }
@@ -345,6 +349,8 @@ export function calculateWeightBalance(inputs: WeightBalanceInputs) {
         speedAt15mKmh: core.interpolate1D(data.takeoff.rotateSpeedMassBreakpoints, data.takeoff.speedAt15mKmh, totalMassKg),
         approachSpeedKmh: core.interpolate1D(data.landing.approachSpeedMassBreakpoints, data.landing.approachSpeedKmh, totalMassKg),
         stallIdleFlaps40Kmh: stallIdleFlaps40Kmh(totalMassKg),
+        stallIdleFlaps40Bank30Kmh: bankedStallSpeedKmh(stallIdleFlaps40Kmh(totalMassKg), 30),
+        stallIdleFlaps40Bank45Kmh: bankedStallSpeedKmh(stallIdleFlaps40Kmh(totalMassKg), 45),
         referenceSpeedKmh: vrefKmh(totalMassKg),
       },
       conditions: [

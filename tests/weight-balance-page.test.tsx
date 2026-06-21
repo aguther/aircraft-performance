@@ -24,6 +24,8 @@ describe("WeightBalancePage", () => {
     expect(markup).toContain("Beladung · Start bis Landung");
     expect(markup).toContain("Gesamt · Start");
     expect(markup).toContain("Gesamt · Landung");
+    expect(markup).toContain("30° Bank");
+    expect(markup).toContain("45° Bank");
     expect(markup).not.toContain("<div class=\"card-title\">Bedingungen</div>");
   });
 });

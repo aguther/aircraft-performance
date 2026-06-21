@@ -11,6 +11,10 @@ import { createPdfBlobFromCanvas, warmPdfExportModule } from "../export/pdf";
 
 type WeightBalanceResult = ReturnType<typeof calculateWeightBalance>;
 
+function bankedStallSpeedKmh(stallSpeedKmh: number, bankDegrees: number): number {
+  return stallSpeedKmh * Math.sqrt(1 / Math.cos((bankDegrees * Math.PI) / 180));
+}
+
 function deriveLandingResult(startResult: WeightBalanceResult, plannedFuelBurnLiters: number): WeightBalanceResult {
   const data = g115bData.weightBalance;
   const burnedFuelLiters = Math.min(startResult.stations[4].massKg / data.fuelDensityKgPerLiter, Math.max(0, plannedFuelBurnLiters));
@@ -41,6 +45,8 @@ function deriveLandingResult(startResult: WeightBalanceResult, plannedFuelBurnLi
       speedAt15mKmh: interpolate1D(g115bData.takeoff.rotateSpeedMassBreakpoints, g115bData.takeoff.speedAt15mKmh, totalMassKg),
       approachSpeedKmh: interpolate1D(g115bData.landing.approachSpeedMassBreakpoints, g115bData.landing.approachSpeedKmh, totalMassKg),
       stallIdleFlaps40Kmh,
+      stallIdleFlaps40Bank30Kmh: bankedStallSpeedKmh(stallIdleFlaps40Kmh, 30),
+      stallIdleFlaps40Bank45Kmh: bankedStallSpeedKmh(stallIdleFlaps40Kmh, 45),
       referenceSpeedKmh: stallIdleFlaps40Kmh * 1.3,
     },
   };
@@ -369,6 +375,8 @@ function speedRowsForResult(result: WeightBalanceResult): SpeedExportRow[] {
     { detail: "Approach", kmh: Math.round(result.speeds.approachSpeedKmh).toString(), kt: kilometersPerHourToKnots(result.speeds.approachSpeedKmh).toFixed(1), subscript: "APP" },
     { kmh: Math.round(result.speeds.referenceSpeedKmh).toString(), kt: kilometersPerHourToKnots(result.speeds.referenceSpeedKmh).toFixed(1), subscript: "REF", suffixSymbolSubscript: "S0", suffixText: "1.3 x" },
     { detail: "Leerlauf 40°", kmh: Math.round(result.speeds.stallIdleFlaps40Kmh).toString(), kt: kilometersPerHourToKnots(result.speeds.stallIdleFlaps40Kmh).toFixed(1), subscript: "S0" },
+    { detail: "Leerlauf 40° · 30° Bank", kmh: Math.round(result.speeds.stallIdleFlaps40Bank30Kmh).toString(), kt: kilometersPerHourToKnots(result.speeds.stallIdleFlaps40Bank30Kmh).toFixed(1), subscript: "S0" },
+    { detail: "Leerlauf 40° · 45° Bank", kmh: Math.round(result.speeds.stallIdleFlaps40Bank45Kmh).toString(), kt: kilometersPerHourToKnots(result.speeds.stallIdleFlaps40Bank45Kmh).toFixed(1), subscript: "S0" },
   ];
 }
 
@@ -612,7 +620,7 @@ async function createWeightBalanceExportCanvas(
     [390, 160, 180],
     40,
   );
-  drawExportEnvelope(context, startResult, landingResult, 1030, 780, 1040, 600);
+  drawExportEnvelope(context, startResult, landingResult, 1030, 960, 1040, 420);
 
   return { canvas, exportDate };
 }
@@ -866,6 +874,8 @@ export function WeightBalancePage() {
                 <SpeedMetric label={<span><SpeedSymbol index="APP" /> · Approach</span>} speedKmh={startResult.speeds.approachSpeedKmh} />
                 <SpeedMetric label={<span><SpeedSymbol index="REF" /> · 1.3 x <SpeedSymbol index="S0" /></span>} speedKmh={startResult.speeds.referenceSpeedKmh} />
                 <SpeedMetric label={<span><SpeedSymbol index="S0" /> · Leerlauf 40°</span>} speedKmh={startResult.speeds.stallIdleFlaps40Kmh} />
+                <SpeedMetric label={<span><SpeedSymbol index="S0" /> · 30° Bank</span>} speedKmh={startResult.speeds.stallIdleFlaps40Bank30Kmh} />
+                <SpeedMetric label={<span><SpeedSymbol index="S0" /> · 45° Bank</span>} speedKmh={startResult.speeds.stallIdleFlaps40Bank45Kmh} />
               </div>
             </div>
             <div className="wb-speed-group">
@@ -874,6 +884,8 @@ export function WeightBalancePage() {
                 <SpeedMetric label={<span><SpeedSymbol index="APP" /> · Approach</span>} speedKmh={landingResult.speeds.approachSpeedKmh} />
                 <SpeedMetric label={<span><SpeedSymbol index="REF" /> · 1.3 x <SpeedSymbol index="S0" /></span>} speedKmh={landingResult.speeds.referenceSpeedKmh} />
                 <SpeedMetric label={<span><SpeedSymbol index="S0" /> · Leerlauf 40°</span>} speedKmh={landingResult.speeds.stallIdleFlaps40Kmh} />
+                <SpeedMetric label={<span><SpeedSymbol index="S0" /> · 30° Bank</span>} speedKmh={landingResult.speeds.stallIdleFlaps40Bank30Kmh} />
+                <SpeedMetric label={<span><SpeedSymbol index="S0" /> · 45° Bank</span>} speedKmh={landingResult.speeds.stallIdleFlaps40Bank45Kmh} />
               </div>
             </div>
           </div>
