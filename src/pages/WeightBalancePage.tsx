@@ -541,7 +541,7 @@ async function createWeightBalanceExportCanvas(
   const burnedFuelMomentKgM = startResult.totalMomentKgM - landingResult.totalMomentKgM;
   const canvas = document.createElement("canvas");
   canvas.width = 2200;
-  canvas.height = 1500;
+  canvas.height = 1700;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
 
@@ -574,7 +574,7 @@ async function createWeightBalanceExportCanvas(
   );
   exportText(context, "MTOW: 920 kg", 72, 750, { size: 24, weight: 700 });
 
-  exportText(context, "Landung", 60, 828, { size: 28, weight: 700, color: "#006f9f" });
+  exportText(context, "Landung", 60, 788, { size: 28, weight: 700, color: "#006f9f" });
   drawExportTable(
     context,
     [
@@ -583,7 +583,7 @@ async function createWeightBalanceExportCanvas(
       ["Landegewicht", landingResult.totalMassKg.toFixed(1), landingResult.cgArmM.toFixed(4), landingResult.totalMomentKgM.toFixed(2)],
     ],
     60,
-    860,
+    820,
     [360, 170, 160, 210],
     58,
     1,
@@ -591,19 +591,7 @@ async function createWeightBalanceExportCanvas(
     [1, 2, 3],
   );
 
-  exportText(context, "Status", 60, 1170, { size: 28, weight: 700, color: "#006f9f" });
-  const envelopeStatusRows = [
-    { danger: !startResult.withinEnvelope, label: "Start", value: startResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope" },
-    { danger: !landingResult.withinEnvelope, label: "Landung", value: landingResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope" },
-  ];
-  drawStatusExportTable(context, envelopeStatusRows, 60, 1208, [250, 650], 43);
-  const statusRows = [
-    ["Kraftstoffdichte", `${g115bData.weightBalance.fuelDensityKgPerLiter.toLocaleString("de-DE")} kg/l`],
-    ["Quelle", `${g115bData.weightBalance.source} · Beladeplan Revision ${startResult.emptyAircraft.revision} vom ${startResult.emptyAircraft.revisionDate}`],
-  ];
-  drawExportTable(context, statusRows, 60, 1294, [250, 650], 43, 0, 0);
-
-  exportText(context, "Geschwindigkeiten", 1030, 286, { size: 28, weight: 700, color: "#006f9f" });
+  exportText(context, "Geschwindigkeiten", 60, 1038, { size: 28, weight: 700, color: "#006f9f" });
   drawSpeedExportTable(
     context,
     [
@@ -615,12 +603,24 @@ async function createWeightBalanceExportCanvas(
       { group: "Landung mit Landegewicht" },
       ...speedRowsForResult(landingResult),
     ],
-    1030,
-    318,
-    [390, 160, 180],
-    40,
+    60,
+    1070,
+    [560, 160, 180],
+    36,
   );
-  drawExportEnvelope(context, startResult, landingResult, 1030, 960, 1040, 420);
+  drawExportEnvelope(context, startResult, landingResult, 1030, 238, 1040, 900);
+
+  exportText(context, "Status", 1030, 1210, { size: 28, weight: 700, color: "#006f9f" });
+  const envelopeStatusRows = [
+    { danger: !startResult.withinEnvelope, label: "Start", value: startResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope" },
+    { danger: !landingResult.withinEnvelope, label: "Landung", value: landingResult.withinEnvelope ? "Envelope OK" : "Ausserhalb Envelope" },
+  ];
+  drawStatusExportTable(context, envelopeStatusRows, 1030, 1248, [250, 790], 43);
+  const statusRows = [
+    ["Kraftstoffdichte", `${g115bData.weightBalance.fuelDensityKgPerLiter.toLocaleString("de-DE")} kg/l`],
+    ["Quelle", `${g115bData.weightBalance.source} · Beladeplan Revision ${startResult.emptyAircraft.revision} vom ${startResult.emptyAircraft.revisionDate}`],
+  ];
+  drawExportTable(context, statusRows, 1030, 1334, [250, 790], 43, 0, 0);
 
   return { canvas, exportDate };
 }
