@@ -305,13 +305,12 @@ async function createTakeoffPathExportCanvas(inputs: TakeoffInputs, result: Take
   const exportDate = new Date();
   const trace = calculateDr400TakeoffTrace(inputs);
   const steps = [
-    ["Info", "Handhabung: DR400 hat keine Diagrammlinie, sondern POH-Tabellen. Es wird je Strecke zuerst in der OAT-Spalte interpoliert, dann zwischen den Druckhöhen, danach zwischen 900/1100 kg. Wind und Bahn-Zuschlag werden danach auf die jeweilige Ergebnisstrecke angewendet.", "Rechenfolge"],
-    ["1", `Startrollstrecke aus POH-Tabelle.\n${trace.roll900.compact}\n${trace.roll1100.compact}`, `${round(result.groundRollByAtmosphereMeters)} m bei 1100 kg`],
-    ["2", `15-m-Strecke aus POH-Tabelle.\n${trace.obstacle900.compact}\n${trace.obstacle1100.compact}`, `${round(trace.obstacle1100.result)} m bei 1100 kg`],
-    ["3", `Masseninterpolation zwischen den POH-Gewichten.\n${trace.massCompact}`, `${round(trace.groundRollByMassMeters)} m / ${round(trace.obstacleByMassMeters)} m vor Wind`],
-    ["4", "Slope ist für dieses Muster nicht im Flughandbuch verfügbar und wird deshalb nicht angewendet.", `${round(result.groundRollBySlopeMeters)} m`],
-    ["5", trace.windText, `${round(result.groundRollByWindMeters)} m / ${round(result.takeoffDistanceWithoutMarginMeters)} m`],
-    ["6", trace.marginText, `${result.groundRollMeters} m / ${result.takeoffDistanceMeters} m`],
+    ["Info", "Handhabung: DR400 hat POH-Tabellen. Aus PA/OAT wird ΔISA berechnet. Für jede relevante Höhenzeile wird daraus die Tabellen-OAT gebildet, dort 900/1100 kg interpoliert und danach zwischen den Höhenzeilen interpoliert.", "Rechenfolge"],
+    ["1", `Startrollstrecke aus POH-Tabelle.\n${trace.rollCombined.compact}`, `${round(trace.groundRollByMassMeters)} m vor Wind`],
+    ["2", `15-m-Strecke aus POH-Tabelle.\n${trace.obstacleCombined.compact}`, `${round(trace.obstacleByMassMeters)} m vor Wind`],
+    ["3", "Slope ist für dieses Muster nicht im Flughandbuch verfügbar und wird deshalb nicht angewendet.", `${round(result.groundRollBySlopeMeters)} m`],
+    ["4", trace.windText, `${round(result.groundRollByWindMeters)} m / ${round(result.takeoffDistanceWithoutMarginMeters)} m`],
+    ["5", trace.marginText, `${result.groundRollMeters} m / ${result.takeoffDistanceMeters} m`],
   ];
   const canvas = document.createElement("canvas");
   canvas.width = 1200;

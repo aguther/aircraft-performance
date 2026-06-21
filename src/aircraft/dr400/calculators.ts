@@ -118,8 +118,9 @@ function interpolateRaggedTable(
   altitudeFt: number,
   oatC: number,
 ) {
+  const isaDeviationC = core.densityAltitude(altitudeFt, oatC).isaDeviationC;
   const perAltitude = altitudes.map((_, index) =>
-    core.interpolate1D(temperatures[index], values[index], oatC)
+    core.interpolate1D(temperatures[index], values[index], temperatures[index][1] + isaDeviationC)
   );
   return core.interpolate1D(altitudes, perAltitude, altitudeFt);
 }
@@ -155,24 +156,27 @@ function raggedTrace(
   altitudeFt: number,
   oatC: number,
 ) {
+  const isaDeviationC = core.densityAltitude(altitudeFt, oatC).isaDeviationC;
   const [lowerAltitude, upperAltitude] = bracket(altitudes, altitudeFt);
   const lowerAltitudeIndex = altitudes.indexOf(lowerAltitude);
   const upperAltitudeIndex = altitudes.indexOf(upperAltitude);
   const lowerTempValues = temperatures[lowerAltitudeIndex];
   const upperTempValues = temperatures[upperAltitudeIndex];
-  const [lowerTempLow, lowerTempHigh] = bracket(lowerTempValues, oatC);
-  const [upperTempLow, upperTempHigh] = bracket(upperTempValues, oatC);
+  const lowerEffectiveTemp = lowerTempValues[1] + isaDeviationC;
+  const upperEffectiveTemp = upperTempValues[1] + isaDeviationC;
+  const [lowerTempLow, lowerTempHigh] = bracket(lowerTempValues, lowerEffectiveTemp);
+  const [upperTempLow, upperTempHigh] = bracket(upperTempValues, upperEffectiveTemp);
   const lowerTempLowIndex = lowerTempValues.indexOf(lowerTempLow);
   const lowerTempHighIndex = lowerTempValues.indexOf(lowerTempHigh);
   const upperTempLowIndex = upperTempValues.indexOf(upperTempLow);
   const upperTempHighIndex = upperTempValues.indexOf(upperTempHigh);
-  const lowerAtTemp = valueAt(lowerTempValues, values[lowerAltitudeIndex], oatC);
-  const upperAtTemp = valueAt(upperTempValues, values[upperAltitudeIndex], oatC);
+  const lowerAtTemp = valueAt(lowerTempValues, values[lowerAltitudeIndex], lowerEffectiveTemp);
+  const upperAtTemp = valueAt(upperTempValues, values[upperAltitudeIndex], upperEffectiveTemp);
   const result = core.interpolate1D([lowerAltitude, upperAltitude], [lowerAtTemp, upperAtTemp], altitudeFt);
   const compact = [
-    `${label}: erst OAT je Höhenzeile, dann Höhe ${lowerAltitude}/${upperAltitude} ft.`,
-    compactInterpolationLine(`${lowerAltitude} ft OAT`, oatC, lowerTempLow, values[lowerAltitudeIndex][lowerTempLowIndex], lowerTempHigh, values[lowerAltitudeIndex][lowerTempHighIndex], lowerAtTemp, "m"),
-    compactInterpolationLine(`${upperAltitude} ft OAT`, oatC, upperTempLow, values[upperAltitudeIndex][upperTempLowIndex], upperTempHigh, values[upperAltitudeIndex][upperTempHighIndex], upperAtTemp, "m"),
+    `${label}: ΔISA ${isaDeviationC.toFixed(1)} °C, Höhenzeilen ${lowerAltitude}/${upperAltitude} ft.`,
+    compactInterpolationLine(`${lowerAltitude} ft Tabellen-OAT ${lowerEffectiveTemp.toFixed(1)} °C`, lowerEffectiveTemp, lowerTempLow, values[lowerAltitudeIndex][lowerTempLowIndex], lowerTempHigh, values[lowerAltitudeIndex][lowerTempHighIndex], lowerAtTemp, "m"),
+    compactInterpolationLine(`${upperAltitude} ft Tabellen-OAT ${upperEffectiveTemp.toFixed(1)} °C`, upperEffectiveTemp, upperTempLow, values[upperAltitudeIndex][upperTempLowIndex], upperTempHigh, values[upperAltitudeIndex][upperTempHighIndex], upperAtTemp, "m"),
     compactInterpolationLine("Höhe", altitudeFt, lowerAltitude, Math.round(lowerAtTemp), upperAltitude, Math.round(upperAtTemp), result, "m"),
   ].join("\n");
   return {
@@ -180,10 +184,49 @@ function raggedTrace(
     result,
     text: [
       `${label}: Tabellenhöhen ${lowerAltitude}/${upperAltitude} ft, OAT-Stützstellen ${lowerTempLow}/${lowerTempHigh} °C und ${upperTempLow}/${upperTempHigh} °C.`,
-      interpolationFormula(`${lowerAltitude} ft OAT`, oatC, lowerTempLow, values[lowerAltitudeIndex][lowerTempLowIndex], lowerTempHigh, values[lowerAltitudeIndex][lowerTempHighIndex], lowerAtTemp, "m"),
-      interpolationFormula(`${upperAltitude} ft OAT`, oatC, upperTempLow, values[upperAltitudeIndex][upperTempLowIndex], upperTempHigh, values[upperAltitudeIndex][upperTempHighIndex], upperAtTemp, "m"),
+      interpolationFormula(`${lowerAltitude} ft OAT`, lowerEffectiveTemp, lowerTempLow, values[lowerAltitudeIndex][lowerTempLowIndex], lowerTempHigh, values[lowerAltitudeIndex][lowerTempHighIndex], lowerAtTemp, "m"),
+      interpolationFormula(`${upperAltitude} ft OAT`, upperEffectiveTemp, upperTempLow, values[upperAltitudeIndex][upperTempLowIndex], upperTempHigh, values[upperAltitudeIndex][upperTempHighIndex], upperAtTemp, "m"),
       interpolationFormula("Höhe", altitudeFt, lowerAltitude, Math.round(lowerAtTemp), upperAltitude, Math.round(upperAtTemp), result, "m"),
     ].join(" "),
+  };
+}
+
+function raggedMassTrace(
+  label: string,
+  altitudes: readonly number[],
+  temperatures: readonly (readonly number[])[],
+  lowerMassValues: readonly (readonly number[])[],
+  upperMassValues: readonly (readonly number[])[],
+  lowerMass: number,
+  upperMass: number,
+  massKg: number,
+  altitudeFt: number,
+  oatC: number,
+) {
+  const isaDeviationC = core.densityAltitude(altitudeFt, oatC).isaDeviationC;
+  const [lowerAltitude, upperAltitude] = bracket(altitudes, altitudeFt);
+  const rowValue = (altitude: number) => {
+    const altitudeIndex = altitudes.indexOf(altitude);
+    const rowTemperatures = temperatures[altitudeIndex];
+    const effectiveTemperature = rowTemperatures[1] + isaDeviationC;
+    const lowerMassAtTemp = core.interpolate1D(rowTemperatures, lowerMassValues[altitudeIndex], effectiveTemperature);
+    const upperMassAtTemp = core.interpolate1D(rowTemperatures, upperMassValues[altitudeIndex], effectiveTemperature);
+    const massResult = core.interpolate1D([lowerMass, upperMass], [lowerMassAtTemp, upperMassAtTemp], massKg);
+    return { effectiveTemperature, lowerMassAtTemp, massResult, rowTemperatures, upperMassAtTemp };
+  };
+  const lowerRow = rowValue(lowerAltitude);
+  const upperRow = rowValue(upperAltitude);
+  const result = core.interpolate1D([lowerAltitude, upperAltitude], [lowerRow.massResult, upperRow.massResult], altitudeFt);
+  const rowText = (altitude: number, row: ReturnType<typeof rowValue>) =>
+    `${altitude} ft: OAT ${row.rowTemperatures[1]} + ΔISA ${isaDeviationC.toFixed(1)} = ${row.effectiveTemperature.toFixed(1)} °C; ${lowerMass}/${upperMass} kg -> ${Math.round(row.lowerMassAtTemp)}/${Math.round(row.upperMassAtTemp)} m; ${massKg} kg -> ${Math.round(row.massResult)} m.`;
+  return {
+    compact: [
+      `${label}: ΔISA ${isaDeviationC.toFixed(1)} °C; relevante Höhenzeilen ${lowerAltitude}/${upperAltitude} ft.`,
+      rowText(lowerAltitude, lowerRow),
+      rowText(upperAltitude, upperRow),
+      compactInterpolationLine("Höhe", altitudeFt, lowerAltitude, Math.round(lowerRow.massResult), upperAltitude, Math.round(upperRow.massResult), result, "m"),
+    ].join("\n"),
+    result,
   };
 }
 
@@ -211,16 +254,19 @@ export function takeoffTrace(inputs: TakeoffInputs) {
   const roll1100 = raggedTrace("Startrollstrecke 1100 kg", takeoffDistances.altitudes, takeoffDistances.temperatures, takeoffDistances.groundRoll1100, inputs.pressureAltitudeFt, inputs.oatC);
   const obstacle900 = raggedTrace("15-m-Strecke 900 kg", takeoffDistances.altitudes, takeoffDistances.temperatures, takeoffDistances.obstacle900, inputs.pressureAltitudeFt, inputs.oatC);
   const obstacle1100 = raggedTrace("15-m-Strecke 1100 kg", takeoffDistances.altitudes, takeoffDistances.temperatures, takeoffDistances.obstacle1100, inputs.pressureAltitudeFt, inputs.oatC);
+  const rollCombined = raggedMassTrace("Startrollstrecke", takeoffDistances.altitudes, takeoffDistances.temperatures, takeoffDistances.groundRoll900, takeoffDistances.groundRoll1100, 900, 1100, mass, inputs.pressureAltitudeFt, inputs.oatC);
+  const obstacleCombined = raggedMassTrace("15-m-Strecke", takeoffDistances.altitudes, takeoffDistances.temperatures, takeoffDistances.obstacle900, takeoffDistances.obstacle1100, 900, 1100, mass, inputs.pressureAltitudeFt, inputs.oatC);
   const groundRollByMassMeters = core.interpolate1D([900, 1100], [roll900.result, roll1100.result], mass);
   const obstacleByMassMeters = core.interpolate1D([900, 1100], [obstacle900.result, obstacle1100.result], mass);
   const factor = windFactor(inputs.windKt);
   const groundRollByWindMeters = groundRollByMassMeters * factor;
   const obstacleByWindMeters = obstacleByMassMeters * factor;
   const groundRollMarginMeters = groundRollByWindMeters * (inputs.safetyMarginPercent / 100);
-  const obstacleMarginMeters = obstacleByWindMeters * (inputs.safetyMarginPercent / 100);
   return {
+    rollCombined,
     roll900,
     roll1100,
+    obstacleCombined,
     obstacle900,
     obstacle1100,
     groundRollByMassMeters,
@@ -236,7 +282,7 @@ export function takeoffTrace(inputs: TakeoffInputs) {
       compactMassTrace("15-m-Strecke Masse", mass, 900, obstacle900.result, 1100, obstacle1100.result, obstacleByMassMeters),
     ].join("\n"),
     windText: `Windfaktor: ${inputs.windKt} kt -> Faktor ${factor.toFixed(2)}. Rollstrecke ${Math.round(groundRollByMassMeters)} x ${factor.toFixed(2)} = ${Math.round(groundRollByWindMeters)} m; 15-m-Strecke ${Math.round(obstacleByMassMeters)} x ${factor.toFixed(2)} = ${Math.round(obstacleByWindMeters)} m.`,
-    marginText: `Zuschlag auf jede Ergebnisstrecke: Roll ${Math.round(groundRollByWindMeters)} x ${inputs.safetyMarginPercent}% = ${Math.round(groundRollMarginMeters)} m -> ${core.round(groundRollByWindMeters + groundRollMarginMeters)} m. 15-m-Strecke ${Math.round(obstacleByWindMeters)} x ${inputs.safetyMarginPercent}% = ${Math.round(obstacleMarginMeters)} m -> ${core.round(obstacleByWindMeters + obstacleMarginMeters)} m.`,
+    marginText: `Bahn-Zuschlag aus Rollstrecke: ${Math.round(groundRollByWindMeters)} x ${inputs.safetyMarginPercent}% = ${Math.round(groundRollMarginMeters)} m. Rollstrecke ${Math.round(groundRollByWindMeters)} + ${Math.round(groundRollMarginMeters)} = ${core.round(groundRollByWindMeters + groundRollMarginMeters)} m; 15-m-Strecke ${Math.round(obstacleByWindMeters)} + ${Math.round(groundRollMarginMeters)} = ${core.round(obstacleByWindMeters + groundRollMarginMeters)} m.`,
   };
 }
 
@@ -252,7 +298,6 @@ export function landingTrace(inputs: LandingInputs) {
   const rollByWindMeters = rollByMassMeters * factor;
   const obstacleByWindMeters = obstacleByMassMeters * factor;
   const landingRollMarginMeters = rollByWindMeters * (inputs.safetyMarginPercent / 100);
-  const obstacleMarginMeters = obstacleByWindMeters * (inputs.safetyMarginPercent / 100);
   return {
     roll845,
     roll1045,
@@ -271,7 +316,7 @@ export function landingTrace(inputs: LandingInputs) {
       compactMassTrace("15-m-Strecke Masse", mass, 845, obstacle845.result, 1045, obstacle1045.result, obstacleByMassMeters),
     ].join("\n"),
     windText: `Windfaktor: ${inputs.windKt} kt -> Faktor ${factor.toFixed(2)}. Rollstrecke ${Math.round(rollByMassMeters)} x ${factor.toFixed(2)} = ${Math.round(rollByWindMeters)} m; 15-m-Strecke ${Math.round(obstacleByMassMeters)} x ${factor.toFixed(2)} = ${Math.round(obstacleByWindMeters)} m.`,
-    marginText: `Zuschlag auf jede Ergebnisstrecke: Roll ${Math.round(rollByWindMeters)} x ${inputs.safetyMarginPercent}% = ${Math.round(landingRollMarginMeters)} m -> ${core.round(rollByWindMeters + landingRollMarginMeters)} m. 15-m-Strecke ${Math.round(obstacleByWindMeters)} x ${inputs.safetyMarginPercent}% = ${Math.round(obstacleMarginMeters)} m -> ${core.round(obstacleByWindMeters + obstacleMarginMeters)} m.`,
+    marginText: `Bahn-Zuschlag aus Rollstrecke: ${Math.round(rollByWindMeters)} x ${inputs.safetyMarginPercent}% = ${Math.round(landingRollMarginMeters)} m. Rollstrecke ${Math.round(rollByWindMeters)} + ${Math.round(landingRollMarginMeters)} = ${core.round(rollByWindMeters + landingRollMarginMeters)} m; 15-m-Strecke ${Math.round(obstacleByWindMeters)} + ${Math.round(landingRollMarginMeters)} = ${core.round(obstacleByWindMeters + landingRollMarginMeters)} m.`,
   };
 }
 
@@ -287,7 +332,6 @@ export function calculateTakeoff(inputs: TakeoffInputs) {
   const groundRollByWindMeters = groundRollByMassMeters * factor;
   const obstacleByWindMeters = takeoffDistanceWithoutMarginMeters * factor;
   const groundRollMarginMeters = groundRollByWindMeters * (inputs.safetyMarginPercent / 100);
-  const takeoffDistanceMarginMeters = obstacleByWindMeters * (inputs.safetyMarginPercent / 100);
   const warnings: Warning[] = [];
   const atmosphere = core.densityAltitude(inputs.pressureAltitudeFt, inputs.oatC);
   if (inputs.massKg > 1100) warnings.push({ text: "Masse überschreitet MTOW (1100 kg).", danger: true });
@@ -305,8 +349,8 @@ export function calculateTakeoff(inputs: TakeoffInputs) {
     groundRollMarginMeters,
     groundRollMeters: core.round(groundRollByWindMeters + groundRollMarginMeters),
     takeoffDistanceWithoutMarginMeters: obstacleByWindMeters,
-    takeoffDistanceMarginMeters,
-    takeoffDistanceMeters: core.round(obstacleByWindMeters + takeoffDistanceMarginMeters),
+    takeoffDistanceMarginMeters: groundRollMarginMeters,
+    takeoffDistanceMeters: core.round(obstacleByWindMeters + groundRollMarginMeters),
     rotateSpeedKmh: 100,
     speedAt15mKmh: 130,
     conditions: ["1100/900-kg-Tabelle interpoliert", "Ohne Wind tabelliert", "Klappen Startstellung", "Vollgas", "Trockene Bahn"],
@@ -325,7 +369,6 @@ export function calculateLanding(inputs: LandingInputs) {
   const landingRollByWindMeters = landingRollByMassMeters * factor;
   const obstacleByWindMeters = landingDistanceWithoutMarginMeters * factor;
   const landingRollMarginMeters = landingRollByWindMeters * (inputs.safetyMarginPercent / 100);
-  const landingDistanceMarginMeters = obstacleByWindMeters * (inputs.safetyMarginPercent / 100);
   const warnings: Warning[] = [];
   const atmosphere = core.densityAltitude(inputs.pressureAltitudeFt, inputs.oatC);
   if (inputs.massKg > 1045) warnings.push({ text: "Masse oberhalb DR400-Landetabelle (1045 kg).", danger: true });
@@ -344,8 +387,8 @@ export function calculateLanding(inputs: LandingInputs) {
     landingRollMarginMeters,
     landingRollMeters: core.round(landingRollByWindMeters + landingRollMarginMeters),
     landingDistanceWithoutMarginMeters: obstacleByWindMeters,
-    landingDistanceMarginMeters,
-    landingDistanceMeters: core.round(obstacleByWindMeters + landingDistanceMarginMeters),
+    landingDistanceMarginMeters: landingRollMarginMeters,
+    landingDistanceMeters: core.round(obstacleByWindMeters + landingRollMarginMeters),
     approachSpeedKmh: 125,
     referenceSpeedKmh: 95 * 1.3,
     conditions: ["1045/845-kg-Tabelle interpoliert", "Klappen Landestellung", "Motor Leerlauf", "Trockene ebene Betonbahn"],
