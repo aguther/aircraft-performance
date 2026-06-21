@@ -222,6 +222,10 @@ function timestamp(date: Date) {
   return date.toISOString().replace("T", " ").replace(/:/g, "-").slice(0, 19);
 }
 
+function filenameSafeLabel(label: string) {
+  return label.replace(/[<>:"/\\|?*]+/g, "-").replace(/\s+/g, " ").trim();
+}
+
 function exportTimestamp(date: Date) {
   const value = date.toISOString();
   return `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)} ${value.slice(11, 19)}Z`;
@@ -358,7 +362,7 @@ async function createTakeoffPathExportCanvas(inputs: TakeoffInputs, result: Take
 async function exportPathImage(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext, aircraftLabel: string) {
   const { canvas, exportDate } = await createTakeoffPathExportCanvas(inputs, result, exportContext, aircraftLabel);
   const blob = await canvasToBlob(canvas);
-  await saveExportBlob(blob, `${timestamp(exportDate)}Z ${aircraftLabel} Startstreckenberechnung.png`, "image/png");
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z ${filenameSafeLabel(aircraftLabel)} Startstreckenberechnung.png`, "image/png");
 }
 
 async function exportPathPdf(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext, aircraftLabel: string, options: { openWindow?: Window | null } = {}) {
@@ -368,7 +372,7 @@ async function exportPathPdf(inputs: TakeoffInputs, result: TakeoffResult, expor
     openExportBlob(blob, options.openWindow);
     return;
   }
-  await saveExportBlob(blob, `${timestamp(exportDate)}Z ${aircraftLabel} Startstreckenberechnung.pdf`, "application/pdf");
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z ${filenameSafeLabel(aircraftLabel)} Startstreckenberechnung.pdf`, "application/pdf");
 }
 
 async function createTakeoffExportCanvas(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext) {

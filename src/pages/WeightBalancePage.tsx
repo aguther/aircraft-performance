@@ -229,6 +229,10 @@ function timestamp(date: Date) {
   return date.toISOString().replace("T", " ").replace(/:/g, "-").slice(0, 19);
 }
 
+function filenameSafeLabel(label: string) {
+  return label.replace(/[<>:"/\\|?*]+/g, "-").replace(/\s+/g, " ").trim();
+}
+
 function exportTimestamp(date: Date) {
   const value = date.toISOString();
   return `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)} ${value.slice(11, 19)}Z`;
@@ -697,7 +701,7 @@ async function exportWeightBalanceImage(
 ) {
   const { canvas, exportDate } = await createWeightBalanceExportCanvas(plan, startResult, landingResult, landingFuelLiters, meta);
   const blob = await canvasToBlob(canvas);
-  await saveExportBlob(blob, `${timestamp(exportDate)}Z ${meta.aircraftLabel} Beladeplan ${plan.registration}.png`, "image/png");
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z ${filenameSafeLabel(meta.aircraftLabel)} Beladeplan ${plan.registration}.png`, "image/png");
 }
 
 async function exportWeightBalancePdf(
@@ -714,7 +718,7 @@ async function exportWeightBalancePdf(
     openExportBlob(blob, options.openWindow);
     return;
   }
-  await saveExportBlob(blob, `${timestamp(exportDate)}Z ${meta.aircraftLabel} Beladeplan ${plan.registration}.pdf`, "application/pdf");
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z ${filenameSafeLabel(meta.aircraftLabel)} Beladeplan ${plan.registration}.pdf`, "application/pdf");
 }
 
 function WeightBalanceExportCard({
