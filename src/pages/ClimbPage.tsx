@@ -8,7 +8,7 @@ import { interpolate1D } from "../domain";
 import { AltitudeInput, type AltitudeInputValue, resolveAltitudeInput } from "../components/AltitudeInput";
 import { CalculatorCard, MetricItem } from "../components/CalculatorCard";
 import { CalculatorInputSection } from "../components/CalculatorInputSection";
-import { createPdfBlobFromCanvas, warmPdfExportModule } from "../export/pdf";
+import { createPdfBlobFromCanvas, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
 
 type ClimbResult = ReturnType<typeof calculateClimb>;
 type LegState = AltitudeInputValue;
@@ -186,11 +186,15 @@ async function exportChart(from: LegState, to: LegState, inputs: { departureDens
   await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Steigflugberechnung.png`, "image/png");
 }
 
-async function exportChartPdf(from: LegState, to: LegState, inputs: { departureDensityAltitudeFt: number; destinationDensityAltitudeFt: number }, result: ClimbResult) {
+async function exportChartPdf(from: LegState, to: LegState, inputs: { departureDensityAltitudeFt: number; destinationDensityAltitudeFt: number }, result: ClimbResult, options: { openWindow?: Window | null } = {}) {
   const exportCanvas = await createClimbExportCanvas(from, to, inputs, result);
   if (!exportCanvas) return;
   const { canvas, exportDate } = exportCanvas;
   const blob = await createPdfBlobFromCanvas(canvas);
+  if (options.openWindow) {
+    openExportBlob(blob, options.openWindow);
+    return;
+  }
   await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Steigflugberechnung.pdf`, "application/pdf");
 }
 
@@ -259,7 +263,7 @@ function ContextCard({ inputs, result }: { inputs: { departureDensityAltitudeFt:
 }
 
 function ChartCard({ from, to, inputs, result }: { from: LegState; to: LegState; inputs: { departureDensityAltitudeFt: number; destinationDensityAltitudeFt: number }; result: ClimbResult }) {
-  const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
+  const [exporting, setExporting] = useState<"png" | "pdf" | "pdf-open" | null>(null);
   const valid = !result.error && result.climbTimeMinutes !== null && result.climbFuelLiters !== null && result.climbDistanceKm !== null && result.climbDistanceNm !== null;
   const saveImage = async () => {
     setExporting("png");
@@ -268,6 +272,19 @@ function ChartCard({ from, to, inputs, result }: { from: LegState; to: LegState;
   const savePdf = async () => {
     setExporting("pdf");
     try { await exportChartPdf(from, to, inputs, result); } finally { setExporting(null); }
+  };
+  const openPdf = async () => {
+    setExporting("pdf-open");
+    let exportWindow: Window | null = null;
+    try {
+      exportWindow = openExportTab();
+      await exportChartPdf(from, to, inputs, result, { openWindow: exportWindow });
+    } catch (error) {
+      exportWindow?.close();
+      console.error(error);
+    } finally {
+      setExporting(null);
+    }
   };
   return (
     <section className="card takeoff-chart-card climb-chart-card traceability-card">
@@ -284,6 +301,9 @@ function ChartCard({ from, to, inputs, result }: { from: LegState; to: LegState;
           </button>
           <button className="takeoff-chart-download" type="button" disabled={!valid || exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={savePdf}>
             {exporting === "pdf" ? "PDF vorbereiten…" : "PDF speichern"}
+          </button>
+          <button className="takeoff-chart-download" type="button" disabled={!valid || exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={openPdf}>
+            {exporting === "pdf-open" ? "PDF öffnen…" : "PDF öffnen"}
           </button>
         </div>
       </div>

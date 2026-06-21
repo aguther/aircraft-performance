@@ -10,6 +10,7 @@ describe("ClimbPage", () => {
     expect(markup).toContain("Steigzeit · Climb Time");
     expect(markup).toContain("Start- und Ziel-Dichtehöhe sind gültig");
     expect(markup).toContain("grob115b-climb-chart.png");
+    expect(markup).toContain("PDF öffnen");
     expect(markup).toContain("Steigflug · Differenz");
     expect(markup).toContain("Start aus Takeoff übernehmen");
   });

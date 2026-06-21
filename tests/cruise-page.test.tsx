@@ -10,6 +10,7 @@ describe("CruisePage", () => {
     expect(markup).toContain("Wahre Fluggeschwindigkeit · POH 5.3.12");
     expect(markup).toContain("grob115b-cruise-speed-chart.png");
     expect(markup).toContain("grob115b-cruise-rpm-chart.png");
+    expect(markup).toContain("Charts PDF öffnen");
     expect(markup).toContain("Density Altitude");
   });
 });

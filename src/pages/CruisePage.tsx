@@ -13,7 +13,7 @@ import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
 import { useFlightPlan } from "../app/FlightPlanContext";
-import { createPdfBlobFromCanvas, warmPdfExportModule } from "../export/pdf";
+import { createPdfBlobFromCanvas, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
 
 type CruiseMode = "alt" | "fl" | "da";
 type ChartPoint = readonly [number, number];
@@ -164,9 +164,13 @@ async function exportCharts(inputs: CruiseViewInputs, charts: readonly CruiseCha
   await saveExportBlob(blob, `${time}Z Grob G115B Reiseflugberechnung.png`, "image/png");
 }
 
-async function exportChartsPdf(inputs: CruiseViewInputs, charts: readonly CruiseChart[]) {
+async function exportChartsPdf(inputs: CruiseViewInputs, charts: readonly CruiseChart[], options: { openWindow?: Window | null } = {}) {
   const { canvas, time } = await createCruiseExportCanvas(inputs, charts);
   const blob = await createPdfBlobFromCanvas(canvas, { maxDimensionPx: 3600 });
+  if (options.openWindow) {
+    openExportBlob(blob, options.openWindow);
+    return;
+  }
   await saveExportBlob(blob, `${time}Z Grob G115B Reiseflugberechnung.pdf`, "application/pdf");
 }
 
@@ -232,7 +236,7 @@ async function saveExportBlob(blob: Blob, fileName: string, type: string) {
 }
 
 function CruiseExportToolbar({ inputs, charts }: { inputs: CruiseViewInputs; charts: readonly CruiseChart[] }) {
-  const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
+  const [exporting, setExporting] = useState<"png" | "pdf" | "pdf-open" | null>(null);
   const saveImage = async () => {
     setExporting("png");
     try {
@@ -245,6 +249,19 @@ function CruiseExportToolbar({ inputs, charts }: { inputs: CruiseViewInputs; cha
     setExporting("pdf");
     try {
       await exportChartsPdf(inputs, charts);
+    } finally {
+      setExporting(null);
+    }
+  };
+  const openPdf = async () => {
+    setExporting("pdf-open");
+    let exportWindow: Window | null = null;
+    try {
+      exportWindow = openExportTab();
+      await exportChartsPdf(inputs, charts, { openWindow: exportWindow });
+    } catch (error) {
+      exportWindow?.close();
+      console.error(error);
     } finally {
       setExporting(null);
     }
@@ -264,6 +281,9 @@ function CruiseExportToolbar({ inputs, charts }: { inputs: CruiseViewInputs; cha
           </button>
           <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={savePdf}>
             {exporting === "pdf" ? "PDF vorbereiten…" : "Charts PDF speichern"}
+          </button>
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={openPdf}>
+            {exporting === "pdf-open" ? "PDF öffnen…" : "Charts PDF öffnen"}
           </button>
         </div>
       </div>

@@ -20,7 +20,7 @@ import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { FlightPlanMassImport } from "../components/FlightPlanMassImport";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
-import { createPdfBlobFromCanvas, warmPdfExportModule } from "../export/pdf";
+import { createPdfBlobFromCanvas, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
 import { landingRunwayWarnings, type RunwayDirection } from "../flight-data";
 import type { Airport } from "../flight-data";
 
@@ -232,9 +232,13 @@ async function exportChartImage(inputs: LandingInputs, result: LandingResult, ex
   await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Landestreckenberechnung.png`, "image/png");
 }
 
-async function exportChartPdf(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext) {
+async function exportChartPdf(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext, options: { openWindow?: Window | null } = {}) {
   const { canvas, exportDate } = await createLandingExportCanvas(inputs, result, exportContext);
   const blob = await createPdfBlobFromCanvas(canvas);
+  if (options.openWindow) {
+    openExportBlob(blob, options.openWindow);
+    return;
+  }
   await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Landestreckenberechnung.pdf`, "application/pdf");
 }
 
@@ -316,7 +320,7 @@ async function saveExportBlob(blob: Blob, fileName: string, type: string, option
 
 function TraceabilityCard({ inputs, result, exportContext }: { inputs: LandingInputs; result: LandingResult; exportContext: ExportContext }) {
   const [view, setView] = useState<"chart" | "path">("chart");
-  const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
+  const [exporting, setExporting] = useState<"png" | "pdf" | "pdf-open" | null>(null);
   const points = createChartPoints(inputs, result);
   const finalDistancePoint: ChartPoint = [1178, chartDistanceY(result.landingDistanceMeters)];
 
@@ -336,6 +340,19 @@ function TraceabilityCard({ inputs, result, exportContext }: { inputs: LandingIn
     try {
       await exportChartPdf(inputs, result, exportContext);
     } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) console.error(error);
+    } finally {
+      setExporting(null);
+    }
+  };
+  const openPdf = async () => {
+    setExporting("pdf-open");
+    let exportWindow: Window | null = null;
+    try {
+      exportWindow = openExportTab();
+      await exportChartPdf(inputs, result, exportContext, { openWindow: exportWindow });
+    } catch (error) {
+      exportWindow?.close();
       if (!(error instanceof DOMException && error.name === "AbortError")) console.error(error);
     } finally {
       setExporting(null);
@@ -364,6 +381,9 @@ function TraceabilityCard({ inputs, result, exportContext }: { inputs: LandingIn
             </button>
             <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={exportPdf}>
               {exporting === "pdf" ? "PDF vorbereiten…" : "PDF speichern"}
+            </button>
+            <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={openPdf}>
+              {exporting === "pdf-open" ? "PDF öffnen…" : "PDF öffnen"}
             </button>
           </div>
         ) : null}

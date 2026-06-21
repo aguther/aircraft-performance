@@ -7,7 +7,7 @@ import { interpolate1D, kilometersPerHourToKnots } from "../domain";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
 import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { SliderField } from "../components/SliderField";
-import { createPdfBlobFromCanvas, warmPdfExportModule } from "../export/pdf";
+import { createPdfBlobFromCanvas, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
 
 type WeightBalanceResult = ReturnType<typeof calculateWeightBalance>;
 
@@ -647,9 +647,14 @@ async function exportWeightBalancePdf(
   startResult: WeightBalanceResult,
   landingResult: WeightBalanceResult,
   landingFuelLiters: number,
+  options: { openWindow?: Window | null } = {},
 ) {
   const { canvas, exportDate } = await createWeightBalanceExportCanvas(plan, startResult, landingResult, landingFuelLiters);
   const blob = await createPdfBlobFromCanvas(canvas, { orientation: "landscape", maxDimensionPx: 2400 });
+  if (options.openWindow) {
+    openExportBlob(blob, options.openWindow);
+    return;
+  }
   await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Beladeplan ${plan.registration}.pdf`, "application/pdf");
 }
 
@@ -664,7 +669,7 @@ function WeightBalanceExportCard({
   plan: WeightBalancePlan;
   startResult: WeightBalanceResult;
 }) {
-  const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
+  const [exporting, setExporting] = useState<"png" | "pdf" | "pdf-open" | null>(null);
   const saveImage = async () => {
     setExporting("png");
     try {
@@ -677,6 +682,19 @@ function WeightBalanceExportCard({
     setExporting("pdf");
     try {
       await exportWeightBalancePdf(plan, startResult, landingResult, landingFuelLiters);
+    } finally {
+      setExporting(null);
+    }
+  };
+  const openPdf = async () => {
+    setExporting("pdf-open");
+    let exportWindow: Window | null = null;
+    try {
+      exportWindow = openExportTab();
+      await exportWeightBalancePdf(plan, startResult, landingResult, landingFuelLiters, { openWindow: exportWindow });
+    } catch (error) {
+      exportWindow?.close();
+      console.error(error);
     } finally {
       setExporting(null);
     }
@@ -696,6 +714,9 @@ function WeightBalanceExportCard({
           </button>
           <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={savePdf}>
             {exporting === "pdf" ? "PDF vorbereiten…" : "PDF speichern"}
+          </button>
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={openPdf}>
+            {exporting === "pdf-open" ? "PDF öffnen…" : "PDF öffnen"}
           </button>
         </div>
       </div>
