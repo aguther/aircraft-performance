@@ -19,11 +19,14 @@ describe("WeightBalancePage", () => {
     expect(markup).toContain("Start, Landung, Revision und Envelope gemeinsam speichern");
     expect(markup).toContain("PNG speichern");
     expect(markup).toContain("PDF speichern");
+    expect(markup).toContain("PDF öffnen");
     expect(markup.match(/Weight and balance envelope/g)).toHaveLength(1);
     expect(markup).toContain("Envelope · Start und Landung");
     expect(markup).toContain("Beladung · Start bis Landung");
     expect(markup).toContain("Gesamt · Start");
     expect(markup).toContain("Gesamt · Landung");
+    expect(markup).toContain("30° Bank");
+    expect(markup).toContain("45° Bank");
     expect(markup).not.toContain("<div class=\"card-title\">Bedingungen</div>");
   });
 });

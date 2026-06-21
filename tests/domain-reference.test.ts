@@ -547,8 +547,14 @@ test("weight and balance calculator returns stable loading result", () => {
   assert.equal(result.speeds.speedAt15mKmh.toFixed(1), "117.6");
   assert.equal(result.speeds.approachSpeedKmh.toFixed(1), "116.8");
   assert.equal(result.speeds.stallIdleFlaps40Kmh.toFixed(1), "86.0");
+  assert.equal(result.speeds.stallIdleFlaps40Bank30Kmh.toFixed(1), "92.4");
+  assert.equal(result.speeds.stallIdleFlaps40Bank45Kmh.toFixed(1), "102.2");
   assert.equal(result.speeds.referenceSpeedKmh.toFixed(1), "111.7");
   assert.equal(result.speeds.referenceSpeedKmh, result.speeds.stallIdleFlaps40Kmh * 1.3);
+  assert.equal(
+    result.speeds.stallIdleFlaps40Bank30Kmh,
+    result.speeds.stallIdleFlaps40Kmh * Math.sqrt(1 / Math.cos((30 * Math.PI) / 180))
+  );
 });
 
 test("weight and balance accepts envelope boundary points", () => {

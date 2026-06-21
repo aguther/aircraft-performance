@@ -8,6 +8,7 @@ describe("StallPage", () => {
     const markup = renderToStaticMarkup(<FlightPlanProvider><StallPage /></FlightPlanProvider>);
 
     expect(markup).toContain("Überziehgeschwindigkeit");
+    expect(markup).toContain("PDF öffnen");
     expect(markup).toContain("grob115b-stall-chart.png");
     expect(markup).toContain("Leerlauf");
     expect(markup).toContain("Klappen 40°");

@@ -42,3 +42,28 @@ export async function createPdfBlobFromCanvas(canvas: HTMLCanvasElement, options
   pdf.addImage(pdfCanvas.toDataURL("image/png"), "PNG", 0, 0, pdfCanvas.width, pdfCanvas.height);
   return pdf.output("blob");
 }
+
+export function openExportTab() {
+  const opened = window.open("about:blank", "_blank");
+  if (!opened) throw new Error("Der neue Tab wurde vom Browser blockiert.");
+  opened.opener = null;
+  opened.document.title = "PDF wird vorbereitet";
+  opened.document.body.style.fontFamily = "Arial, sans-serif";
+  opened.document.body.style.margin = "24px";
+  opened.document.body.textContent = "PDF wird vorbereitet...";
+  return opened;
+}
+
+export function openExportBlob(blob: Blob, targetWindow?: Window | null) {
+  const url = URL.createObjectURL(blob);
+  if (targetWindow) {
+    targetWindow.location.href = url;
+  } else {
+    const opened = window.open(url, "_blank", "noopener,noreferrer");
+    if (!opened) {
+      URL.revokeObjectURL(url);
+      throw new Error("Der neue Tab wurde vom Browser blockiert.");
+    }
+  }
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}

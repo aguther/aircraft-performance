@@ -8,7 +8,7 @@ import { interpolate1D } from "../domain";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
 import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { SliderField } from "../components/SliderField";
-import { createPdfBlobFromCanvas, warmPdfExportModule } from "../export/pdf";
+import { createPdfBlobFromCanvas, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
 
 type StallResult = ReturnType<typeof calculateStall>;
 type ChartPoint = readonly [number, number];
@@ -73,15 +73,24 @@ function timestamp(date: Date) {
   return date.toISOString().replace("T", " ").replace(/:/g, "-").slice(0, 19);
 }
 
+function exportTimestamp(date: Date) {
+  const value = date.toISOString();
+  return `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)} ${value.slice(11, 19)}Z`;
+}
+
 async function exportChart(inputs: StallInputs, result: StallResult) {
   const { canvas, exportDate } = await createStallExportCanvas(inputs, result);
   const blob = await canvasToBlob(canvas);
   await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Überziehgeschwindigkeit.png`, "image/png");
 }
 
-async function exportChartPdf(inputs: StallInputs, result: StallResult) {
+async function exportChartPdf(inputs: StallInputs, result: StallResult, options: { openWindow?: Window | null } = {}) {
   const { canvas, exportDate } = await createStallExportCanvas(inputs, result);
   const blob = await createPdfBlobFromCanvas(canvas);
+  if (options.openWindow) {
+    openExportBlob(blob, options.openWindow);
+    return;
+  }
   await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Überziehgeschwindigkeit.pdf`, "application/pdf");
 }
 
@@ -94,7 +103,7 @@ async function createStallExportCanvas(inputs: StallInputs, result: StallResult)
   if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, canvas.width, canvas.height);
-  drawText(context, `${timestamp(exportDate)}Z – Grob G115B Überziehgeschwindigkeit`, 40, 54, { size: 28, weight: 700 });
+  drawText(context, `${exportTimestamp(exportDate)} – Grob G115B Überziehgeschwindigkeit`, 40, 54, { size: 28, weight: 700 });
   drawText(context, "Eingangswerte", 40, 98, { size: 18, weight: 700, color: "#006f9f" });
   drawField(context, "Flugmasse", `${inputs.massKg} kg`, 40, 114, 350);
   drawField(context, "Leistungsstellung", inputs.powerMode === "leerlauf" ? "Leerlauf" : "Vollast", 410, 114, 350);
@@ -141,7 +150,7 @@ async function saveExportBlob(blob: Blob, fileName: string, type: string) {
 }
 
 function ChartCard({ inputs, result }: { inputs: StallInputs; result: StallResult }) {
-  const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
+  const [exporting, setExporting] = useState<"png" | "pdf" | "pdf-open" | null>(null);
   const saveImage = async () => {
     setExporting("png");
     try { await exportChart(inputs, result); } finally { setExporting(null); }
@@ -149,6 +158,19 @@ function ChartCard({ inputs, result }: { inputs: StallInputs; result: StallResul
   const savePdf = async () => {
     setExporting("pdf");
     try { await exportChartPdf(inputs, result); } finally { setExporting(null); }
+  };
+  const openPdf = async () => {
+    setExporting("pdf-open");
+    let exportWindow: Window | null = null;
+    try {
+      exportWindow = openExportTab();
+      await exportChartPdf(inputs, result, { openWindow: exportWindow });
+    } catch (error) {
+      exportWindow?.close();
+      console.error(error);
+    } finally {
+      setExporting(null);
+    }
   };
   return (
     <section className="card takeoff-chart-card stall-chart-card traceability-card">
@@ -165,6 +187,9 @@ function ChartCard({ inputs, result }: { inputs: StallInputs; result: StallResul
           </button>
           <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={savePdf}>
             {exporting === "pdf" ? "PDF vorbereiten…" : "PDF speichern"}
+          </button>
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={openPdf}>
+            {exporting === "pdf-open" ? "PDF öffnen…" : "PDF öffnen"}
           </button>
         </div>
       </div>
