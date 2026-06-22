@@ -36,7 +36,7 @@ const calculatorRouteElements: Record<AircraftCapability, ReactElement> = {
 
 export function App() {
   const location = useLocation();
-  const { aircraft, availableAircraft, selectAircraft } = useAircraft();
+  const { aircraft, availableAircraft, selectAircraft, selectSpeedUnitPreference, speedUnitPreference } = useAircraft();
   const { resetFlightPlan } = useFlightPlan();
   const { preference, resolvedTheme, setThemePreference } = useTheme();
   const [usageNoticeOpen, setUsageNoticeOpen] = useState(
@@ -65,7 +65,7 @@ export function App() {
             path={calculator.href}
           />
         ))}
-        <Route path="/settings.html" element={<SettingsPage preference={preference} onOpenUsageNotice={() => setUsageNoticeOpen(true)} onSelectTheme={setThemePreference} />} />
+        <Route path="/settings.html" element={<SettingsPage preference={preference} speedUnitPreference={speedUnitPreference} onOpenUsageNotice={() => setUsageNoticeOpen(true)} onSelectSpeedUnit={selectSpeedUnitPreference} onSelectTheme={setThemePreference} />} />
         <Route path="*" element={<HomePage aircraft={aircraft} availableAircraft={availableAircraft} onResetFlightPlan={resetFlightPlan} onSelectAircraft={selectAircraft} />} />
       </Routes>
       <UsageNotice

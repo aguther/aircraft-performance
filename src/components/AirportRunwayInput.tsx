@@ -338,7 +338,7 @@ export function AirportRunwayInput({
         </span>
       </form>
       {error ? <div className="airport-status error">{error}</div> : null}
-      {!airport && !error ? (
+      {!airport ? (
         <div className="airport-empty-state">
           <label className="airport-field">
             <span>Flugplatz</span>
@@ -415,6 +415,15 @@ export function AirportRunwayInput({
                 </div>
               </div>
             </div>
+          </div>
+          <div className="airport-sources airport-sources--placeholder">
+            OpenAIP und Wetterdaten werden nach Flugplatzauswahl angezeigt.
+          </div>
+          <div className="airport-imports">
+            <label className="import-toggle airport-import-toggle">
+              <input type="checkbox" checked={false} disabled onChange={() => undefined} />
+              <span>Werte übernehmen</span>
+            </label>
           </div>
         </div>
       ) : null}

@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { CloudSun, Gauge, Plane, Road } from "lucide-react";
-import { calculateLanding } from "../aircraft/g115b/calculators";
+import { landingTrace as calculateDr400LandingTrace } from "../aircraft/dr400/calculators";
+import { calculateLanding as calculateG115BLanding } from "../aircraft/g115b/calculators";
 import { g115bData } from "../aircraft/g115b/data";
 import type { LandingInputs } from "../aircraft/g115b/types";
+import { performanceForAircraft, safetyMarginForSurface } from "../app/aircraftPerformance";
+import { useAircraft } from "../app/AircraftContext";
 import { useFlightPlan } from "../app/FlightPlanContext";
 import {
   formatSigned,
   interpolate1D,
-  kilometersPerHourToKnots,
   knotsToKilometersPerHour,
   lookup2D,
   pressureAltitudeFromQnh,
@@ -23,8 +25,9 @@ import { SliderField } from "../components/SliderField";
 import { createPdfBlobFromCanvas, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
 import { landingRunwayWarnings, type RunwayDirection } from "../flight-data";
 import type { Airport } from "../flight-data";
+import { speedUnitLabel, speedValue } from "../app/speed";
 
-type LandingResult = ReturnType<typeof calculateLanding>;
+type LandingResult = ReturnType<typeof calculateG115BLanding>;
 type PressureAltitudeMode = "airport" | "qnh" | "direct";
 type ExportContext = {
   pressureAltitudeMode: PressureAltitudeMode;
@@ -36,9 +39,8 @@ type ChartPoint = readonly [number, number];
 const CHART_SOURCE = "/assets/grob115b-landing-chart.png";
 
 function formatWindLabel(windKt: number) {
-  const windKmh = knotsToKilometersPerHour(windKt);
   if (windKt === 0) return "Kein Wind";
-  return `${Math.abs(windKt)} kt (${Math.abs(windKmh).toFixed(1)} km/h) ${windKt > 0 ? "HW" : "TW"}`;
+  return `${Math.abs(windKt)} kt ${windKt > 0 ? "HW" : "TW"}`;
 }
 
 function formatAtmosphereSummary({
@@ -226,6 +228,10 @@ function timestamp(date: Date) {
   return date.toISOString().replace("T", " ").replace(/:/g, "-").slice(0, 19);
 }
 
+function filenameSafeLabel(label: string) {
+  return label.replace(/[<>:"/\\|?*]+/g, "-").replace(/\s+/g, " ").trim();
+}
+
 function exportTimestamp(date: Date) {
   const value = date.toISOString();
   return `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)} ${value.slice(11, 19)}Z`;
@@ -245,6 +251,107 @@ async function exportChartPdf(inputs: LandingInputs, result: LandingResult, expo
     return;
   }
   await saveExportBlob(blob, `${timestamp(exportDate)}Z Grob G115B Landestreckenberechnung.pdf`, "application/pdf");
+}
+
+function drawWrappedText(context: CanvasRenderingContext2D, text: string, x: number, y: number, width: number, options: { color?: string; weight?: number; size?: number; lineHeight?: number } = {}) {
+  const lineHeight = options.lineHeight ?? 24;
+  let lineY = y;
+  context.fillStyle = options.color || "#152235";
+  context.font = `${options.weight || 500} ${options.size || 18}px "Segoe UI", Arial, sans-serif`;
+  text.split("\n").forEach((paragraph) => {
+    const words = paragraph.split(" ");
+    let line = "";
+    words.forEach((word, index) => {
+      const testLine = line ? `${line} ${word}` : word;
+      if (context.measureText(testLine).width > width && line) {
+        context.fillText(line, x, lineY);
+        line = word;
+        lineY += lineHeight;
+      } else {
+        line = testLine;
+      }
+      if (index === words.length - 1 && line) context.fillText(line, x, lineY);
+    });
+    lineY += lineHeight;
+  });
+  return lineY;
+}
+
+function atmosphereExportLines(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext) {
+  const pressureAltitudeText = exportContext.pressureAltitudeMode === "direct"
+    ? `Pressure Altitude = direkt eingegebene Druckhöhe = ${inputs.pressureAltitudeFt} ft.`
+    : `Pressure Altitude = Elevation + (1013.25 - QNH) x 27 = ${exportContext.elevationFt} + (1013.25 - ${exportContext.qnhHpa}) x 27 = ${inputs.pressureAltitudeFt} ft.`;
+  return [
+    pressureAltitudeText,
+    `ISA-Temperatur = 15 - 1.98 x PA / 1000 = 15 - 1.98 x ${inputs.pressureAltitudeFt} / 1000 = ${result.atmosphere.isaTemperatureC.toFixed(1)} °C.`,
+    `ISA-Abweichung = OAT - ISA = ${inputs.oatC} - ${result.atmosphere.isaTemperatureC.toFixed(1)} = ${formatSigned(result.atmosphere.isaDeviationC, 1)} °C.`,
+    `Density Altitude = PA + 120 x ISA-Abweichung = ${inputs.pressureAltitudeFt} + 120 x ${result.atmosphere.isaDeviationC.toFixed(1)} = ${result.atmosphere.densityAltitudeFt} ft.`,
+  ];
+}
+
+async function createLandingPathExportCanvas(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext, aircraftLabel: string) {
+  const exportDate = new Date();
+  const trace = calculateDr400LandingTrace(inputs);
+  const canvas = document.createElement("canvas");
+  canvas.width = 1200;
+  canvas.height = 1240;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  drawText(context, `${exportTimestamp(exportDate)} – ${aircraftLabel} Landestreckenberechnung`, 48, 58, { size: 28, weight: 700 });
+  drawText(context, "Eingangswerte", 48, 104, { size: 19, weight: 700, color: "#006f9f" });
+  drawField(context, "Elevation", exportContext.pressureAltitudeMode !== "direct" ? `${exportContext.elevationFt} ft` : "Direkte Druckhöhe", 48, 122, 256, exportContext.pressureAltitudeMode === "direct");
+  drawField(context, "QNH", exportContext.pressureAltitudeMode !== "direct" ? `${exportContext.qnhHpa} hPa` : "Direkte Druckhöhe", 320, 122, 256, exportContext.pressureAltitudeMode === "direct");
+  drawField(context, "Pressure Alt.", `${inputs.pressureAltitudeFt} ft`, 592, 122, 256);
+  drawField(context, "OAT", `${inputs.oatC} °C`, 864, 122, 256);
+  drawField(context, "Masse", `${inputs.massKg} kg`, 48, 206, 256);
+  drawField(context, "Wind", formatWindLabel(inputs.windKt), 320, 206, 256);
+  drawField(context, "Zuschlag", `${inputs.safetyMarginPercent}%`, 592, 206, 256);
+
+  drawText(context, "Atmosphäre", 48, 330, { size: 19, weight: 700, color: "#006f9f" });
+  const textY = drawWrappedText(context, atmosphereExportLines(inputs, result, exportContext).join("\n"), 48, 362, 1070, { size: 17, lineHeight: 23 });
+
+  drawText(context, "Tabellen- und Korrekturschritte", 48, textY + 36, { size: 19, weight: 700, color: "#006f9f" });
+  const steps = [
+    ["1", `Landerollstrecke aus POH-Tabelle.\n${trace.roll845.compact}\n${trace.roll1045.compact}`, `${round(result.landingRollByAtmosphereMeters)} m bei 1045 kg`],
+    ["2", `15-m-Strecke aus POH-Tabelle.\n${trace.obstacle845.compact}\n${trace.obstacle1045.compact}`, `${round(trace.obstacle1045.result)} m bei 1045 kg`],
+    ["3", `Masseninterpolation zwischen den POH-Gewichten.\n${trace.massCompact}`, `${round(trace.rollByMassMeters)} m / ${round(trace.obstacleByMassMeters)} m vor Wind`],
+    ["4", trace.windText, `${round(result.landingRollByWindMeters)} m / ${round(result.landingDistanceWithoutMarginMeters)} m`],
+    ["5", trace.marginText, `${result.landingRollMeters} m / ${result.landingDistanceMeters} m`],
+  ];
+  let rowY = textY + 72;
+  steps.forEach(([index, detail, value]) => {
+    context.fillStyle = "#f4f8fb";
+    context.strokeStyle = "#d8e3eb";
+    context.lineWidth = 1;
+    context.beginPath();
+    context.roundRect(48, rowY, 1072, 112, 10);
+    context.fill();
+    context.stroke();
+    drawText(context, index, 70, rowY + 66, { size: 24, weight: 800, color: "#006f9f" });
+    drawWrappedText(context, detail, 112, rowY + 20, 735, { size: 12, lineHeight: 14 });
+    drawWrappedText(context, value, 870, rowY + 54, 220, { size: 17, weight: 700, lineHeight: 21 });
+    rowY += 124;
+  });
+  drawWrappedText(context, result.warnings.length ? `Warnungen: ${result.warnings.map((warning) => warning.text).join(" · ")}` : "Warnungen: keine.", 48, rowY + 14, 1070, { color: result.warnings.length ? "#9a5200" : "#526274" });
+  return { canvas, exportDate };
+}
+
+async function exportPathImage(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext, aircraftLabel: string) {
+  const { canvas, exportDate } = await createLandingPathExportCanvas(inputs, result, exportContext, aircraftLabel);
+  const blob = await canvasToBlob(canvas);
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z ${filenameSafeLabel(aircraftLabel)} Landestreckenberechnung.png`, "image/png");
+}
+
+async function exportPathPdf(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext, aircraftLabel: string, options: { openWindow?: Window | null } = {}) {
+  const { canvas, exportDate } = await createLandingPathExportCanvas(inputs, result, exportContext, aircraftLabel);
+  const blob = await createPdfBlobFromCanvas(canvas);
+  if (options.openWindow) {
+    openExportBlob(blob, options.openWindow);
+    return;
+  }
+  await saveExportBlob(blob, `${timestamp(exportDate)}Z ${filenameSafeLabel(aircraftLabel)} Landestreckenberechnung.pdf`, "application/pdf");
 }
 
 async function createLandingExportCanvas(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext) {
@@ -270,9 +377,8 @@ async function createLandingExportCanvas(inputs: LandingInputs, result: LandingR
   drawField(context, "Masse", `${inputs.massKg} kg`, 48, 192, 338);
   drawField(context, "Wind", formatWindLabel(inputs.windKt), 402, 192, 338);
   drawField(context, "Zuschlag", `${inputs.safetyMarginPercent}%`, 756, 192, 338);
-  drawText(context, "Berechnete Atmosphärenwerte", 48, 300, { size: 19, weight: 700, color: "#006f9f" });
-  drawField(context, "Density Altitude", `${result.atmosphere.densityAltitudeFt} ft`, 48, 316, 410);
-  drawField(context, "ISA-Abweichung", `${formatSigned(result.atmosphere.isaDeviationC, 1)} °C`, 474, 316, 410);
+  drawText(context, "Atmosphäre", 48, 300, { size: 19, weight: 700, color: "#006f9f" });
+  drawWrappedText(context, atmosphereExportLines(inputs, result, exportContext).join("\n"), 48, 328, 1364, { size: 16, lineHeight: 22 });
   drawText(context, "Ergebnis", 48, 424, { size: 19, weight: 700, color: "#006f9f" });
   drawField(context, "Rollstrecke ohne Zuschlag", `${round(result.landingRollByWindMeters)} m`, 48, 440, 664);
   drawField(context, "Zuschlag", `${round(result.landingRollMarginMeters)} m`, 728, 440, 684);
@@ -418,7 +524,65 @@ function TraceabilityCard({ inputs, result, exportContext }: { inputs: LandingIn
   );
 }
 
+function PathTraceabilityCard({ inputs, result, exportContext, aircraftLabel }: { inputs: LandingInputs; result: LandingResult; exportContext: ExportContext; aircraftLabel: string }) {
+  const [exporting, setExporting] = useState<"png" | "pdf" | "pdf-open" | null>(null);
+  const exportImage = async () => {
+    setExporting("png");
+    try {
+      await exportPathImage(inputs, result, exportContext, aircraftLabel);
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) console.error(error);
+    } finally {
+      setExporting(null);
+    }
+  };
+  const exportPdf = async () => {
+    setExporting("pdf");
+    try {
+      await exportPathPdf(inputs, result, exportContext, aircraftLabel);
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) console.error(error);
+    } finally {
+      setExporting(null);
+    }
+  };
+  const openPdf = async () => {
+    setExporting("pdf-open");
+    let exportWindow: Window | null = null;
+    try {
+      exportWindow = openExportTab();
+      await exportPathPdf(inputs, result, exportContext, aircraftLabel, { openWindow: exportWindow });
+    } catch (error) {
+      exportWindow?.close();
+      if (!(error instanceof DOMException && error.name === "AbortError")) console.error(error);
+    } finally {
+      setExporting(null);
+    }
+  };
+  return (
+    <section className="card traceability-card">
+      <div className="traceability-header">
+        <div>
+          <div className="card-title">Nachvollziehbarkeit</div>
+          <div className="traceability-description">Schrittweise Herleitung mit exportierbarem Rechenweg</div>
+        </div>
+      </div>
+      <div className="traceability-toolbar">
+        <div className="takeoff-chart-actions">
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onClick={exportImage}>{exporting === "png" ? "Erzeuge PNG…" : "PNG speichern"}</button>
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={exportPdf}>{exporting === "pdf" ? "PDF vorbereiten…" : "PDF speichern"}</button>
+          <button className="takeoff-chart-download" type="button" disabled={exporting !== null} onFocus={warmPdfExportModule} onPointerEnter={warmPdfExportModule} onClick={openPdf}>{exporting === "pdf-open" ? "PDF öffnen…" : "PDF öffnen"}</button>
+        </div>
+      </div>
+      <CalculationPath inputs={inputs} result={result} />
+    </section>
+  );
+}
+
 export function LandingPage() {
+  const { aircraft, resolvedSpeedUnit } = useAircraft();
+  const performance = performanceForAircraft(aircraft);
+  const { calculateLanding } = performance.calculators;
   const { flightPlan, updateImports, updateLandingCalculator } = useFlightPlan();
   const savedCalculator = flightPlan.landingCalculator;
   const [pressureAltitudeMode, setPressureAltitudeMode] = useState<PressureAltitudeMode>(savedCalculator?.pressureAltitudeMode ?? "airport");
@@ -426,9 +590,9 @@ export function LandingPage() {
   const [qnhHpa, setQnhHpa] = useState(savedCalculator?.qnhHpa ?? 1013);
   const [directPressureAltitudeFt, setDirectPressureAltitudeFt] = useState(savedCalculator?.directPressureAltitudeFt ?? 0);
   const [oatC, setOatC] = useState(savedCalculator?.oatC ?? 15);
-  const [massKg, setMassKg] = useState(savedCalculator?.massKg ?? 920);
+  const [massKg, setMassKg] = useState(savedCalculator?.massKg ?? performance.limits.landingMassMaxKg);
   const [windKt, setWindKt] = useState(savedCalculator?.windKt ?? 0);
-  const [safetyMarginPercent, setSafetyMarginPercent] = useState(savedCalculator?.safetyMarginPercent ?? 40);
+  const [safetyMarginPercent, setSafetyMarginPercent] = useState(savedCalculator?.safetyMarginPercent ?? performance.safetyMargins.landing.fallback);
   const [selectedAirport, setSelectedAirport] = useState<Airport>();
   const [selectedRunway, setSelectedRunway] = useState<RunwayDirection>();
   const [selectedWeatherValues, setSelectedWeatherValues] = useState<{ qnhHpa?: number; oatC?: number }>();
@@ -473,6 +637,10 @@ export function LandingPage() {
   useEffect(() => {
     if (flightPlan.imports.arrivalImport) setPressureAltitudeMode("airport");
   }, [flightPlan.imports.arrivalImport]);
+  useEffect(() => {
+    if (pressureAltitudeMode !== "airport" || !selectedRunway) return;
+    setSafetyMarginPercent(safetyMarginForSurface(performance.safetyMargins.landing, selectedRunway.surface));
+  }, [aircraft.id, pressureAltitudeMode, selectedRunway?.id, selectedRunway?.surface]);
 
   return (
     <div className="page-layout compact-calculator-layout">
@@ -552,7 +720,7 @@ export function LandingPage() {
             onEnabledChange={(enabled) => updateImports({ landingMass: enabled })}
             onImport={setMassKg}
           />
-          <SliderField label="Masse" labelDetail="kg · MTOW 920" unit="kg" value={massKg} min={700} max={920} disabled={flightPlan.imports.landingMass} onChange={setMassKg} />
+          <SliderField label="Masse" labelDetail={`kg · max. ${performance.limits.landingMassMaxKg}`} unit="kg" value={massKg} min={performance.limits.landingMassMinKg} max={performance.limits.landingMassMaxKg} disabled={flightPlan.imports.landingMass} onChange={setMassKg} />
         </CalculatorInputSection>
         <CalculatorInputSection
           icon={<Road aria-hidden="true" />}
@@ -562,7 +730,7 @@ export function LandingPage() {
           defaultOpen={false}
         >
           <SliderField label="Wind" labelDetail="kt · HW(+) TW(−)" unit="kt" value={windKt} min={-11} max={22} disabled={flightPlan.imports.arrivalImport} onChange={setWindKt} />
-          <SliderField label="Zuschlag" unit="%" value={safetyMarginPercent} min={0} max={60} inputMax={100} hint="Trockene Grasbahn: +40% · Hartbelag trocken: 0%" onChange={setSafetyMarginPercent} />
+          <SliderField label="Zuschlag" unit="%" value={safetyMarginPercent} min={0} max={60} inputMax={100} hint={`Default ${aircraft.shortName}: Gras ${performance.safetyMargins.landing.grass}% · Hartbelag ${performance.safetyMargins.landing.hard}%`} onChange={setSafetyMarginPercent} />
         </CalculatorInputSection>
       </aside>
       <main className="results">
@@ -578,11 +746,15 @@ export function LandingPage() {
           </div>
           <div className="takeoff-summary-divider">Anfluggeschwindigkeiten</div>
           <div className="speed-grid">
-            <MetricItem label={<span><SpeedSymbol index="APP" /> · Approach</span>} value={kilometersPerHourToKnots(result.approachSpeedKmh).toFixed(1)} unit="kt" speedType="IAS" subtext={`${result.approachSpeedKmh.toFixed(0)} km/h`} />
-            <MetricItem label={<span><SpeedSymbol index="REF" /> · 1.3 × <SpeedSymbol index="S0" /></span>} value={kilometersPerHourToKnots(result.referenceSpeedKmh).toFixed(1)} unit="kt" speedType="IAS" subtext={`${result.referenceSpeedKmh.toFixed(0)} km/h`} />
+            <MetricItem label={<span><SpeedSymbol index="APP" /> · Approach</span>} value={speedValue(result.approachSpeedKmh, resolvedSpeedUnit)} unit={speedUnitLabel(resolvedSpeedUnit)} speedType="IAS" />
+            <MetricItem label={<span><SpeedSymbol index="REF" /> · 1.3 × <SpeedSymbol index="S0" /></span>} value={speedValue(result.referenceSpeedKmh, resolvedSpeedUnit)} unit={speedUnitLabel(resolvedSpeedUnit)} speedType="IAS" />
           </div>
         </CalculatorCard>
-        <TraceabilityCard inputs={inputs} result={result} exportContext={{ pressureAltitudeMode, elevationFt, qnhHpa }} />
+        {performance.hasChartOverlays ? (
+          <TraceabilityCard inputs={inputs} result={result} exportContext={{ pressureAltitudeMode, elevationFt, qnhHpa }} />
+        ) : (
+          <PathTraceabilityCard inputs={inputs} result={result} exportContext={{ pressureAltitudeMode, elevationFt, qnhHpa }} aircraftLabel={aircraft.shortName} />
+        )}
       </main>
     </div>
   );
