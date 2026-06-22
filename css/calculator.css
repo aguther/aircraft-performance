@@ -2478,7 +2478,13 @@ input[type="range"]:focus-visible::-moz-range-thumb {
     max-width: 1120px;
   }
 
-  .sidebar {
+  .sidebar:not(.compact-input-panel) {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .compact-input-panel {
+    position: static;
     max-height: none;
     overflow-y: visible;
   }
