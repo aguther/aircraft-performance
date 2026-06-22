@@ -2489,6 +2489,22 @@ input[type="range"]:focus-visible::-moz-range-thumb {
     overflow-y: visible;
   }
 
+  .compact-input-panel {
+    max-height: calc(100vh - 109px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .compact-input-panel > .calculator-input-section {
+    flex: 0 0 auto;
+  }
+
+  @supports (max-height: 100dvh) {
+    .compact-input-panel {
+      max-height: calc(100dvh - 109px);
+    }
+  }
+
   .sidebar-section {
     padding: 0.75rem 0.8rem 0.8rem;
   }
