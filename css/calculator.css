@@ -2484,6 +2484,12 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   }
 
   .compact-input-panel {
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .compact-input-panel {
     max-height: calc(100vh - 109px);
     overflow-y: auto;
     overscroll-behavior: contain;
