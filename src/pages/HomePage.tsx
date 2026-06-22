@@ -6,6 +6,7 @@ import { performanceForAircraft } from "../app/aircraftPerformance";
 import { useFlightPlan } from "../app/FlightPlanContext";
 import { speedUnitLabel } from "../app/speed";
 import { kilometersPerHourToKnots } from "../domain";
+import type { WeightBalancePlan } from "../app/FlightPlanContext";
 
 type HomePageProps = {
   aircraft: AircraftDefinition;
@@ -31,6 +32,27 @@ function formatSpeedEntry(entry: SpeedEntry, unit: "kt" | "kmh") {
   return "–";
 }
 
+function defaultPlanForAircraft(aircraft: AircraftDefinition): Partial<WeightBalancePlan> {
+  if (aircraft.id === "robin-dr400-180") {
+    return {
+      registration: aircraft.registrations[0] ?? "D-EDNE",
+      startFuelLiters: 189,
+      mainFuelLiters: 109,
+      wingFuelLiters: 80,
+      plannedMainFuelBurnLiters: 0,
+      plannedWingFuelBurnLiters: 0,
+    };
+  }
+  return {
+    registration: aircraft.registrations[0] ?? "D-EBFT",
+    startFuelLiters: 107,
+    mainFuelLiters: undefined,
+    wingFuelLiters: undefined,
+    plannedMainFuelBurnLiters: undefined,
+    plannedWingFuelBurnLiters: undefined,
+  };
+}
+
 export function HomePage({
   aircraft,
   availableAircraft,
@@ -50,14 +72,10 @@ export function HomePage({
   const startFuelMassKg = startFuelLiters * performance.data.weightBalance.fuelDensityKgPerLiter;
   const selectAircraft = (aircraftId: string) => {
     const nextAircraft = availableAircraft.find((option) => option.id === aircraftId);
+    if (!nextAircraft || nextAircraft.id === aircraft.id) return;
+    onResetFlightPlan();
     onSelectAircraft(aircraftId);
-    if (!nextAircraft) return;
-    updateWeightBalance({
-      registration: nextAircraft.registrations[0] ?? plan.registration,
-      startFuelLiters: nextAircraft.id === "robin-dr400-180" ? 189 : Math.min(plan.startFuelLiters, 107),
-      mainFuelLiters: nextAircraft.id === "robin-dr400-180" ? 109 : undefined,
-      wingFuelLiters: nextAircraft.id === "robin-dr400-180" ? 80 : undefined,
-    });
+    updateWeightBalance(defaultPlanForAircraft(nextAircraft));
   };
 
   return (
