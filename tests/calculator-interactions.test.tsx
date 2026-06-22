@@ -19,7 +19,7 @@ import { LandingPage } from "../src/pages/LandingPage";
 import { CruisePage } from "../src/pages/CruisePage";
 import { ClimbRatePage } from "../src/pages/ClimbRatePage";
 import { AppHeader } from "../src/components/AppHeader";
-import { defaultAircraft } from "../src/app/aircraft";
+import { aircraftRegistry, defaultAircraft } from "../src/app/aircraft";
 import { SettingsPage } from "../src/pages/SettingsPage";
 import { HomePage } from "../src/pages/HomePage";
 
@@ -84,6 +84,19 @@ function FlightPlanContextHarness() {
   );
 }
 
+function HomePageHarness() {
+  const { aircraft, availableAircraft, selectAircraft } = useAircraft();
+  const { resetFlightPlan } = useFlightPlan();
+  return (
+    <HomePage
+      aircraft={aircraft}
+      availableAircraft={availableAircraft}
+      onResetFlightPlan={resetFlightPlan}
+      onSelectAircraft={selectAircraft}
+    />
+  );
+}
+
 describe("calculator interactions", () => {
   it("selects the theme directly in settings", async () => {
     const user = userEvent.setup();
@@ -127,6 +140,66 @@ describe("calculator interactions", () => {
     await user.click(screen.getByRole("button", { name: "Neue Planung" }));
     expect(onResetFlightPlan).toHaveBeenCalledTimes(1);
     expect(confirmSpy).not.toHaveBeenCalled();
+  });
+
+  it("resets aircraft-specific planning data when the pattern changes", async () => {
+    window.localStorage.setItem("performance-calculators-flight-plan", JSON.stringify({
+      version: 2,
+      flightPlan: {
+        weightBalance: {
+          registration: "D-ELWF",
+          pilotMassKg: 91,
+          copilotMassKg: 82,
+          baggageMassKg: 12,
+          startFuelLiters: 44,
+          plannedFuelBurnLiters: 18,
+        },
+        imports: { takeoffMass: false },
+        masses: {
+          startMassKg: 860,
+          landingMassKg: 835,
+          startFuelLiters: 44,
+          landingFuelLiters: 26,
+          updatedAt: "2026-06-14T12:00:00.000Z",
+        },
+        takeoffCalculator: {
+          pressureAltitudeMode: "qnh",
+          elevationFt: 900,
+          qnhHpa: 1002,
+          directPressureAltitudeFt: 0,
+          oatC: 28,
+          massKg: 860,
+          slopePercent: 1,
+          windKt: -4,
+          safetyMarginPercent: 15,
+          updatedAt: "2026-06-14T12:00:00.000Z",
+        },
+      },
+    }));
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <AircraftProvider availableAircraft={aircraftRegistry}>
+          <FlightPlanProvider>
+            <HomePageHarness />
+          </FlightPlanProvider>
+        </AircraftProvider>
+      </MemoryRouter>,
+    );
+
+    await user.selectOptions(screen.getByRole("combobox", { name: "Muster" }), "robin-dr400-180");
+
+    await waitFor(() => {
+      const storedPlan = JSON.parse(window.localStorage.getItem("performance-calculators-flight-plan")!);
+      expect(window.localStorage.getItem("performance-calculators-aircraft")).toBe("robin-dr400-180");
+      expect(storedPlan.weightBalance.registration).toBe("D-EDNE");
+      expect(storedPlan.weightBalance.startFuelLiters).toBe(189);
+      expect(storedPlan.weightBalance.mainFuelLiters).toBe(109);
+      expect(storedPlan.weightBalance.wingFuelLiters).toBe(80);
+      expect(storedPlan.weightBalance.plannedFuelBurnLiters).toBe(0);
+      expect(storedPlan.masses).toBeUndefined();
+      expect(storedPlan.takeoffCalculator).toBeUndefined();
+    });
   });
 
   it("keeps the important notice available from the settings tab", async () => {
