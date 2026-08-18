@@ -23,6 +23,7 @@ import { FlightPlanMassImport } from "../components/FlightPlanMassImport";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
 import { createPdfBlobFromCanvas, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
+import { runwayExportDetails } from "../export/runwayDetails";
 import { landingRunwayWarnings, type RunwayDirection } from "../flight-data";
 import type { Airport } from "../flight-data";
 import { speedUnitLabel, speedValue } from "../app/speed";
@@ -30,9 +31,11 @@ import { speedUnitLabel, speedValue } from "../app/speed";
 type LandingResult = ReturnType<typeof calculateG115BLanding>;
 type PressureAltitudeMode = "airport" | "qnh" | "direct";
 type ExportContext = {
+  airport?: Airport;
   pressureAltitudeMode: PressureAltitudeMode;
   elevationFt: number;
   qnhHpa: number;
+  runway?: RunwayDirection;
 };
 type ChartPoint = readonly [number, number];
 
@@ -292,9 +295,10 @@ function atmosphereExportLines(inputs: LandingInputs, result: LandingResult, exp
 async function createLandingPathExportCanvas(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext, aircraftLabel: string) {
   const exportDate = new Date();
   const trace = calculateDr400LandingTrace(inputs);
+  const runwayDetails = runwayExportDetails("landing", exportContext.airport, exportContext.runway);
   const canvas = document.createElement("canvas");
   canvas.width = 1200;
-  canvas.height = 1240;
+  canvas.height = 1324;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
   context.fillStyle = "#ffffff";
@@ -308,9 +312,11 @@ async function createLandingPathExportCanvas(inputs: LandingInputs, result: Land
   drawField(context, "Masse", `${inputs.massKg} kg`, 48, 206, 256);
   drawField(context, "Wind", formatWindLabel(inputs.windKt), 320, 206, 256);
   drawField(context, "Zuschlag", `${inputs.safetyMarginPercent}%`, 592, 206, 256);
+  drawField(context, "Flugplatz", runwayDetails.airportLabel, 48, 290, 528, runwayDetails.airportUnavailable);
+  drawField(context, runwayDetails.runwayFieldLabel, runwayDetails.runwayLabel, 592, 290, 528, runwayDetails.runwayUnavailable);
 
-  drawText(context, "Atmosphäre", 48, 330, { size: 19, weight: 700, color: "#006f9f" });
-  const textY = drawWrappedText(context, atmosphereExportLines(inputs, result, exportContext).join("\n"), 48, 362, 1070, { size: 17, lineHeight: 23 });
+  drawText(context, "Atmosphäre", 48, 414, { size: 19, weight: 700, color: "#006f9f" });
+  const textY = drawWrappedText(context, atmosphereExportLines(inputs, result, exportContext).join("\n"), 48, 446, 1070, { size: 17, lineHeight: 23 });
 
   drawText(context, "Tabellen- und Korrekturschritte", 48, textY + 36, { size: 19, weight: 700, color: "#006f9f" });
   const steps = [
@@ -356,7 +362,7 @@ async function exportPathPdf(inputs: LandingInputs, result: LandingResult, expor
 
 async function createLandingExportCanvas(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext) {
   const exportDate = new Date();
-  const headerHeight = 745;
+  const headerHeight = 825;
   const canvas = document.createElement("canvas");
   canvas.width = 1505;
   canvas.height = headerHeight + 1045;
@@ -365,6 +371,7 @@ async function createLandingExportCanvas(inputs: LandingInputs, result: LandingR
   const image = await loadImage(CHART_SOURCE);
   const points = createChartPoints(inputs, result);
   const finalDistancePoint: ChartPoint = [1178, chartDistanceY(result.landingDistanceMeters)];
+  const runwayDetails = runwayExportDetails("landing", exportContext.airport, exportContext.runway);
 
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, canvas.width, canvas.height);
@@ -377,15 +384,17 @@ async function createLandingExportCanvas(inputs: LandingInputs, result: LandingR
   drawField(context, "Masse", `${inputs.massKg} kg`, 48, 192, 338);
   drawField(context, "Wind", formatWindLabel(inputs.windKt), 402, 192, 338);
   drawField(context, "Zuschlag", `${inputs.safetyMarginPercent}%`, 756, 192, 338);
-  drawText(context, "Atmosphäre", 48, 300, { size: 19, weight: 700, color: "#006f9f" });
-  drawWrappedText(context, atmosphereExportLines(inputs, result, exportContext).join("\n"), 48, 328, 1364, { size: 16, lineHeight: 22 });
-  drawText(context, "Ergebnis", 48, 424, { size: 19, weight: 700, color: "#006f9f" });
-  drawField(context, "Rollstrecke ohne Zuschlag", `${round(result.landingRollByWindMeters)} m`, 48, 440, 664);
-  drawField(context, "Zuschlag", `${round(result.landingRollMarginMeters)} m`, 728, 440, 684);
-  drawField(context, "Rollstrecke inkl. Zuschlag", `${result.landingRollMeters} m`, 48, 520, 664);
-  drawField(context, "Landestrecke über 15 m inkl. Zuschlag", `${result.landingDistanceMeters} m`, 728, 520, 684);
-  drawText(context, result.warnings.length ? `Warnungen: ${result.warnings.map((warning) => warning.text).join(" · ")}` : "Warnungen: keine", 48, 638, { size: 18, color: result.warnings.length ? "#9a5200" : "#526274" });
-  drawLegend(context, 48, 685);
+  drawField(context, "Flugplatz", runwayDetails.airportLabel, 48, 272, 664, runwayDetails.airportUnavailable);
+  drawField(context, runwayDetails.runwayFieldLabel, runwayDetails.runwayLabel, 728, 272, 684, runwayDetails.runwayUnavailable);
+  drawText(context, "Atmosphäre", 48, 380, { size: 19, weight: 700, color: "#006f9f" });
+  drawWrappedText(context, atmosphereExportLines(inputs, result, exportContext).join("\n"), 48, 408, 1364, { size: 16, lineHeight: 22 });
+  drawText(context, "Ergebnis", 48, 504, { size: 19, weight: 700, color: "#006f9f" });
+  drawField(context, "Rollstrecke ohne Zuschlag", `${round(result.landingRollByWindMeters)} m`, 48, 520, 664);
+  drawField(context, "Zuschlag", `${round(result.landingRollMarginMeters)} m`, 728, 520, 684);
+  drawField(context, "Rollstrecke inkl. Zuschlag", `${result.landingRollMeters} m`, 48, 600, 664);
+  drawField(context, "Landestrecke über 15 m inkl. Zuschlag", `${result.landingDistanceMeters} m`, 728, 600, 684);
+  drawText(context, result.warnings.length ? `Warnungen: ${result.warnings.map((warning) => warning.text).join(" · ")}` : "Warnungen: keine", 48, 718, { size: 18, color: result.warnings.length ? "#9a5200" : "#526274" });
+  drawLegend(context, 48, 765);
   context.drawImage(image, 0, headerHeight, 1505, 1045);
   context.save();
   context.translate(0, headerHeight);
@@ -751,9 +760,21 @@ export function LandingPage() {
           </div>
         </CalculatorCard>
         {performance.hasChartOverlays ? (
-          <TraceabilityCard inputs={inputs} result={result} exportContext={{ pressureAltitudeMode, elevationFt, qnhHpa }} />
+          <TraceabilityCard inputs={inputs} result={result} exportContext={{
+            airport: pressureAltitudeMode === "airport" ? selectedAirport : undefined,
+            pressureAltitudeMode,
+            elevationFt,
+            qnhHpa,
+            runway: pressureAltitudeMode === "airport" ? selectedRunway : undefined,
+          }} />
         ) : (
-          <PathTraceabilityCard inputs={inputs} result={result} exportContext={{ pressureAltitudeMode, elevationFt, qnhHpa }} aircraftLabel={aircraft.shortName} />
+          <PathTraceabilityCard inputs={inputs} result={result} exportContext={{
+            airport: pressureAltitudeMode === "airport" ? selectedAirport : undefined,
+            pressureAltitudeMode,
+            elevationFt,
+            qnhHpa,
+            runway: pressureAltitudeMode === "airport" ? selectedRunway : undefined,
+          }} aircraftLabel={aircraft.shortName} />
         )}
       </main>
     </div>

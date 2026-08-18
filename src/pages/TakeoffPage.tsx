@@ -20,6 +20,7 @@ import { FlightPlanMassImport } from "../components/FlightPlanMassImport";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
 import { createPdfBlobFromCanvas, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
+import { runwayExportDetails } from "../export/runwayDetails";
 import { takeoffRunwayWarnings, type RunwayDirection } from "../flight-data";
 import type { Airport } from "../flight-data";
 import { speedUnitLabel, speedValue } from "../app/speed";
@@ -28,9 +29,11 @@ import { calculateTakeoff as calculateG115BTakeoff } from "../aircraft/g115b/cal
 type TakeoffResult = ReturnType<typeof calculateG115BTakeoff>;
 type PressureAltitudeMode = "airport" | "qnh" | "direct";
 type ExportContext = {
+  airport?: Airport;
   pressureAltitudeMode: PressureAltitudeMode;
   elevationFt: number;
   qnhHpa: number;
+  runway?: RunwayDirection;
 };
 type ChartPoint = readonly [number, number];
 
@@ -308,6 +311,7 @@ function atmosphereExportLines(inputs: TakeoffInputs, result: TakeoffResult, exp
 async function createTakeoffPathExportCanvas(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext, aircraftLabel: string) {
   const exportDate = new Date();
   const trace = calculateDr400TakeoffTrace(inputs);
+  const runwayDetails = runwayExportDetails("takeoff", exportContext.airport, exportContext.runway);
   const steps = [
     ["Info", "Handhabung: DR400 hat POH-Tabellen. Aus PA/OAT wird ΔISA berechnet. Für jede relevante Höhenzeile wird daraus die Tabellen-OAT gebildet, dort 900/1100 kg interpoliert und danach zwischen den Höhenzeilen interpoliert.", "Rechenfolge"],
     ["1", `Startrollstrecke aus POH-Tabelle.\n${trace.rollCombined.compact}`, `${round(trace.groundRollByMassMeters)} m vor Wind`],
@@ -318,7 +322,7 @@ async function createTakeoffPathExportCanvas(inputs: TakeoffInputs, result: Take
   ];
   const canvas = document.createElement("canvas");
   canvas.width = 1200;
-  canvas.height = 1780;
+  canvas.height = 1864;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
   context.fillStyle = "#ffffff";
@@ -333,9 +337,11 @@ async function createTakeoffPathExportCanvas(inputs: TakeoffInputs, result: Take
   drawExportField(context, "Slope", inputs.slopePercent === 0 ? "Nicht gerechnet" : formatSlopeLabel(inputs.slopePercent), 320, 206, 256, inputs.slopePercent === 0);
   drawExportField(context, "Wind", formatWindLabel(inputs.windKt), 592, 206, 256);
   drawExportField(context, "Zuschlag", `${inputs.safetyMarginPercent}%`, 864, 206, 256);
+  drawExportField(context, "Flugplatz", runwayDetails.airportLabel, 48, 290, 528, runwayDetails.airportUnavailable);
+  drawExportField(context, runwayDetails.runwayFieldLabel, runwayDetails.runwayLabel, 592, 290, 528, runwayDetails.runwayUnavailable);
 
-  drawExportText(context, "Atmosphäre", 48, 330, { size: 19, weight: 700, color: "#006f9f" });
-  const textY = drawWrappedExportText(context, atmosphereExportLines(inputs, result, exportContext).join("\n"), 48, 362, 1070, { size: 17, lineHeight: 23 });
+  drawExportText(context, "Atmosphäre", 48, 414, { size: 19, weight: 700, color: "#006f9f" });
+  const textY = drawWrappedExportText(context, atmosphereExportLines(inputs, result, exportContext).join("\n"), 48, 446, 1070, { size: 17, lineHeight: 23 });
 
   drawExportText(context, "Tabellen- und Korrekturschritte", 48, textY + 36, { size: 19, weight: 700, color: "#006f9f" });
   let rowY = textY + 72;
@@ -377,7 +383,7 @@ async function exportPathPdf(inputs: TakeoffInputs, result: TakeoffResult, expor
 
 async function createTakeoffExportCanvas(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext) {
   const exportDate = new Date();
-  const headerHeight = 745;
+  const headerHeight = 825;
   const canvas = document.createElement("canvas");
   canvas.width = 1516;
   canvas.height = headerHeight + 1038;
@@ -386,6 +392,7 @@ async function createTakeoffExportCanvas(inputs: TakeoffInputs, result: TakeoffR
   const image = await loadImage(CHART_SOURCE);
   const points = createChartPoints(inputs, result);
   const finalDistancePoint: ChartPoint = [1227, chartDistanceY(result.takeoffDistanceMeters)];
+  const runwayDetails = runwayExportDetails("takeoff", exportContext.airport, exportContext.runway);
 
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, canvas.width, canvas.height);
@@ -399,15 +406,17 @@ async function createTakeoffExportCanvas(inputs: TakeoffInputs, result: TakeoffR
   drawExportField(context, "Slope", formatSlopeLabel(inputs.slopePercent), 402, 192, 338);
   drawExportField(context, "Wind", formatWindLabel(inputs.windKt), 756, 192, 338);
   drawExportField(context, "Zuschlag", `${inputs.safetyMarginPercent}%`, 1110, 192, 302);
-  drawExportText(context, "Atmosphäre", 48, 300, { size: 19, weight: 700, color: "#006f9f" });
-  drawWrappedExportText(context, atmosphereExportLines(inputs, result, exportContext).join("\n"), 48, 328, 1364, { size: 16, lineHeight: 22 });
-  drawExportText(context, "Ergebnis", 48, 424, { size: 19, weight: 700, color: "#006f9f" });
-  drawExportField(context, "Rollstrecke ohne Zuschlag", `${round(result.groundRollByWindMeters)} m`, 48, 440, 664);
-  drawExportField(context, "Zuschlag", `${round(result.groundRollMarginMeters)} m`, 728, 440, 684);
-  drawExportField(context, "Rollstrecke inkl. Zuschlag", `${result.groundRollMeters} m`, 48, 520, 664);
-  drawExportField(context, "Startstrecke über 15 m inkl. Zuschlag", `${result.takeoffDistanceMeters} m`, 728, 520, 684);
-  drawExportText(context, result.warnings.length ? `Warnungen: ${result.warnings.map((warning) => warning.text).join(" · ")}` : "Warnungen: keine", 48, 638, { size: 18, color: result.warnings.length ? "#9a5200" : "#526274" });
-  drawExportLegend(context, 48, 685);
+  drawExportField(context, "Flugplatz", runwayDetails.airportLabel, 48, 272, 664, runwayDetails.airportUnavailable);
+  drawExportField(context, runwayDetails.runwayFieldLabel, runwayDetails.runwayLabel, 728, 272, 684, runwayDetails.runwayUnavailable);
+  drawExportText(context, "Atmosphäre", 48, 380, { size: 19, weight: 700, color: "#006f9f" });
+  drawWrappedExportText(context, atmosphereExportLines(inputs, result, exportContext).join("\n"), 48, 408, 1364, { size: 16, lineHeight: 22 });
+  drawExportText(context, "Ergebnis", 48, 504, { size: 19, weight: 700, color: "#006f9f" });
+  drawExportField(context, "Rollstrecke ohne Zuschlag", `${round(result.groundRollByWindMeters)} m`, 48, 520, 664);
+  drawExportField(context, "Zuschlag", `${round(result.groundRollMarginMeters)} m`, 728, 520, 684);
+  drawExportField(context, "Rollstrecke inkl. Zuschlag", `${result.groundRollMeters} m`, 48, 600, 664);
+  drawExportField(context, "Startstrecke über 15 m inkl. Zuschlag", `${result.takeoffDistanceMeters} m`, 728, 600, 684);
+  drawExportText(context, result.warnings.length ? `Warnungen: ${result.warnings.map((warning) => warning.text).join(" · ")}` : "Warnungen: keine", 48, 718, { size: 18, color: result.warnings.length ? "#9a5200" : "#526274" });
+  drawExportLegend(context, 48, 765);
   context.drawImage(image, 0, headerHeight, 1516, 1038);
   context.save();
   context.translate(0, headerHeight);
@@ -796,9 +805,21 @@ export function TakeoffPage() {
           </div>
         </CalculatorCard>
         {performance.hasChartOverlays ? (
-          <TraceabilityCard inputs={inputs} result={result} exportContext={{ pressureAltitudeMode, elevationFt, qnhHpa }} />
+          <TraceabilityCard inputs={inputs} result={result} exportContext={{
+            airport: pressureAltitudeMode === "airport" ? selectedAirport : undefined,
+            pressureAltitudeMode,
+            elevationFt,
+            qnhHpa,
+            runway: pressureAltitudeMode === "airport" ? selectedRunway : undefined,
+          }} />
         ) : (
-          <PathTraceabilityCard inputs={inputs} result={result} exportContext={{ pressureAltitudeMode, elevationFt, qnhHpa }} aircraftLabel={aircraft.shortName} />
+          <PathTraceabilityCard inputs={inputs} result={result} exportContext={{
+            airport: pressureAltitudeMode === "airport" ? selectedAirport : undefined,
+            pressureAltitudeMode,
+            elevationFt,
+            qnhHpa,
+            runway: pressureAltitudeMode === "airport" ? selectedRunway : undefined,
+          }} aircraftLabel={aircraft.shortName} />
         )}
       </main>
     </div>
