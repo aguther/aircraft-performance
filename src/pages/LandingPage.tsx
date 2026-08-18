@@ -36,6 +36,7 @@ type ExportContext = {
   elevationFt: number;
   qnhHpa: number;
   runway?: RunwayDirection;
+  warnings: LandingResult["warnings"];
 };
 type ChartPoint = readonly [number, number];
 
@@ -340,7 +341,7 @@ async function createLandingPathExportCanvas(inputs: LandingInputs, result: Land
     drawWrappedText(context, value, 870, rowY + 54, 220, { size: 17, weight: 700, lineHeight: 21 });
     rowY += 124;
   });
-  drawWrappedText(context, result.warnings.length ? `Warnungen: ${result.warnings.map((warning) => warning.text).join(" · ")}` : "Warnungen: keine.", 48, rowY + 14, 1070, { color: result.warnings.length ? "#9a5200" : "#526274" });
+  drawWrappedText(context, exportContext.warnings.length ? `Warnungen: ${exportContext.warnings.map((warning) => warning.text).join(" · ")}` : "Warnungen: keine.", 48, rowY + 14, 1070, { color: exportContext.warnings.length ? "#9a5200" : "#526274" });
   return { canvas, exportDate };
 }
 
@@ -393,7 +394,7 @@ async function createLandingExportCanvas(inputs: LandingInputs, result: LandingR
   drawField(context, "Zuschlag", `${round(result.landingRollMarginMeters)} m`, 728, 520, 684);
   drawField(context, "Rollstrecke inkl. Zuschlag", `${result.landingRollMeters} m`, 48, 600, 664);
   drawField(context, "Landestrecke über 15 m inkl. Zuschlag", `${result.landingDistanceMeters} m`, 728, 600, 684);
-  drawText(context, result.warnings.length ? `Warnungen: ${result.warnings.map((warning) => warning.text).join(" · ")}` : "Warnungen: keine", 48, 718, { size: 18, color: result.warnings.length ? "#9a5200" : "#526274" });
+  drawText(context, exportContext.warnings.length ? `Warnungen: ${exportContext.warnings.map((warning) => warning.text).join(" · ")}` : "Warnungen: keine", 48, 718, { size: 18, color: exportContext.warnings.length ? "#9a5200" : "#526274" });
   drawLegend(context, 48, 765);
   context.drawImage(image, 0, headerHeight, 1505, 1045);
   context.save();
@@ -766,6 +767,7 @@ export function LandingPage() {
             elevationFt,
             qnhHpa,
             runway: pressureAltitudeMode === "airport" ? selectedRunway : undefined,
+            warnings,
           }} />
         ) : (
           <PathTraceabilityCard inputs={inputs} result={result} exportContext={{
@@ -774,6 +776,7 @@ export function LandingPage() {
             elevationFt,
             qnhHpa,
             runway: pressureAltitudeMode === "airport" ? selectedRunway : undefined,
+            warnings,
           }} aircraftLabel={aircraft.shortName} />
         )}
       </main>
