@@ -8,15 +8,18 @@ import {
   landingRunwayWarnings,
   takeoffRunwayWarnings,
 } from "../src/flight-data";
+import { mergeBaseWithTaf, normalizeAwcMetar } from "../src/flight-data/aviationWeather";
 import { openAipAirportFixture } from "./fixtures/openAipAirport";
 
 describe("flight data models and OpenAIP adapter", () => {
   it("normalizes official OpenAIP airport and directional runway fields", () => {
-    const airport = normalizeOpenAipAirport(openAipAirportFixture)!;
+    const airport = normalizeOpenAipAirport(openAipAirportFixture, "2026-06-14T18:40:00.000Z")!;
 
     expect(airport.name).toBe("Frankfurt-Egelsbach");
     expect(airport.elevationFt).toBe(384);
     expect(airport.source.provider).toBe("OpenAIP");
+    expect(airport.source.updatedAt).toBe("2026-06-14T12:00:00.000Z");
+    expect(airport.source.retrievedAt).toBe("2026-06-14T18:40:00.000Z");
     expect(airport.runways[0].surface).toBe("asphalt");
     expect(airport.runways[0].toraM).toBe(1400);
     expect(airport.runways[0].magneticHeadingDeg).toBe(78.5);
@@ -51,7 +54,44 @@ describe("flight data models and OpenAIP adapter", () => {
     expect(forecast.source).toEqual({
       provider: "Open-Meteo",
       model: "ICON-D2",
-      updatedAt: "2026-06-14T18:45:00.000Z",
+      retrievedAt: "2026-06-14T18:45:00.000Z",
+    });
+  });
+
+  it("preserves TAF issue and retrieval times plus the QNH/OAT base source", () => {
+    const base = normalizeAwcMetar([{
+      icaoId: "EDFE",
+      reportTime: "2026-06-14T18:20:00.000Z",
+      temp: 17,
+      altim: 1016,
+      wdir: 80,
+      wspd: 6,
+      wgst: null,
+    }], "open-aip-edfe", "2026-06-14T18:42:00.000Z")!;
+    const merged = mergeBaseWithTaf(base, {
+      timeFrom: "2026-06-14T19:00:00.000Z",
+      timeTo: "2026-06-14T21:00:00.000Z",
+      changeIndicator: null,
+      wdir: 90,
+      wspd: 8,
+      wgst: 14,
+    }, {
+      icaoId: "EDFE",
+      issueTime: "2026-06-14T17:00:00.000Z",
+      validTimeFrom: "2026-06-14T18:00:00.000Z",
+      validTimeTo: "2026-06-15T18:00:00.000Z",
+      fcsts: [],
+    }, "2026-06-14T18:43:00.000Z");
+
+    expect(merged.source).toEqual({
+      provider: "Aviation Weather Center",
+      model: "TAF · METAR",
+      retrievedAt: "2026-06-14T18:43:00.000Z",
+      updatedAt: "2026-06-14T17:00:00.000Z",
+    });
+    expect(merged.baseForecast).toEqual({
+      validAt: "2026-06-14T18:20:00.000Z",
+      source: base.source,
     });
   });
 

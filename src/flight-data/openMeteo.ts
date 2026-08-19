@@ -33,7 +33,7 @@ function weatherForecast(
   },
   model: string,
   airportId?: string,
-  updatedAt = new Date().toISOString(),
+  retrievedAt = new Date().toISOString(),
 ) {
   const { time, temperatureC, qnhHpa, windSpeedKt, windDirectionTrueDeg, windGustKt } = values;
   if (!time || temperatureC == null || qnhHpa == null || windSpeedKt == null || windDirectionTrueDeg == null) return null;
@@ -49,7 +49,7 @@ function weatherForecast(
     source: {
       provider: "Open-Meteo" as const,
       model,
-      updatedAt,
+      retrievedAt,
     },
   };
 }
@@ -57,7 +57,7 @@ function weatherForecast(
 export function normalizeOpenMeteoForecast(
   response: OpenMeteoHourlyResponse,
   airportId?: string,
-  updatedAt = new Date().toISOString(),
+  retrievedAt = new Date().toISOString(),
   model = "ICON-D2",
 ): WeatherForecast | null {
   return weatherForecast({
@@ -67,13 +67,13 @@ export function normalizeOpenMeteoForecast(
     windSpeedKt: response.hourly?.wind_speed_10m?.[0],
     windDirectionTrueDeg: response.hourly?.wind_direction_10m?.[0],
     windGustKt: response.hourly?.wind_gusts_10m?.[0],
-  }, model, airportId, updatedAt);
+  }, model, airportId, retrievedAt);
 }
 
 export function normalizeOpenMeteoCurrent(
   response: OpenMeteoCurrentResponse,
   airportId?: string,
-  updatedAt = new Date().toISOString(),
+  retrievedAt = new Date().toISOString(),
   model = "ICON-D2",
 ): WeatherForecast | null {
   return weatherForecast({
@@ -83,5 +83,5 @@ export function normalizeOpenMeteoCurrent(
     windSpeedKt: response.current?.wind_speed_10m,
     windDirectionTrueDeg: response.current?.wind_direction_10m,
     windGustKt: response.current?.wind_gusts_10m,
-  }, model, airportId, updatedAt);
+  }, model, airportId, retrievedAt);
 }

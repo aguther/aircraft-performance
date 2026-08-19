@@ -18,6 +18,9 @@ export type AirportRunwayValues = {
   windKt?: number;
 };
 type WeatherRunwayValues = Required<Omit<AirportRunwayValues, "elevationFt">>;
+export type WeatherRunwaySelection = WeatherRunwayValues & {
+  forecast: WeatherForecast;
+};
 
 type AirportRunwayOperation = "departure" | "arrival";
 
@@ -118,7 +121,7 @@ export function AirportRunwayInput({
   onApply: (values: AirportRunwayValues) => void;
   onAirportChange?: (airport?: Airport) => void;
   onRunwayChange?: (runway?: RunwayDirection) => void;
-  onWeatherValuesChange?: (values?: WeatherRunwayValues) => void;
+  onWeatherValuesChange?: (selection?: WeatherRunwaySelection) => void;
 }>) {
   const { flightPlan, updateArrival, updateDeparture } = useFlightPlan();
   const savedSelection = operation === "departure" ? flightPlan.departure : flightPlan.arrival;
@@ -164,6 +167,10 @@ export function AirportRunwayInput({
     () => weather && runway ? weatherValuesForRunway(weather, runway) : null,
     [runway?.id, weather?.id],
   );
+  const weatherSelection = useMemo(
+    () => weather && weatherValues ? { ...weatherValues, forecast: weather } : null,
+    [weather, weatherValues],
+  );
   const weatherTitle = buildWeatherTitle(weather, weatherNow, weatherLoading);
   const headwindStatus = windStatus(windComponents ? windComponents.headwindKt >= 0 : null);
   const crosswindStatus = windStatus(windComponents ? Math.abs(windComponents.crosswindKt) < 10 : null);
@@ -191,8 +198,8 @@ export function AirportRunwayInput({
   useEffect(() => {
     onAirportChange?.(airport ?? undefined);
     onRunwayChange?.(runway);
-    onWeatherValuesChange?.(weatherValues ?? undefined);
-  }, [airport, onAirportChange, onRunwayChange, onWeatherValuesChange, runway, weatherValues]);
+    onWeatherValuesChange?.(weatherSelection ?? undefined);
+  }, [airport, onAirportChange, onRunwayChange, onWeatherValuesChange, runway, weatherSelection]);
 
   useEffect(() => {
     if (!autoImportKey || enabled || autoImportSuppressedKey.current === autoImportKey || !autoImportRequested.current) return;
@@ -533,7 +540,7 @@ export function AirportRunwayInput({
             </>
           ) : <div className="airport-status error">OpenAIP liefert für diesen Flugplatz keine aktive Bahn.</div>}
           <div className="airport-sources">
-            OpenAIP · Stand {new Date(airport.source.updatedAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })}
+            OpenAIP · {airport.source.updatedAt ? "Stand" : "Abruf"} {new Date(airport.source.updatedAt ?? airport.source.retrievedAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })}
             {weather ? (
               <>
                 <br />

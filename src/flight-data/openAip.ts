@@ -71,7 +71,7 @@ function normalizeRunway(runway: OpenAipRunway, declinationDeg: number): RunwayD
   };
 }
 
-export function normalizeOpenAipAirport(raw: OpenAipAirport): Airport | null {
+export function normalizeOpenAipAirport(raw: OpenAipAirport, retrievedAt = new Date().toISOString()): Airport | null {
   const longitude = raw.geometry?.coordinates?.[0];
   const latitude = raw.geometry?.coordinates?.[1];
   const elevationM = raw.elevation?.value;
@@ -93,7 +93,8 @@ export function normalizeOpenAipAirport(raw: OpenAipAirport): Airport | null {
       .filter((runway): runway is RunwayDirection => runway !== null),
     source: {
       provider: "OpenAIP",
-      updatedAt: raw.updatedAt ?? new Date().toISOString(),
+      retrievedAt,
+      ...(raw.updatedAt ? { updatedAt: raw.updatedAt } : {}),
     },
   };
 }

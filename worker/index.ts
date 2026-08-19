@@ -225,7 +225,8 @@ export async function handleApiRequest(request: Request, env: Env, context: Work
         }));
         const airports = results.flatMap((result) => result.items ?? []);
         const uniqueAirports = [...new Map(airports.filter((airport) => airport._id).map((airport) => [airport._id!, airport])).values()];
-        const items = uniqueAirports.map(normalizeOpenAipAirport).filter((airport) => airport !== null).slice(0, 15);
+        const retrievedAt = new Date().toISOString();
+        const items = uniqueAirports.map((airport) => normalizeOpenAipAirport(airport, retrievedAt)).filter((airport) => airport !== null).slice(0, 15);
         return json({ items, totalCount: items.length });
       });
     }
@@ -235,7 +236,8 @@ export async function handleApiRequest(request: Request, env: Env, context: Work
       if (!env.OPENAIP_API_KEY) return json({ error: "OpenAIP ist noch nicht konfiguriert. Das Worker-Secret OPENAIP_API_KEY fehlt." }, 503);
       if (!/^[a-zA-Z0-9_-]{1,64}$/.test(match[1])) return json({ error: "Ungültige Flugplatz-ID." }, 400);
       return cached(request, context, async () => {
-        const airport = normalizeOpenAipAirport(await upstreamJson<OpenAipAirport>(await openAip(`/airports/${encodeURIComponent(match[1])}`, env.OPENAIP_API_KEY!)));
+        const rawAirport = await upstreamJson<OpenAipAirport>(await openAip(`/airports/${encodeURIComponent(match[1])}`, env.OPENAIP_API_KEY!));
+        const airport = normalizeOpenAipAirport(rawAirport, new Date().toISOString());
         return airport ? json(airport) : json({ error: "OpenAIP lieferte unvollständige Flugplatzdaten." }, 502);
       });
     }

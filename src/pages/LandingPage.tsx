@@ -16,15 +16,15 @@ import {
   round,
 } from "../domain";
 import { CalculatorCard, MetricItem, SpeedSymbol } from "../components/CalculatorCard";
-import { AirportRunwayInput } from "../components/AirportRunwayInput";
+import { AirportRunwayInput, type WeatherRunwaySelection } from "../components/AirportRunwayInput";
 import { CalculatorContextCard } from "../components/CalculatorContextCard";
 import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { FlightPlanMassImport } from "../components/FlightPlanMassImport";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
-import { createPdfBlobFromCanvas, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
+import { appendPdfProvenance, createPdfBlobFromCanvas, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
 import { runwayExportDetails } from "../export/runwayDetails";
-import { landingRunwayWarnings, type RunwayDirection } from "../flight-data";
+import { landingRunwayWarnings, type RunwayDirection, type WeatherForecast } from "../flight-data";
 import type { Airport } from "../flight-data";
 import { speedUnitLabel, speedValue } from "../app/speed";
 
@@ -36,6 +36,7 @@ type ExportContext = {
   elevationFt: number;
   qnhHpa: number;
   runway?: RunwayDirection;
+  weather?: WeatherForecast;
   warnings: LandingResult["warnings"];
 };
 type ChartPoint = readonly [number, number];
@@ -249,7 +250,7 @@ async function exportChartImage(inputs: LandingInputs, result: LandingResult, ex
 
 async function exportChartPdf(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext, options: { openWindow?: Window | null } = {}) {
   const { canvas, exportDate } = await createLandingExportCanvas(inputs, result, exportContext);
-  const blob = await createPdfBlobFromCanvas(canvas);
+  const blob = await createPdfBlobFromCanvas(appendPdfProvenance(canvas, exportContext));
   if (options.openWindow) {
     openExportBlob(blob, options.openWindow);
     return;
@@ -353,7 +354,7 @@ async function exportPathImage(inputs: LandingInputs, result: LandingResult, exp
 
 async function exportPathPdf(inputs: LandingInputs, result: LandingResult, exportContext: ExportContext, aircraftLabel: string, options: { openWindow?: Window | null } = {}) {
   const { canvas, exportDate } = await createLandingPathExportCanvas(inputs, result, exportContext, aircraftLabel);
-  const blob = await createPdfBlobFromCanvas(canvas);
+  const blob = await createPdfBlobFromCanvas(appendPdfProvenance(canvas, exportContext));
   if (options.openWindow) {
     openExportBlob(blob, options.openWindow);
     return;
@@ -605,7 +606,7 @@ export function LandingPage() {
   const [safetyMarginPercent, setSafetyMarginPercent] = useState(savedCalculator?.safetyMarginPercent ?? performance.safetyMargins.landing.fallback);
   const [selectedAirport, setSelectedAirport] = useState<Airport>();
   const [selectedRunway, setSelectedRunway] = useState<RunwayDirection>();
-  const [selectedWeatherValues, setSelectedWeatherValues] = useState<{ qnhHpa?: number; oatC?: number }>();
+  const [selectedWeatherValues, setSelectedWeatherValues] = useState<WeatherRunwaySelection>();
   const pressureAltitudeFt = pressureAltitudeMode !== "direct" ? pressureAltitudeFromQnh(elevationFt, qnhHpa) : directPressureAltitudeFt;
   const inputs = useMemo<LandingInputs>(() => ({
     pressureAltitudeFt,
@@ -767,6 +768,7 @@ export function LandingPage() {
             elevationFt,
             qnhHpa,
             runway: pressureAltitudeMode === "airport" ? selectedRunway : undefined,
+            weather: pressureAltitudeMode === "airport" && flightPlan.imports.arrivalImport ? selectedWeatherValues?.forecast : undefined,
             warnings,
           }} />
         ) : (
@@ -776,6 +778,7 @@ export function LandingPage() {
             elevationFt,
             qnhHpa,
             runway: pressureAltitudeMode === "airport" ? selectedRunway : undefined,
+            weather: pressureAltitudeMode === "airport" && flightPlan.imports.arrivalImport ? selectedWeatherValues?.forecast : undefined,
             warnings,
           }} aircraftLabel={aircraft.shortName} />
         )}

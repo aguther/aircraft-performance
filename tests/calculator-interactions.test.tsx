@@ -372,7 +372,7 @@ describe("calculator interactions", () => {
       widthM: 25,
       surface: "asphalt",
     }],
-    source: { provider: "OpenAIP", updatedAt: "2026-06-14T12:00:00.000Z" },
+    source: { provider: "OpenAIP", updatedAt: "2026-06-14T12:00:00.000Z", retrievedAt: "2026-06-14T18:40:00.000Z" },
   };
   const weather = {
     id: "icon-d2-2026-06-14T19:00Z",
@@ -383,7 +383,7 @@ describe("calculator interactions", () => {
     windDirectionTrueDeg: 82,
     windSpeedKt: 7.8,
     windGustKt: 12.4,
-    source: { provider: "Open-Meteo" as const, model: "ICON-D2", updatedAt: "2026-06-14T18:45:00.000Z" },
+    source: { provider: "Open-Meteo" as const, model: "ICON-D2", retrievedAt: "2026-06-14T18:45:00.000Z" },
   };
 
   function stubAirportSearch(selectedAirport = airport) {

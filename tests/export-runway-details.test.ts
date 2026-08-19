@@ -23,7 +23,7 @@ const airport: Airport = {
   elevationFt: 420,
   magneticDeclinationDeg: 3,
   runways: [runway],
-  source: { provider: "OpenAIP", updatedAt: "2026-08-18T12:00:00.000Z" },
+  source: { provider: "OpenAIP", updatedAt: "2026-08-18T12:00:00.000Z", retrievedAt: "2026-08-18T14:00:00.000Z" },
 };
 
 describe("runway export details", () => {

@@ -5,8 +5,10 @@ export type Coordinates = {
 
 export type DataSource = {
   provider: "OpenAIP" | "Open-Meteo" | "Aviation Weather Center";
-  updatedAt: string;
+  retrievedAt: string;
+  updatedAt?: string;
   model?: string;
+  modelRunAt?: string;
 };
 
 export type RunwaySurface = "asphalt" | "concrete" | "grass" | "gravel" | "other";
@@ -48,6 +50,10 @@ export type WeatherForecast = {
   windSpeedKt: number;
   windGustKt?: number;
   source: DataSource;
+  baseForecast?: {
+    validAt: string;
+    source: DataSource;
+  };
 };
 
 export type WindComponents = {

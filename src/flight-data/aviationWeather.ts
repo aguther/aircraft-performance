@@ -50,7 +50,7 @@ function parseAwcTime(value: string): string {
   return new Date(value.includes("T") ? value : value.replace(" ", "T") + "Z").toISOString();
 }
 
-export function normalizeAwcMetar(data: AwcMetar[], airportId?: string): WeatherForecast | null {
+export function normalizeAwcMetar(data: AwcMetar[], airportId?: string, retrievedAt = new Date().toISOString()): WeatherForecast | null {
   const metar = data[0];
   if (!metar) return null;
   const { temp, altim, wdir, wspd, wgst, reportTime, icaoId, obsTime, rawOb } = metar;
@@ -69,6 +69,7 @@ export function normalizeAwcMetar(data: AwcMetar[], airportId?: string): Weather
     source: {
       provider: "Aviation Weather Center",
       model: "METAR",
+      retrievedAt,
       updatedAt: validAt,
     },
   };
@@ -92,6 +93,7 @@ export function mergeBaseWithTaf(
   base: WeatherForecast,
   period: AwcTafPeriod,
   taf: AwcTaf,
+  retrievedAt = new Date().toISOString(),
 ): WeatherForecast {
   return {
     ...base,
@@ -103,7 +105,12 @@ export function mergeBaseWithTaf(
     source: {
       provider: "Aviation Weather Center",
       model: `TAF · ${base.source.model}`,
+      retrievedAt,
       updatedAt: parseAwcTime(taf.issueTime),
+    },
+    baseForecast: {
+      validAt: base.validAt,
+      source: base.source,
     },
   };
 }
