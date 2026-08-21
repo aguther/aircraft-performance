@@ -91,7 +91,15 @@ function wrappedLines(context: CanvasRenderingContext2D, text: string, width: nu
   return lines;
 }
 
-export function appendPdfProvenance(canvas: HTMLCanvasElement, data: PdfProvenanceData) {
+function composePdfProvenance(
+  canvas: HTMLCanvasElement,
+  data: PdfProvenanceData,
+  insertionY: number,
+  separator: "before" | "after",
+) {
+  if (!Number.isFinite(insertionY) || insertionY < 0 || insertionY > canvas.height) {
+    throw new RangeError(`Ungültige Einfügeposition für die PDF-Datenbasis: ${insertionY}.`);
+  }
   const sourceLines = pdfProvenanceLines(data);
   const measureContext = canvas.getContext("2d");
   if (!measureContext) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
@@ -103,27 +111,33 @@ export function appendPdfProvenance(canvas: HTMLCanvasElement, data: PdfProvenan
   const wrappedSourceLines = sourceLines.flatMap((line) => wrappedLines(measureContext, line, contentWidth));
   measureContext.font = '700 14px "Segoe UI", Arial, sans-serif';
   const wrappedNoticeLines = wrappedLines(measureContext, PILOT_RESPONSIBILITY_NOTICE, contentWidth);
-  const footerHeight = 36 + 25 + wrappedSourceLines.length * sourceLineHeight + 14 + wrappedNoticeLines.length * noticeLineHeight + 34;
+  const blockHeight = 36 + 25 + wrappedSourceLines.length * sourceLineHeight + 14 + wrappedNoticeLines.length * noticeLineHeight + 34;
   const target = document.createElement("canvas");
   target.width = canvas.width;
-  target.height = canvas.height + footerHeight;
+  target.height = canvas.height + blockHeight;
   const context = target.getContext("2d");
   if (!context) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
 
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, target.width, target.height);
-  context.drawImage(canvas, 0, 0);
-  const footerY = canvas.height;
+  if (insertionY === canvas.height) {
+    context.drawImage(canvas, 0, 0);
+  } else {
+    context.drawImage(canvas, 0, 0, canvas.width, insertionY, 0, 0, canvas.width, insertionY);
+    const lowerHeight = canvas.height - insertionY;
+    context.drawImage(canvas, 0, insertionY, canvas.width, lowerHeight, 0, insertionY + blockHeight, canvas.width, lowerHeight);
+  }
   context.fillStyle = "#f5f8fa";
-  context.fillRect(0, footerY, target.width, footerHeight);
+  context.fillRect(0, insertionY, target.width, blockHeight);
   context.strokeStyle = "#cbd8e2";
   context.lineWidth = 2;
   context.beginPath();
-  context.moveTo(margin, footerY + 1);
-  context.lineTo(target.width - margin, footerY + 1);
+  const separatorY = separator === "before" ? insertionY + 1 : insertionY + blockHeight - 1;
+  context.moveTo(margin, separatorY);
+  context.lineTo(target.width - margin, separatorY);
   context.stroke();
 
-  let y = footerY + 36;
+  let y = insertionY + 36;
   context.fillStyle = "#006f9f";
   context.font = '700 18px "Segoe UI", Arial, sans-serif';
   context.fillText("Datenbasis", margin, y);
@@ -142,6 +156,14 @@ export function appendPdfProvenance(canvas: HTMLCanvasElement, data: PdfProvenan
     y += noticeLineHeight;
   });
   return target;
+}
+
+export function appendPdfProvenance(canvas: HTMLCanvasElement, data: PdfProvenanceData) {
+  return composePdfProvenance(canvas, data, canvas.height, "before");
+}
+
+export function insertPdfProvenance(canvas: HTMLCanvasElement, data: PdfProvenanceData, insertionY: number) {
+  return composePdfProvenance(canvas, data, insertionY, "after");
 }
 
 function scaleCanvasForPdf(canvas: HTMLCanvasElement, maxDimensionPx?: number) {
