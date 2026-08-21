@@ -19,7 +19,7 @@ import { CalculatorInputSection } from "../components/CalculatorInputSection";
 import { FlightPlanMassImport } from "../components/FlightPlanMassImport";
 import { NumberField } from "../components/NumberField";
 import { SliderField } from "../components/SliderField";
-import { appendPdfProvenance, createPdfBlobFromCanvas, insertPdfProvenance, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
+import { appendPdfProvenance, createA4LandscapePdfBlobFromCanvases, createPdfBlobFromCanvas, createPdfProvenancePages, openExportBlob, openExportTab, warmPdfExportModule } from "../export/pdf";
 import { runwayExportDetails } from "../export/runwayDetails";
 import { takeoffRunwayWarnings, type RunwayDirection, type WeatherForecast } from "../flight-data";
 import type { Airport } from "../flight-data";
@@ -38,7 +38,7 @@ type ExportContext = {
   warnings: TakeoffResult["warnings"];
 };
 type ChartPoint = readonly [number, number];
-const CHART_PROVENANCE_INSERT_Y = 742;
+const CHART_PAGE_SPLIT_Y = 742;
 
 const CHART_SOURCE = "/assets/grob115b-takeoff-chart.png";
 
@@ -245,7 +245,8 @@ async function exportChartImage(inputs: TakeoffInputs, result: TakeoffResult, ex
 
 async function exportChartPdf(inputs: TakeoffInputs, result: TakeoffResult, exportContext: ExportContext, options: { openWindow?: Window | null } = {}) {
   const { canvas, exportDate } = await createTakeoffExportCanvas(inputs, result, exportContext);
-  const blob = await createPdfBlobFromCanvas(insertPdfProvenance(canvas, exportContext, CHART_PROVENANCE_INSERT_Y));
+  const pages = createPdfProvenancePages(canvas, exportContext, CHART_PAGE_SPLIT_Y);
+  const blob = await createA4LandscapePdfBlobFromCanvases(pages);
   if (options.openWindow) {
     openExportBlob(blob, options.openWindow);
     return;

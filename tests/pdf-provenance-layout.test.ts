@@ -1,15 +1,10 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { appendPdfProvenance, insertPdfProvenance } from "../src/export/pdf";
+import { appendPdfProvenance, createPdfProvenancePages } from "../src/export/pdf";
 
-function createCanvasHarness(width: number, height: number) {
-  const source = document.createElement("canvas");
-  const target = document.createElement("canvas");
-  source.width = width;
-  source.height = height;
-
-  const context = {
+function createContext() {
+  return {
     beginPath: vi.fn(),
     drawImage: vi.fn(),
     fillRect: vi.fn(),
@@ -23,12 +18,22 @@ function createCanvasHarness(width: number, height: number) {
     lineWidth: 1,
     strokeStyle: "",
   } as unknown as CanvasRenderingContext2D;
+}
 
-  vi.spyOn(source, "getContext").mockReturnValue(context);
-  vi.spyOn(target, "getContext").mockReturnValue(context);
-  vi.spyOn(document, "createElement").mockReturnValue(target);
+function createCanvasHarness(width: number, height: number, targetCount: number) {
+  const source = document.createElement("canvas");
+  const targets = Array.from({ length: targetCount }, () => document.createElement("canvas"));
+  const sourceContext = createContext();
+  const contexts = targets.map(() => createContext());
+  source.width = width;
+  source.height = height;
 
-  return { context, source, target };
+  vi.spyOn(source, "getContext").mockReturnValue(sourceContext);
+  targets.forEach((target, index) => vi.spyOn(target, "getContext").mockReturnValue(contexts[index]));
+  const createElement = vi.spyOn(document, "createElement");
+  targets.forEach((target) => createElement.mockReturnValueOnce(target));
+
+  return { contexts, source, targets };
 }
 
 afterEach(() => {
@@ -36,26 +41,31 @@ afterEach(() => {
 });
 
 describe("PDF provenance layout", () => {
-  it("inserts the provenance block before the unchanged lower canvas section", () => {
-    const { context, source, target } = createCanvasHarness(1516, 1863);
-    const insertionY = 742;
+  it("places summary and provenance on page one and the unchanged diagram section on page two", () => {
+    const { contexts, source, targets } = createCanvasHarness(1516, 1863, 2);
+    const [summaryPage, diagramPage] = targets;
+    const [summaryContext, diagramContext] = contexts;
+    const splitY = 742;
 
-    const result = insertPdfProvenance(source, {}, insertionY);
-    const insertedHeight = target.height - source.height;
+    const result = createPdfProvenancePages(source, {}, splitY);
+    const provenanceHeight = summaryPage.height - splitY;
 
-    expect(result).toBe(target);
-    expect(target.width).toBe(source.width);
-    expect(insertedHeight).toBeGreaterThan(0);
-    expect(context.drawImage).toHaveBeenNthCalledWith(1, source, 0, 0, 1516, insertionY, 0, 0, 1516, insertionY);
-    expect(context.drawImage).toHaveBeenNthCalledWith(2, source, 0, insertionY, 1516, 1121, 0, insertionY + insertedHeight, 1516, 1121);
-    expect(context.fillRect).toHaveBeenCalledWith(0, insertionY, 1516, insertedHeight);
-    expect(context.fillText).toHaveBeenCalledWith("Datenbasis", 48, insertionY + 36);
-    expect(context.moveTo).toHaveBeenCalledWith(48, insertionY + insertedHeight - 1);
-    expect(context.lineTo).toHaveBeenCalledWith(1468, insertionY + insertedHeight - 1);
+    expect(result).toEqual([summaryPage, diagramPage]);
+    expect(summaryPage.width).toBe(source.width);
+    expect(provenanceHeight).toBeGreaterThan(0);
+    expect(summaryContext.drawImage).toHaveBeenCalledWith(source, 0, 0, 1516, splitY, 0, 0, 1516, splitY);
+    expect(summaryContext.fillRect).toHaveBeenCalledWith(0, splitY, 1516, provenanceHeight);
+    expect(summaryContext.fillText).toHaveBeenCalledWith("Datenbasis", 48, splitY + 36);
+    expect(summaryContext.stroke).not.toHaveBeenCalled();
+    expect(diagramPage.width).toBe(source.width);
+    expect(diagramPage.height).toBe(1121);
+    expect(diagramContext.drawImage).toHaveBeenCalledWith(source, 0, splitY, 1516, 1121, 0, 0, 1516, 1121);
   });
 
   it("keeps append mode and its leading separator for diagramless PDFs", () => {
-    const { context, source, target } = createCanvasHarness(1200, 1324);
+    const { contexts, source, targets } = createCanvasHarness(1200, 1324, 1);
+    const [context] = contexts;
+    const [target] = targets;
 
     appendPdfProvenance(source, {});
 
@@ -66,24 +76,25 @@ describe("PDF provenance layout", () => {
     expect(target.height).toBeGreaterThan(source.height);
   });
 
-  it("grows the inserted block when provenance text wraps", () => {
-    const wide = createCanvasHarness(1516, 1863);
-    insertPdfProvenance(wide.source, {}, 742);
-    const wideBlockHeight = wide.target.height - wide.source.height;
+  it("grows only the summary page when provenance text wraps", () => {
+    const wide = createCanvasHarness(1516, 1863, 2);
+    createPdfProvenancePages(wide.source, {}, 742);
+    const wideSummaryHeight = wide.targets[0].height;
+    const wideDiagramHeight = wide.targets[1].height;
     vi.restoreAllMocks();
 
-    const narrow = createCanvasHarness(400, 1863);
-    insertPdfProvenance(narrow.source, {}, 742);
-    const narrowBlockHeight = narrow.target.height - narrow.source.height;
+    const narrow = createCanvasHarness(400, 1863, 2);
+    createPdfProvenancePages(narrow.source, {}, 742);
 
-    expect(narrow.target.width).toBe(narrow.source.width);
-    expect(narrowBlockHeight).toBeGreaterThan(wideBlockHeight);
+    expect(narrow.targets[0].width).toBe(narrow.source.width);
+    expect(narrow.targets[0].height).toBeGreaterThan(wideSummaryHeight);
+    expect(narrow.targets[1].height).toBe(wideDiagramHeight);
   });
 
-  it("rejects insertion points outside the source canvas", () => {
-    const { source } = createCanvasHarness(1516, 1863);
+  it("rejects split points outside the source canvas", () => {
+    const { source } = createCanvasHarness(1516, 1863, 2);
 
-    expect(() => insertPdfProvenance(source, {}, -1)).toThrow(RangeError);
-    expect(() => insertPdfProvenance(source, {}, 1864)).toThrow(RangeError);
+    expect(() => createPdfProvenancePages(source, {}, 0)).toThrow(RangeError);
+    expect(() => createPdfProvenancePages(source, {}, 1863)).toThrow(RangeError);
   });
 });
