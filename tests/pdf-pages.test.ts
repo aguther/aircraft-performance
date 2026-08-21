@@ -31,7 +31,7 @@ beforeEach(() => {
 describe("A4 landscape PDF pages", () => {
   it("creates one A4 landscape PDF page per canvas and scales each without cropping", async () => {
     const summaryPage = { height: 950, toDataURL: vi.fn(() => "summary"), width: 1516 } as unknown as HTMLCanvasElement;
-    const diagramPage = { height: 1121, toDataURL: vi.fn(() => "diagram"), width: 1516 } as unknown as HTMLCanvasElement;
+    const diagramPage = { height: 1201, toDataURL: vi.fn(() => "diagram"), width: 1516 } as unknown as HTMLCanvasElement;
 
     const result = await createA4LandscapePdfBlobFromCanvases([summaryPage, diagramPage]);
 

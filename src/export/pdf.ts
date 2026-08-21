@@ -2,6 +2,9 @@ import type { Airport, DataSource, WeatherForecast } from "../flight-data";
 
 let pdfModulePromise: Promise<typeof import("jspdf")> | null = null;
 
+const DIAGRAM_PAGE_TOP_PADDING_PX = 48;
+const DIAGRAM_PAGE_BOTTOM_PADDING_PX = 32;
+
 export function preloadPdfExportModule() {
   pdfModulePromise ??= import("jspdf").catch((error) => {
     pdfModulePromise = null;
@@ -177,14 +180,25 @@ export function createPdfProvenancePages(canvas: HTMLCanvasElement, data: PdfPro
   summaryContext.drawImage(canvas, 0, 0, canvas.width, splitY, 0, 0, canvas.width, splitY);
   drawPdfProvenance(summaryContext, summaryPage.width, splitY, layout, false);
 
+  const diagramContentHeight = canvas.height - splitY;
   const diagramPage = document.createElement("canvas");
   diagramPage.width = canvas.width;
-  diagramPage.height = canvas.height - splitY;
+  diagramPage.height = DIAGRAM_PAGE_TOP_PADDING_PX + diagramContentHeight + DIAGRAM_PAGE_BOTTOM_PADDING_PX;
   const diagramContext = diagramPage.getContext("2d");
   if (!diagramContext) throw new Error("Canvas wird von diesem Browser nicht unterstützt.");
   diagramContext.fillStyle = "#ffffff";
   diagramContext.fillRect(0, 0, diagramPage.width, diagramPage.height);
-  diagramContext.drawImage(canvas, 0, splitY, canvas.width, diagramPage.height, 0, 0, canvas.width, diagramPage.height);
+  diagramContext.drawImage(
+    canvas,
+    0,
+    splitY,
+    canvas.width,
+    diagramContentHeight,
+    0,
+    DIAGRAM_PAGE_TOP_PADDING_PX,
+    canvas.width,
+    diagramContentHeight,
+  );
 
   return [summaryPage, diagramPage] as const;
 }

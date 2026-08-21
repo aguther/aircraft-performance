@@ -41,7 +41,7 @@ afterEach(() => {
 });
 
 describe("PDF provenance layout", () => {
-  it("places summary and provenance on page one and the unchanged diagram section on page two", () => {
+  it("places summary and provenance on page one and pads the unchanged diagram section on page two", () => {
     const { contexts, source, targets } = createCanvasHarness(1516, 1863, 2);
     const [summaryPage, diagramPage] = targets;
     const [summaryContext, diagramContext] = contexts;
@@ -58,8 +58,9 @@ describe("PDF provenance layout", () => {
     expect(summaryContext.fillText).toHaveBeenCalledWith("Datenbasis", 48, splitY + 36);
     expect(summaryContext.stroke).not.toHaveBeenCalled();
     expect(diagramPage.width).toBe(source.width);
-    expect(diagramPage.height).toBe(1121);
-    expect(diagramContext.drawImage).toHaveBeenCalledWith(source, 0, splitY, 1516, 1121, 0, 0, 1516, 1121);
+    expect(diagramPage.height).toBe(1201);
+    expect(diagramContext.fillRect).toHaveBeenCalledWith(0, 0, 1516, 1201);
+    expect(diagramContext.drawImage).toHaveBeenCalledWith(source, 0, splitY, 1516, 1121, 0, 48, 1516, 1121);
   });
 
   it("keeps append mode and its leading separator for diagramless PDFs", () => {
